@@ -1679,10 +1679,15 @@ export class Device extends EventEmitter {
   > {
     const usage = async (type: ItemType): Promise<CacheUsage> => {
       const count = await this.cache.count(type);
-      const items = count > 0 ? await this.cache.list(type, 0, count) : [];
+      const pageSize = 100;
+      let bytes = 0;
+      for (let offset = 0; offset < count; offset += pageSize) {
+        const items = await this.cache.list(type, offset, pageSize);
+        bytes += items.reduce((sum, item) => sum + (item.size || 0), 0);
+      }
       return {
         items: count,
-        bytes: items.reduce((sum, item) => sum + (item.size || 0), 0),
+        bytes,
       };
     };
     const [code, data, media] = await Promise.all([

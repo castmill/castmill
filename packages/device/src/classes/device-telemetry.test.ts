@@ -66,6 +66,29 @@ describe('Device telemetry', () => {
     });
   });
 
+  it('reads cache usage in bounded pages', async () => {
+    const items = Array.from({ length: 205 }, (_, i) =>
+      item(ItemType.Media, i + 1)
+    );
+    const cache = cacheBackend(items);
+    const list = vi.spyOn(cache, 'list');
+    const device = new Device({} as Machine, {} as StorageIntegration, {
+      cacheBackend: cache,
+    });
+
+    const telemetry = await device.getTelemetry();
+
+    expect(telemetry.cache?.types.media).toEqual({
+      items: 205,
+      bytes: items.reduce((sum, cacheItem) => sum + cacheItem.size, 0),
+    });
+    expect(list.mock.calls).toEqual([
+      [ItemType.Media, 0, 100],
+      [ItemType.Media, 100, 100],
+      [ItemType.Media, 200, 100],
+    ]);
+  });
+
   it('falls back to the wall clock when performance.now is unavailable', async () => {
     vi.useFakeTimers({ now: 0 });
     vi.stubGlobal('performance', undefined);
