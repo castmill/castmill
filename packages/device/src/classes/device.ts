@@ -112,6 +112,11 @@ const getReconnectDelay = (tries: number): number => {
 
 const supportedDebugModes = ['remote', 'local', 'none'];
 
+const getMonotonicNow = () =>
+  typeof performance !== 'undefined' && typeof performance.now === 'function'
+    ? performance.now()
+    : Date.now();
+
 /** Chromium's non-standard `performance.memory`, when exposed. */
 const getHeapUsage = () => {
   const memory =
@@ -292,7 +297,7 @@ const toChannels = (rawChannels: unknown): Channel[] | undefined => {
  */
 export class Device extends EventEmitter {
   private closing = false;
-  private readonly startedAt = Date.now();
+  private readonly startedAt = getMonotonicNow();
   private connectedAt?: number;
   private maintenanceToastDelayMs = MAINTENANCE_TOAST_DELAY_MS;
   private cache: CacheBackend;
@@ -1333,7 +1338,7 @@ export class Device extends EventEmitter {
         .join()
         .receive('ok', (response: { orientation?: unknown } = {}) => {
           if (this.closing) return;
-          this.connectedAt = Date.now();
+          this.connectedAt = getMonotonicNow();
           this.initOrientationListener(channel);
           if (response.orientation !== undefined) {
             void this.applyOrientation(response.orientation, channel);
@@ -1650,7 +1655,7 @@ export class Device extends EventEmitter {
       this.logger.error(`Unable to read platform telemetry: ${error}`);
     }
 
-    const now = Date.now();
+    const now = getMonotonicNow();
     const player: NonNullable<DeviceTelemetryData['player']> = {
       uptimeSeconds: Math.floor((now - this.startedAt) / 1000),
     };

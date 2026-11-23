@@ -33,7 +33,8 @@ describe('Device telemetry', () => {
   });
 
   it('adds player and cache statistics to the platform telemetry', async () => {
-    vi.useFakeTimers({ now: 0 });
+    let monotonicNow = 0;
+    vi.stubGlobal('performance', { now: () => monotonicNow });
     const device = create(
       {
         getTelemetry: async () => ({
@@ -46,13 +47,14 @@ describe('Device telemetry', () => {
         item(ItemType.Data, 10),
       ]
     );
-    vi.setSystemTime(90_500);
+    (device as unknown as { connectedAt: number }).connectedAt = 500;
+    monotonicNow = 90_500;
 
     const telemetry = await device.getTelemetry();
 
     expect(telemetry.memory).toEqual({ usedBytes: 1, totalBytes: 2 });
     expect(telemetry.player?.uptimeSeconds).toBe(90);
-    expect(telemetry.player?.connectedSeconds).toBeUndefined();
+    expect(telemetry.player?.connectedSeconds).toBe(90);
     expect(telemetry.cache).toEqual({
       items: 3,
       bytes: 510,
@@ -62,6 +64,17 @@ describe('Device telemetry', () => {
         media: { items: 2, bytes: 500 },
       },
     });
+  });
+
+  it('falls back to the wall clock when performance.now is unavailable', async () => {
+    vi.useFakeTimers({ now: 0 });
+    vi.stubGlobal('performance', undefined);
+    const device = create({});
+    vi.setSystemTime(90_500);
+
+    const telemetry = await device.getTelemetry();
+
+    expect(telemetry.player?.uptimeSeconds).toBe(90);
   });
 
   it('reports the JavaScript heap when the runtime exposes it', async () => {

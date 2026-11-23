@@ -125,6 +125,24 @@ describe('DeviceHealth', () => {
     expect(screen.getByText('10.0.0.3')).toBeInTheDocument();
   });
 
+  it.each([
+    { network: { ssid: 'Lobby' }, expected: 'Lobby' },
+    {
+      network: { ssid: 'Lobby', ipAddress: '10.0.0.3' },
+      expected: 'Lobby · 10.0.0.3',
+    },
+  ])(
+    'shows partial network details when type and signal are unavailable',
+    async ({ network, expected }) => {
+      vi.mocked(DevicesService.getDeviceTelemetry).mockResolvedValue({
+        network,
+      });
+      render(() => <DeviceHealth baseUrl="/api" device={device()} t={t} />);
+
+      expect(await screen.findByText(expected)).toBeInTheDocument();
+    }
+  );
+
   it('does not query an offline device', () => {
     render(() => (
       <DeviceHealth baseUrl="/api" device={device({ online: false })} t={t} />

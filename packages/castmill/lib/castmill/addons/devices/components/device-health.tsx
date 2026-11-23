@@ -161,7 +161,7 @@ export const DeviceHealth: Component<{
       .join(' · ');
     if (!value && !detail) return undefined;
     return {
-      value: value || data.ipAddress || '',
+      value: value || detail || '',
       detail: value ? detail : undefined,
       tone:
         signal !== undefined
