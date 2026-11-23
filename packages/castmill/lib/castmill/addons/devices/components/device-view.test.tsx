@@ -16,6 +16,7 @@ vi.mock('@castmill/ui-common', async (importOriginal) => {
   };
 });
 vi.mock('./device-info', () => ({ DeviceInfo: () => null }));
+vi.mock('./device-health', () => ({ DeviceHealth: () => null }));
 vi.mock('./channels', () => ({ Channels: () => <p>Channels panel</p> }));
 vi.mock('./maintainance', () => ({ Maintainance: () => null }));
 vi.mock('./device-telemetry', () => ({ DeviceTelemetry: () => null }));

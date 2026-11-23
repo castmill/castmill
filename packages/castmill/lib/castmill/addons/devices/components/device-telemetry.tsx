@@ -22,6 +22,7 @@ import { Device } from '../interfaces/device.interface';
 import { DevicesService } from '../services/devices.service';
 import styles from './device-telemetry.module.scss';
 import { DeviceIconButton, DeviceNotice } from './device-section';
+import { formatUptime } from './format-uptime';
 
 interface TelemetryData {
   storage?: { totalBytes: number; usedBytes: number };
@@ -75,24 +76,6 @@ const getSignalColor = (percent: number): string => {
   if (percent < 40) return 'var(--cm-error)';
   if (percent < 70) return 'var(--cm-warning)';
   return 'var(--cm-success)';
-};
-
-/**
- * Formats seconds into a human-readable uptime string.
- */
-const formatUptime = (
-  seconds: number,
-  t: (key: string, params?: Record<string, any>) => string
-): string => {
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-
-  const parts: string[] = [];
-  if (days > 0) parts.push(`${days}${t('devices.telemetry.daysShort')}`);
-  if (hours > 0) parts.push(`${hours}${t('devices.telemetry.hoursShort')}`);
-  parts.push(`${minutes}${t('devices.telemetry.minutesShort')}`);
-  return parts.join(' ');
 };
 
 /**

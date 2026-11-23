@@ -31,6 +31,7 @@ import { DevicePreview } from './device-preview';
 import { DeviceTelemetry } from './device-telemetry';
 import { DeviceSchedule } from './device-schedule';
 import { DeviceInfo } from './device-info';
+import { DeviceHealth } from './device-health';
 import { DeviceAutomations } from './device-automations';
 import { AddonStore } from '../../common/interfaces/addon-store';
 import './device-view.scss';
@@ -123,6 +124,7 @@ const DeviceView: Component<{
       icon: BsGrid1x2,
       content: () => (
         <div class="device-overview">
+          <DeviceHealth baseUrl={props.baseUrl} device={props.device} t={t} />
           <DeviceDetails
             device={props.device}
             store={props.store}
