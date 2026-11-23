@@ -151,6 +151,55 @@ describe('time-dependent template updates', () => {
     }
   };
 
+  it('reuses resolved text options during layout while preserving clock updates', async () => {
+    let reads = 0;
+    await withWidget(
+      {
+        type: 'text',
+        name: 'memoized-text',
+        opts: {
+          text: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: { key: 'data.later' },
+              else: { key: 'data.early' },
+            },
+          },
+          autofit: { baseSize: 1 },
+        },
+      },
+      {
+        get early() {
+          reads++;
+          return 'early';
+        },
+        get later() {
+          reads++;
+          return 'later';
+        },
+      },
+      async (root, _widget, _media, advanceClock) => {
+        await flush();
+        const text = root.querySelector('[data-component="text"] span')!;
+        expect(text.textContent).to.equal('early');
+        const beforeResize = reads;
+        globals.window.dispatchEvent(new globals.window.Event('resize'));
+        await flush();
+        expect(reads).to.equal(beforeResize);
+
+        advanceClock();
+        await flush();
+        expect(text.textContent).to.equal('later');
+        expect(reads).to.be.greaterThan(beforeResize);
+        const afterClock = reads;
+        globals.window.dispatchEvent(new globals.window.Event('resize'));
+        await flush();
+        expect(reads).to.equal(afterClock);
+      }
+    );
+  });
+
   it('unloads preview layers when the player UI is destroyed', async () => {
     await withWidget(
       {

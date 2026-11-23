@@ -233,7 +233,14 @@ interface TextProps extends BaseComponentProps {
   opts: TextComponentOptions;
 }
 
-export const Text: Component<TextProps> = (props) => {
+export const Text: Component<TextProps> = (input) => {
+  // JSX option getters otherwise re-resolve every binding on every access.
+  const options = createMemo(() => input.opts);
+  const props = mergeProps(input, {
+    get opts() {
+      return options();
+    },
+  });
   let textRef: HTMLDivElement | undefined;
   const [textElement, setTextElement] = createSignal<HTMLDivElement>();
   let timelineItem: TimelineItem | undefined;

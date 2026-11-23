@@ -100,11 +100,20 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   private updateFileMap(
     update: (files: Map<string, FileData>) => void
   ): Promise<void> {
+    const queuedAt = performance.now();
     const write = this.fileMapWrites.then(async () => {
+      const started = performance.now();
       const updated = new Map(this.fileMap);
       update(updated);
-      await setItem('FILE_MAP', JSON.stringify(Array.from(updated.entries())));
+      const serialized = JSON.stringify(Array.from(updated.entries()));
+      const serializedAt = performance.now();
+      await setItem('FILE_MAP', serialized);
       this.fileMap = updated;
+      if (import.meta.env.VITE_LOGGING === 'true') {
+        console.log(
+          `[legacy performance] FILE_MAP entries=${updated.size} characters=${serialized.length} queue=${Math.round(started - queuedAt)}ms serialize=${Math.round(serializedAt - started)}ms bridge=${Math.round(performance.now() - serializedAt)}ms`
+        );
+      }
     });
     // Keep later writes usable after failure; each caller still awaits its error.
     this.fileMapWrites = write.then(
