@@ -140,6 +140,39 @@ defmodule CastmillWeb.DeviceControllerTest do
       assert_receive %{info: ^info}
     end
 
+    test "stores hardware details", %{organization: organization} do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "hardware-hw-id", pincode: "hardw123"})
+
+      {:ok, {device, token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Hardware Device"
+        })
+
+      info = %{
+        "appType" => "Castmill OS",
+        "appVersion" => "0.2.0",
+        "os" => "Castmill OS 0.2.0",
+        "hardware" => "Intel NUC",
+        "userAgent" => "Castmill Player",
+        "cpu" => "Intel N100 (4 cores)",
+        "memory" => "8 GB",
+        "gpu" => "Mesa Intel(R) Graphics (ADL-N)",
+        "graphicsAcceleration" => "hardware",
+        "videoDecoding" => ["H.264", "HEVC", "VP9", "AV1"],
+        "display" => "HDMI-A-1, 3840 × 2160, 60 Hz"
+      }
+
+      conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", Enum.join(["Bearer", token], " "))
+        |> post("/devices/#{device.id}/info", %{"info" => info})
+
+      assert response(conn, 204)
+      assert Castmill.Devices.get_device(device.id).info == info
+    end
+
     test "rejects malformed, unknown, and oversized player metadata", %{
       organization: organization
     } do
@@ -157,7 +190,11 @@ defmodule CastmillWeb.DeviceControllerTest do
         %{"appType" => %{"nested" => "value"}},
         %{"capabilities" => %{"updateFirmware" => "true"}},
         %{"capabilities" => %{"unknown" => true}},
-        %{"userAgent" => String.duplicate("a", 1025)}
+        %{"userAgent" => String.duplicate("a", 1025)},
+        %{"graphicsAcceleration" => "fast"},
+        %{"videoDecoding" => "H.264"},
+        %{"videoDecoding" => [1]},
+        %{"videoDecoding" => List.duplicate("H.264", 17)}
       ]
 
       for info <- invalid_info_values do

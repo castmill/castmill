@@ -102,9 +102,25 @@ export class CastmillOSMachine implements Machine {
   }
 
   async getDeviceInfo(): Promise<DeviceInfo> {
-    const info =
-      await this.call<Omit<DeviceInfo, 'userAgent'>>('getDeviceInfo');
-    return { ...info, userAgent: navigator.userAgent };
+    const [info, hardware] = await Promise.all([
+      this.call<Omit<DeviceInfo, 'userAgent'>>('getDeviceInfo'),
+      this.getHardwareInfo(),
+    ]);
+    return { ...info, ...hardware, userAgent: navigator.userAgent };
+  }
+
+  /**
+   * CPU, memory, GPU, graphics acceleration, hardware video decoding and
+   * display mode. A separate bridge call, so that Castmill OS never sends
+   * fields a Castmill server doesn't know; older Castmill OS versions don't
+   * have it.
+   */
+  private async getHardwareInfo(): Promise<Partial<DeviceInfo>> {
+    try {
+      return pickHardwareInfo(await this.call<unknown>('getHardwareInfo'));
+    } catch {
+      return {};
+    }
   }
 
   getTelemetry(): Promise<TelemetryData> {
@@ -122,4 +138,32 @@ export class CastmillOSMachine implements Machine {
   async clearCache(): Promise<void> {
     await this.call('clearCache');
   }
+}
+
+const MAX_HARDWARE_TEXT = 200;
+const MAX_VIDEO_FORMATS = 16;
+
+/** The hardware fields of DeviceInfo, with the right types and sizes only. */
+export function pickHardwareInfo(value: unknown): Partial<DeviceInfo> {
+  if (!value || typeof value !== 'object') return {};
+  const h = value as Record<string, unknown>;
+  const out: Partial<DeviceInfo> = {};
+  for (const key of ['cpu', 'memory', 'gpu', 'display'] as const) {
+    const v = h[key];
+    if (typeof v === 'string' && v !== '') {
+      out[key] = v.slice(0, MAX_HARDWARE_TEXT);
+    }
+  }
+  if (
+    h.graphicsAcceleration === 'hardware' ||
+    h.graphicsAcceleration === 'software'
+  ) {
+    out.graphicsAcceleration = h.graphicsAcceleration;
+  }
+  if (Array.isArray(h.videoDecoding)) {
+    out.videoDecoding = h.videoDecoding
+      .filter((f): f is string => typeof f === 'string' && f.length <= 64)
+      .slice(0, MAX_VIDEO_FORMATS);
+  }
+  return out;
 }

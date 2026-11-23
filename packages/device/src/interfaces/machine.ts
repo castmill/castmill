@@ -7,6 +7,12 @@ export interface DeviceInfo {
   chromiumVersion?: string; // The version of the chromium engine e.g. 98.0.4758.102
   v8Version?: string; // The version of the V8 engine if available e.g. 9.8.0
   nodeVersion?: string; // The version of the Node.js if available e.g. 16.13.0
+  cpu?: string; // E.g. Intel N100 (4 cores)
+  memory?: string; // Installed RAM, e.g. 8 GB
+  gpu?: string; // The GPU (GL renderer), e.g. Mesa Intel(R) Graphics (ADL-N)
+  graphicsAcceleration?: 'hardware' | 'software'; // Whether the player renders on the GPU
+  videoDecoding?: string[]; // Video formats decoded in hardware, e.g. ['H.264', 'HEVC']
+  display?: string; // The display output and mode, e.g. HDMI-A-1, 3840 × 2160, 60 Hz
   userAgent: string; // The user agent string
   capabilities?: DeviceCapabilities;
 }

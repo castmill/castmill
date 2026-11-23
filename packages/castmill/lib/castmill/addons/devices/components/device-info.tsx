@@ -8,6 +8,7 @@ interface InfoField {
   value?: string | null;
   optional?: boolean;
   wide?: boolean;
+  warning?: boolean;
 }
 
 export const DeviceInfo: Component<{
@@ -16,6 +17,25 @@ export const DeviceInfo: Component<{
 }> = (props) => {
   const date = (value?: Date | string | null) =>
     value ? formatTimestamp(value) : undefined;
+
+  const graphicsAcceleration = () => {
+    switch (props.device.info?.graphicsAcceleration) {
+      case 'hardware':
+        return props.t('devices.info.graphicsAccelerationHardware');
+      case 'software':
+        return props.t('devices.info.graphicsAccelerationSoftware');
+    }
+  };
+
+  // Reported by players that check it (Castmill OS); an empty list means
+  // every format is decoded by the CPU.
+  const videoDecoding = () => {
+    const formats = props.device.info?.videoDecoding;
+    if (!Array.isArray(formats)) return undefined;
+    return formats.length
+      ? formats.join(', ')
+      : props.t('devices.info.videoDecodingNone');
+  };
 
   const fields = (): InfoField[] => [
     {
@@ -37,6 +57,43 @@ export const DeviceInfo: Component<{
       id: 'hardware',
       label: props.t('devices.info.hardware'),
       value: props.device.info?.hardware,
+    },
+    {
+      id: 'cpu',
+      label: props.t('devices.info.cpu'),
+      value: props.device.info?.cpu,
+      optional: true,
+    },
+    {
+      id: 'memory',
+      label: props.t('devices.info.memory'),
+      value: props.device.info?.memory,
+      optional: true,
+    },
+    {
+      id: 'gpu',
+      label: props.t('devices.info.gpu'),
+      value: props.device.info?.gpu,
+      optional: true,
+    },
+    {
+      id: 'graphics-acceleration',
+      label: props.t('devices.info.graphicsAcceleration'),
+      value: graphicsAcceleration(),
+      optional: true,
+      warning: props.device.info?.graphicsAcceleration === 'software',
+    },
+    {
+      id: 'video-decoding',
+      label: props.t('devices.info.videoDecoding'),
+      value: videoDecoding(),
+      optional: true,
+    },
+    {
+      id: 'display',
+      label: props.t('devices.info.display'),
+      value: props.device.info?.display,
+      optional: true,
     },
     {
       id: 'timezone',
@@ -97,7 +154,11 @@ export const DeviceInfo: Component<{
           {(field) => (
             <div
               class="device-info-item"
-              classList={{ wide: field.wide, missing: !field.value }}
+              classList={{
+                wide: field.wide,
+                missing: !field.value,
+                warning: field.warning,
+              }}
               data-field={field.id}
             >
               <dt>{field.label}</dt>
