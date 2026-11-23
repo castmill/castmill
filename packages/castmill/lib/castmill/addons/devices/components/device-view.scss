@@ -395,6 +395,10 @@
     color: var(--cm-text-tertiary);
   }
 
+  &.warning dd {
+    color: var(--cm-warning);
+  }
+
   dt {
     margin-bottom: 0.2em;
     color: var(--cm-primary);

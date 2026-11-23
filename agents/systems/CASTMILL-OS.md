@@ -32,6 +32,7 @@ device flow.
 | `getSetting` / `setSetting`, `storeCredentials` / `getCredentials` / `removeCredentials` | kiosk shell, files on the data partition |
 | `getMachineGUID` | castmill-agent: random ID kept until a factory reset, plus the output name |
 | `getDeviceInfo` | castmill-agent + kiosk shell (`appType: "Castmill OS"`, OS version, hardware, Electron/Chromium versions) |
+| `getHardwareInfo` (merged into `getDeviceInfo`) | castmill-agent + kiosk shell: `cpu`, `memory`, `gpu`, `graphicsAcceleration` (`hardware`/`software`), `videoDecoding` (formats decoded in hardware), `display` (output and mode). Missing on Castmill OS 0.1, so `CastmillOSMachine` ignores errors and keeps only known, well-typed fields |
 | `getTelemetry` | castmill-agent, already in `TelemetryData` shape |
 | `getTimezone`, `reboot` | castmill-agent |
 | `restart`, `clearCache` | kiosk shell |
@@ -49,6 +50,10 @@ image), `updateFirmware` (until the backend manages OS versions) and
 - Keep `CastmillOSMachine` backwards compatible: devices in the field run the
   bridge version of their OS image, while the device app updates with the
   backend. New methods must be optional and feature-detected.
+- `POST /devices/:id/info` rejects unknown keys. New device info fields go
+  through a separate bridge method that only a device app knowing them
+  calls (like `getHardwareInfo`), never into `getDeviceInfo` itself, or older
+  servers would reject the whole update.
 
 ## Planned backend work
 

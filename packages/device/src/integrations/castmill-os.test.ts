@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   CastmillOSMachine,
   getCastmillOSBridge,
+  pickHardwareInfo,
   type CastmillOSBridge,
 } from './castmill-os';
 
@@ -93,6 +94,61 @@ describe('CastmillOSMachine', () => {
     });
   });
 
+  it('adds the hardware details to the device info', async () => {
+    const { bridge } = fakeBridge({
+      getDeviceInfo: {
+        appType: 'Castmill OS',
+        appVersion: '0.2.0',
+        os: 'Castmill OS 0.2.0',
+        hardware: 'Intel NUC',
+      },
+      getHardwareInfo: {
+        cpu: 'Intel N100 (4 cores)',
+        memory: '8 GB',
+        gpu: 'Mesa Intel(R) Graphics (ADL-N)',
+        graphicsAcceleration: 'hardware',
+        videoDecoding: ['H.264', 'HEVC', 'VP9', 'AV1'],
+        display: 'HDMI-A-1, 3840 × 2160, 60 Hz',
+      },
+    });
+    const machine = new CastmillOSMachine(bridge);
+
+    expect(await machine.getDeviceInfo()).toEqual({
+      appType: 'Castmill OS',
+      appVersion: '0.2.0',
+      os: 'Castmill OS 0.2.0',
+      hardware: 'Intel NUC',
+      cpu: 'Intel N100 (4 cores)',
+      memory: '8 GB',
+      gpu: 'Mesa Intel(R) Graphics (ADL-N)',
+      graphicsAcceleration: 'hardware',
+      videoDecoding: ['H.264', 'HEVC', 'VP9', 'AV1'],
+      display: 'HDMI-A-1, 3840 × 2160, 60 Hz',
+      userAgent: navigator.userAgent,
+    });
+  });
+
+  it('works with Castmill OS versions without hardware details', async () => {
+    const info = {
+      appType: 'Castmill OS',
+      appVersion: '0.1.0',
+      os: 'Castmill OS 0.1.0',
+      hardware: 'Intel NUC',
+    };
+    const call = vi.fn(async (method: string) => {
+      if (method === 'getHardwareInfo') {
+        throw new Error('castmillOS: unknown method getHardwareInfo');
+      }
+      return info;
+    });
+    const machine = new CastmillOSMachine({ version: 1, call });
+
+    expect(await machine.getDeviceInfo()).toEqual({
+      ...info,
+      userAgent: navigator.userAgent,
+    });
+  });
+
   it('has the methods the device calls unconditionally while registering', async () => {
     const { bridge, call } = fakeBridge({ getTimezone: 'Europe/Madrid' });
     const machine = new CastmillOSMachine(bridge);
@@ -138,5 +194,27 @@ describe('CastmillOSMachine', () => {
     expect(machine.update).toBeUndefined();
     expect(machine.updateFirmware).toBeUndefined();
     expect(machine.setOrientation).toBeUndefined();
+  });
+});
+
+describe('pickHardwareInfo', () => {
+  it('keeps only known fields with the right types', () => {
+    expect(
+      pickHardwareInfo({
+        cpu: 'Cortex-A76 (4 cores)',
+        memory: '',
+        gpu: 42,
+        graphicsAcceleration: 'quantum',
+        videoDecoding: ['HEVC', 7, 'x'.repeat(65)],
+        display: 'x'.repeat(300),
+        serial: 'secret',
+      })
+    ).toEqual({
+      cpu: 'Cortex-A76 (4 cores)',
+      videoDecoding: ['HEVC'],
+      display: 'x'.repeat(200),
+    });
+    expect(pickHardwareInfo(null)).toEqual({});
+    expect(pickHardwareInfo('cpu')).toEqual({});
   });
 });
