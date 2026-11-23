@@ -1,4 +1,9 @@
-import { ItemMetadata, ItemType, SetItemCacheOptions } from './cache';
+import {
+  CacheTypeUsage,
+  ItemMetadata,
+  ItemType,
+  SetItemCacheOptions,
+} from './cache';
 import type { CacheBackend } from './cache-backend';
 import type {
   StorageIntegration,
@@ -64,6 +69,21 @@ export class MemoryCache implements CacheBackend {
 
   async count(type: ItemType): Promise<number> {
     return (await this.list(type, 0, this.items.size)).length;
+  }
+
+  /**
+   * Number of items of a type and their total size, in one synchronous pass:
+   * reads reorder the map (touch), so paging with list() could skip or
+   * double-count items, but nothing can run in the middle of this loop.
+   */
+  async usage(type: ItemType): Promise<CacheTypeUsage> {
+    const usage: CacheTypeUsage = { items: 0, bytes: 0 };
+    for (const item of this.items.values()) {
+      if (item.type !== type) continue;
+      usage.items++;
+      usage.bytes += item.size || 0;
+    }
+    return usage;
   }
 
   async get(url: string): Promise<ItemMetadata | null | undefined> {

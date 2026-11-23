@@ -29,6 +29,12 @@ if ("storage" in navigator && "estimate" in navigator.storage) {
 }
 */
 
+/** Items of one type in the cache and their total size in bytes. */
+export interface CacheTypeUsage {
+  items: number;
+  bytes: number;
+}
+
 export enum ItemType {
   Code = 'code',
   Data = 'data',
@@ -190,6 +196,23 @@ export class Cache extends Dexie {
    */
   async count(type: ItemType) {
     return this.items.where('type').equals(type).count();
+  }
+
+  /**
+   * Number of items of a given type and their total size. One cursor pass in
+   * a single read transaction: consistent totals without loading every item
+   * into memory.
+   */
+  async usage(type: ItemType): Promise<CacheTypeUsage> {
+    const usage: CacheTypeUsage = { items: 0, bytes: 0 };
+    await this.items
+      .where('type')
+      .equals(type)
+      .each((item) => {
+        usage.items++;
+        usage.bytes += item.size || 0;
+      });
+    return usage;
   }
 
   /**

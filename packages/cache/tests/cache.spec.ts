@@ -82,6 +82,34 @@ describe('Cache', () => {
     }
   });
 
+  it('sums items and bytes per type', async () => {
+    const storage = new StorageMockup({
+      'https://example.com/a.js': 'const a = 1;',
+      'https://example.com/b.js': 'const b = 22;',
+      'https://example.com/data.json': '{}',
+    });
+    const cache = new Cache(storage, 'test-usage', 10);
+    await cache.set(
+      'https://example.com/a.js',
+      ItemType.Code,
+      'text/javascript'
+    );
+    await cache.set(
+      'https://example.com/b.js',
+      ItemType.Code,
+      'text/javascript'
+    );
+    await cache.set(
+      'https://example.com/data.json',
+      ItemType.Data,
+      'application/json'
+    );
+
+    expect(await cache.usage(ItemType.Code)).toEqual({ items: 2, bytes: 25 });
+    expect(await cache.usage(ItemType.Data)).toEqual({ items: 1, bytes: 2 });
+    expect(await cache.usage(ItemType.Media)).toEqual({ items: 0, bytes: 0 });
+  });
+
   it('should delete cached items', async () => {
     const url = 'https://example.com/data';
 

@@ -1677,19 +1677,10 @@ export class Device extends EventEmitter {
   private async getCacheUsage(): Promise<
     NonNullable<DeviceTelemetryData['cache']>
   > {
-    const usage = async (type: ItemType): Promise<CacheUsage> => {
-      const count = await this.cache.count(type);
-      const pageSize = 100;
-      let bytes = 0;
-      for (let offset = 0; offset < count; offset += pageSize) {
-        const items = await this.cache.list(type, offset, pageSize);
-        bytes += items.reduce((sum, item) => sum + (item.size || 0), 0);
-      }
-      return {
-        items: count,
-        bytes,
-      };
-    };
+    // One aggregate per type from the cache backend: consistent totals even
+    // when items are read or reordered while telemetry is collected.
+    const usage = (type: ItemType): Promise<CacheUsage> =>
+      this.cache.usage(type);
     const [code, data, media] = await Promise.all([
       usage(ItemType.Code),
       usage(ItemType.Data),

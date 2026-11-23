@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   ItemType,
+  MemoryCache,
   type CacheBackend,
   type ItemMetadata,
   type StorageIntegration,
@@ -19,6 +20,13 @@ const cacheBackend = (items: ItemMetadata[]) =>
     list: vi.fn(async (type: ItemType, offset = 0, limit = 10) =>
       items.filter((i) => i.type === type).slice(offset, offset + limit)
     ),
+    usage: vi.fn(async (type: ItemType) => {
+      const ofType = items.filter((i) => i.type === type);
+      return {
+        items: ofType.length,
+        bytes: ofType.reduce((sum, i) => sum + i.size, 0),
+      };
+    }),
   }) as unknown as CacheBackend;
 
 const create = (machine: Partial<Machine>, items: ItemMetadata[] = []) =>
@@ -66,12 +74,33 @@ describe('Device telemetry', () => {
     });
   });
 
-  it('reads cache usage in bounded pages', async () => {
-    const items = Array.from({ length: 205 }, (_, i) =>
-      item(ItemType.Media, i + 1)
+  it('counts the cache correctly while it is being read (webOS memory cache)', async () => {
+    // MemoryCache moves an item to the end of its map on every read, so
+    // paging through list() while the player reads the cache would skip or
+    // double-count items. Reads between list() pages must not matter.
+    const urls = Array.from(
+      { length: 150 },
+      (_, i) => `https://castmill.test/medias/${i}.mp4`
     );
-    const cache = cacheBackend(items);
-    const list = vi.spyOn(cache, 'list');
+    const storage = {
+      init: async () => {},
+      listFiles: async () =>
+        urls.map((url, i) => ({
+          url: `http://127.0.0.1:9080/castmill-cache/${i}.mp4`,
+          size: i + 1,
+          sourceUrl: url,
+          type: ItemType.Media,
+        })),
+    } as unknown as StorageIntegration;
+    const cache = new MemoryCache(storage);
+    await cache.init();
+    const list = cache.list.bind(cache);
+    vi.spyOn(cache, 'list').mockImplementation(async (...args) => {
+      const page = await list(...args);
+      // The player reads an item of this page before the next page is listed.
+      if (page[0]) await cache.get(page[0].url);
+      return page;
+    });
     const device = new Device({} as Machine, {} as StorageIntegration, {
       cacheBackend: cache,
     });
@@ -79,14 +108,9 @@ describe('Device telemetry', () => {
     const telemetry = await device.getTelemetry();
 
     expect(telemetry.cache?.types.media).toEqual({
-      items: 205,
-      bytes: items.reduce((sum, cacheItem) => sum + cacheItem.size, 0),
+      items: 150,
+      bytes: (150 * 151) / 2,
     });
-    expect(list.mock.calls).toEqual([
-      [ItemType.Media, 0, 100],
-      [ItemType.Media, 100, 100],
-      [ItemType.Media, 200, 100],
-    ]);
   });
 
   it('falls back to the wall clock when performance.now is unavailable', async () => {
@@ -131,7 +155,7 @@ describe('Device telemetry', () => {
   it('omits cache statistics when the cache cannot be read', async () => {
     const device = new Device({} as Machine, {} as StorageIntegration, {
       cacheBackend: {
-        count: async () => {
+        usage: async () => {
           throw new Error('closed');
         },
       } as unknown as CacheBackend,
