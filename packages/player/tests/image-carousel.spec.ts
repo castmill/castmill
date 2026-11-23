@@ -290,6 +290,61 @@ describe('ImageCarousel', () => {
       expect(revoked).to.deep.equal(['blob:carousel-1']);
     });
 
+    for (const firstToUnload of [0, 1]) {
+      it(`reuses overlapping widget images until owner ${1 - firstToUnload} also unloads`, async () => {
+        const created: Blob[] = [];
+        const revoked: string[] = [];
+        dom.window.URL.createObjectURL = (blob: Blob) => {
+          created.push(blob);
+          return `blob:shared-${created.length}`;
+        };
+        dom.window.URL.revokeObjectURL = (url: string) => revoked.push(url);
+        const resourceManager = {
+          getMedia: async () => 'data:image/png;base64,AA==',
+        };
+        const roots = [0, 1].map(() => {
+          const root = dom.window.document.createElement('div');
+          dom.window.document.getElementById('root').appendChild(root);
+          return root;
+        });
+        const widgets = roots.map(
+          (_root, index) =>
+            new TemplateWidget(resourceManager as any, {
+              widget: {
+                name: `overlapping-${index}`,
+                template: {
+                  type: 'image-carousel',
+                  name: `overlapping-${index}`,
+                  opts: { images: ['https://img/1'], imageDuration: 5 },
+                },
+              } as any,
+              config: { options: {}, data: {} } as any,
+              globals: { target: 'poster' },
+            })
+        );
+        try {
+          for (let index = 0; index < widgets.length; index++) {
+            await firstValueFrom(widgets[index].show(roots[index], 0));
+          }
+          expect(created).to.have.length(1);
+          await widgets[firstToUnload].unload();
+          expect(revoked).to.deep.equal([]);
+          expect(
+            roots[1 - firstToUnload].querySelector('[data-component="image"]')
+              .style.backgroundImage
+          ).to.contain('blob:shared-1');
+          await widgets[1 - firstToUnload].unload();
+          expect(revoked).to.deep.equal(['blob:shared-1']);
+
+          await firstValueFrom(widgets[0].show(roots[0], 0));
+          expect(created).to.have.length(2);
+        } finally {
+          for (const widget of widgets) await widget.unload();
+        }
+        expect(revoked).to.deep.equal(['blob:shared-1', 'blob:shared-2']);
+      });
+    }
+
     it('keeps cached data URLs usable without Blob URL support', async () => {
       const source = 'data:image/png;base64,AA==';
       const widget = new TemplateWidget(

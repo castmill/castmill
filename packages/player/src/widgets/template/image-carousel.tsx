@@ -30,6 +30,16 @@ const TRANSITION_SECONDS = 1;
 const MEDIA_CACHE_TIMEOUT_MS = 5000;
 const IMAGE_LOAD_TIMEOUT_MS = 5000;
 
+interface CarouselImageUrl {
+  url: string;
+  users: number;
+}
+
+const sharedImageUrls = new WeakMap<
+  ResourceManager,
+  Map<string, CarouselImageUrl>
+>();
+
 /**
  * Tween vars for an image entering (start) and leaving (end) the carousel.
  * "slide" (default) slides and zooms; "fade" cross-fades in place.
@@ -231,7 +241,19 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
   let previousImageUrls: string[] | undefined;
   let previousImageDuration: number | undefined;
   let previousTransition: string | undefined;
-  const objectUrls = new Map<string, string>();
+  const objectUrls = new Map<string, CarouselImageUrl>();
+  const sharedObjectUrls =
+    sharedImageUrls.get(props.resourceManager) ||
+    new Map<string, CarouselImageUrl>();
+  sharedImageUrls.set(props.resourceManager, sharedObjectUrls);
+
+  const releaseImageUrl = (source: string, imageUrl: CarouselImageUrl) => {
+    objectUrls.delete(source);
+    if (--imageUrl.users === 0) {
+      window.URL.revokeObjectURL(imageUrl.url);
+      sharedObjectUrls.delete(source);
+    }
+  };
 
   const displayImageUrl = (source: string): string => {
     const match = /^data:(image\/[^;,]+(?:;[^,]*)?);base64,/i.exec(source);
@@ -244,7 +266,15 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       return source;
     }
     const existing = objectUrls.get(source);
-    if (existing) return existing;
+    if (existing) return existing.url;
+    // Incoming widgets overlap their predecessor while preparing. Reuse its
+    // decoded bytes without retaining an unbounded, permanent image cache.
+    const shared = sharedObjectUrls.get(source);
+    if (shared) {
+      shared.users++;
+      objectUrls.set(source, shared);
+      return shared.url;
+    }
 
     try {
       const decoded = window.atob(source.slice(match[0].length));
@@ -256,7 +286,9 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       const url = window.URL.createObjectURL(
         new window.Blob([bytes], { type: match[1] })
       );
-      objectUrls.set(source, url);
+      const imageUrl = { url, users: 1 };
+      sharedObjectUrls.set(source, imageUrl);
+      objectUrls.set(source, imageUrl);
       return url;
     } catch (error) {
       console.warn(
@@ -276,10 +308,9 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
         (child) => (child as HTMLElement).style.backgroundImage
       )
     );
-    objectUrls.forEach((objectUrl, dataUrl) => {
-      if (!activeBackgrounds.has(backgroundImageUrl(objectUrl))) {
-        window.URL.revokeObjectURL(objectUrl);
-        objectUrls.delete(dataUrl);
+    objectUrls.forEach((imageUrl, dataUrl) => {
+      if (!activeBackgrounds.has(backgroundImageUrl(imageUrl.url))) {
+        releaseImageUrl(dataUrl, imageUrl);
       }
     });
     return url;
@@ -413,8 +444,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     buildId++;
     props.timeline.remove(timelineItem);
     timeline.kill();
-    objectUrls.forEach((url) => window.URL.revokeObjectURL(url));
-    objectUrls.clear();
+    objectUrls.forEach((imageUrl, source) => releaseImageUrl(source, imageUrl));
   });
 
   createEffect(() => {

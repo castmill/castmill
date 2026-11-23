@@ -151,6 +151,39 @@ describe('time-dependent template updates', () => {
     }
   };
 
+  it('coalesces repeated fitted-text resize notifications into one fit per frame', async () => {
+    await withWidget(
+      {
+        type: 'text',
+        name: 'coalesced-autofit',
+        opts: { text: 'fitted', autofit: { baseSize: 1 } },
+      },
+      {},
+      async (root) => {
+        const span = root.querySelector('span')!;
+        const getRect = span.getBoundingClientRect.bind(span);
+        let measurements = 0;
+        span.getBoundingClientRect = () => {
+          measurements++;
+          return getRect();
+        };
+        for (let index = 0; index < 3; index++) {
+          window.dispatchEvent(new window.Event('resize'));
+        }
+        expect(measurements).to.equal(0);
+        await flush();
+        expect(measurements).to.equal(1);
+        expect(span.style.fontSize).to.equal('1em');
+
+        for (let index = 0; index < 3; index++) {
+          window.dispatchEvent(new window.Event('resize'));
+        }
+        await flush();
+        expect(measurements).to.equal(2);
+      }
+    );
+  });
+
   it('does not initialize transforms for fitted text that never scrolls', async () => {
     await withWidget(
       {

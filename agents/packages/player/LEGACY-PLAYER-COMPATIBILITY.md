@@ -24,6 +24,10 @@ Resolve later image URLs independently and update their backgrounds without
 rebuilding the timeline or delaying the first frame. Keep device playback's
 existing cache resolution and slot timing unchanged.
 
+Autofitted text keeps its initial synchronous fit for readiness. Coalesce later
+resize and content notifications into one animation-frame fit, using the latest
+text and container dimensions, and cancel queued work on cleanup.
+
 The legacy adapter player displays English-only UI on Android, WebOS, and
 Electron. Keep startup and diagnostics strings in English; do not add locale
 files or language selection to `packages/platforms/legacy-adapter-player/`.
@@ -70,6 +74,10 @@ preserve the MIME type and exact binary bytes, and revoke URLs after replacement
 or carousel cleanup. These URLs are render-only: cache metadata and IndexedDB
 must retain their original revisioned data URLs. This does not require storing
 Blobs in IndexedDB or changing the deployed Android APK.
+Overlapping carousels with the same resource manager share identical image
+URLs so incoming widgets do not repeat base64 decoding. Count carousel owners
+and revoke only after the last owner releases an image; do not keep an
+unbounded warm cache after all owners unload.
 
 Android's `castmill-android-files` IndexedDB database stores the complete file
 map, including data URL strings and native media references. Native `FILE_MAP`

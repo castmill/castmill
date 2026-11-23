@@ -428,15 +428,16 @@ export const Text: Component<TextProps> = (input) => {
       };
 
       fitText();
-      animationFrame = requestAnimationFrame(() => {
-        fitText();
-      });
-      stopObservingResize = observeTextContainerResize(textRef, () => {
-        fitText();
-      });
-      contentObserver = observeTextContentChanges(textRef, () => {
-        fitText();
-      });
+      const requestFit = () => {
+        if (animationFrame !== undefined) return;
+        animationFrame = requestAnimationFrame(() => {
+          animationFrame = undefined;
+          fitText();
+        });
+      };
+      requestFit();
+      stopObservingResize = observeTextContainerResize(textRef, requestFit);
+      contentObserver = observeTextContentChanges(textRef, requestFit);
     }
 
     props.onReady();
