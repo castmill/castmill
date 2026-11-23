@@ -5,7 +5,13 @@
  *
  */
 import { StorageBrowser } from '@castmill/cache';
-import { mountDevice, Device, BrowserMachine } from '@castmill/device';
+import {
+  mountDevice,
+  Device,
+  BrowserMachine,
+  CastmillOSMachine,
+  getCastmillOSBridge,
+} from '@castmill/device';
 import { enableDebugOverlayFromEnv } from '@castmill/player';
 
 // Inlined by esbuild from the VITE_DEBUG_OVERLAY environment variable, see
@@ -14,7 +20,12 @@ import { enableDebugOverlayFromEnv } from '@castmill/player';
 enableDebugOverlayFromEnv(import.meta.env?.VITE_DEBUG_OVERLAY);
 
 (async () => {
-  const browserMachine = new BrowserMachine();
+  // Inside the Castmill OS kiosk shell the device talks to the OS through
+  // its native bridge; in any other browser it is a plain web player.
+  const castmillOS = getCastmillOSBridge();
+  const machine = castmillOS
+    ? new CastmillOSMachine(castmillOS)
+    : new BrowserMachine();
   // The worker lives in /assets/ but must control the player page at "/".
   // The endpoint allows this scope with a Service-Worker-Allowed header.
   const browserCache = new StorageBrowser(
@@ -23,7 +34,7 @@ enableDebugOverlayFromEnv(import.meta.env?.VITE_DEBUG_OVERLAY);
     true,
     '/'
   );
-  const device = new Device(browserMachine, browserCache);
+  const device = new Device(machine, browserCache);
 
   await device.init();
   await browserCache.init();

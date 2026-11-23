@@ -34,6 +34,7 @@ agents/
 | AI Agents & MCP Server               | `agents/systems/AI-AGENTS-MCP.md`       |
 | Automations (event-driven actions)   | `agents/systems/AUTOMATIONS.md`         |
 | White-label email branding           | `agents/systems/EMAIL-BRANDING.md`      |
+| Castmill OS platform (Linux OS)      | `agents/systems/CASTMILL-OS.md`         |
 
 ## 🏗️ Project Structure
 
