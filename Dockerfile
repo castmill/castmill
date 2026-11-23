@@ -24,8 +24,8 @@ FROM ${BUILDER_IMAGE} AS builder
 RUN apt-get update -y && apt-get install -y build-essential git curl\
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
-# Install Nodejs@20
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x -o nodesource_setup.sh && bash nodesource_setup.sh
+# Install Nodejs@24
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x -o nodesource_setup.sh && bash nodesource_setup.sh
 RUN apt-get install -y nodejs
 
 # Copy all

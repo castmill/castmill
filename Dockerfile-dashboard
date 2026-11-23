@@ -1,5 +1,5 @@
 # Step 1: Building the frontend
-FROM node:20 AS builder
+FROM node:24 AS builder
 
 # Set the environment variable
 ARG VITE_API_URL

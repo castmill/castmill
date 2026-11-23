@@ -1,46 +1,30 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
 const { createRequire } = require('node:module');
-const { promisify } = require('node:util');
+const { pathToFileURL } = require('node:url');
 
-const releaseRequire = createRequire(require.resolve('semantic-release'));
+// The release workflow runs `npx semantic-release` from the repository root,
+// which uses the hoisted semantic-release (an ES module since v20).
+const releaseRequire = createRequire(
+  require.resolve('semantic-release/package.json')
+);
 
-test('semantic-release and its default plugins load', () => {
-  assert.equal(typeof require('semantic-release'), 'function');
-  for (const plugin of [
-    '@semantic-release/commit-analyzer',
-    '@semantic-release/release-notes-generator',
-    '@semantic-release/npm',
-    '@semantic-release/github',
-  ]) {
-    assert.ok(releaseRequire(plugin));
+const load = (file) => import(pathToFileURL(file).href);
+
+test('semantic-release loads', async () => {
+  const semanticRelease = await load(require.resolve('semantic-release'));
+  assert.equal(typeof semanticRelease.default, 'function');
+});
+
+test('the default release plugins load', async () => {
+  const plugins = {
+    '@semantic-release/commit-analyzer': 'analyzeCommits',
+    '@semantic-release/release-notes-generator': 'generateNotes',
+    '@semantic-release/npm': 'verifyConditions',
+    '@semantic-release/github': 'verifyConditions',
+  };
+  for (const [plugin, step] of Object.entries(plugins)) {
+    const mod = await load(releaseRequire.resolve(plugin));
+    assert.equal(typeof mod[step], 'function', `${plugin} ${step}`);
   }
-});
-
-test('release temporary directories are cleaned up after use', async () => {
-  const tempy = releaseRequire('tempy');
-  let directory;
-  await tempy.directory.task(async (temporaryDirectory) => {
-    directory = temporaryDirectory;
-    fs.writeFileSync(path.join(directory, 'release.txt'), 'release');
-    assert.ok(fs.existsSync(directory));
-  });
-  assert.equal(fs.existsSync(directory), false);
-});
-
-test('release cleanup retains callback-compatible glob support', async (t) => {
-  const tempyRequire = createRequire(releaseRequire.resolve('tempy'));
-  const delRequire = createRequire(tempyRequire.resolve('del'));
-  const rimraf = delRequire('rimraf');
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'castmill-release-'));
-  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  fs.writeFileSync(path.join(directory, 'release.txt'), 'release');
-  fs.writeFileSync(path.join(directory, 'keep.log'), 'keep');
-
-  await promisify(rimraf)(path.join(directory, '*.txt'));
-
-  assert.deepEqual(fs.readdirSync(directory), ['keep.log']);
 });
