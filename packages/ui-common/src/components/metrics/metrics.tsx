@@ -40,10 +40,7 @@ export const metricTone = (
 };
 
 /** Rounded percentage of `used` over `total`, clamped to 0-100. */
-export const usagePercent = (
-  used: number,
-  total: number
-): number | undefined =>
+export const usagePercent = (used: number, total: number): number | undefined =>
   total > 0 && Number.isFinite(used) && Number.isFinite(total)
     ? Math.min(100, Math.max(0, Math.round((used / total) * 100)))
     : undefined;
