@@ -67,6 +67,21 @@ in a hover/focus tooltip; omit successful application text while retaining
 pending, offline, unsupported-player, and error feedback.
 Registration and diagnostics are not part of the playback rotation subtree.
 
+## Device Health Overview
+
+The top of the device drawer's Overview tab is `DeviceHealth`
+(`addons/devices/components/device-health.tsx`). It fetches
+`GET /devices/:id/telemetry` while the device is online, refreshes every 60s
+and on demand, and discards stale responses. It renders memory, app (JS heap),
+storage and CPU gauges, online/player/system uptime, cache size, temperature
+and network tiles, plus a cache-by-type bar. The player adds `player`
+(`uptimeSeconds`, `connectedSeconds`, `heap`) and `cache` (`items`, `bytes`,
+`types`) to the platform telemetry (`DeviceTelemetryData` in
+`packages/device/src/interfaces/machine.ts`); every field is optional, so
+older players and platforms without a metric simply hide that cell. Build the
+UI only from the dependency-free ui-common metrics components; strings live
+under `devices.health` in all nine locales.
+
 ## Responsive App Shell
 
 The side panel (`components/sidepanel`) and top bar (`components/topbar`) adapt
