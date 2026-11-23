@@ -2,7 +2,8 @@
  * This storage integration uses the API provided by the legacy Android
  * Castmill player app. Compatible media uses native file storage with estimated
  * sizes and a 1GB capacity. Configuration, code, and bounded binary fallbacks
- * use authenticated XHR and persistent data URLs through the key/value API.
+ * use authenticated XHR and persistent data URLs in IndexedDB. Native preferences
+ * retain only a small database pointer, not the cached payloads.
  */
 
 import {
@@ -31,6 +32,11 @@ const TOTAL_STORAGE = 1e9; // 1GB
 const DOWNLOAD_TIMEOUT_MS = 30_000;
 const MAX_BINARY_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_BINARY_CACHE_BYTES = 8 * 1024 * 1024;
+const FILE_MAP_DATABASE = 'castmill-android-files';
+const FILE_MAP_POINTER = JSON.stringify({
+  indexedDB: FILE_MAP_DATABASE,
+  version: 1,
+});
 const BINARY_MIME_TYPES = new Map<string, string>([
   ['jpg', 'image/jpeg'],
   ['jpeg', 'image/jpeg'],
@@ -62,13 +68,13 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   private fileMap = new Map<string, FileData>();
   private fileRevision = Date.now();
   private fileMapWrites: Promise<void> = Promise.resolve();
+  private database?: IDBDatabase;
 
   constructor(storagePath: string) {
     this.storagePath = storagePath;
   }
 
-  private async loadFileMap(): Promise<Map<string, FileData>> {
-    const fileMap = await getItem('FILE_MAP');
+  private loadLegacyFileMap(fileMap: string | null): Map<string, FileData> {
     if (fileMap) {
       try {
         const parsed: unknown = JSON.parse(fileMap);
@@ -90,11 +96,120 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
         return new Map(parsed as Array<[string, FileData]>);
       } catch (err) {
         console.error('Error parsing file map', err);
-        await setItem('FILE_MAP', '[]');
       }
     }
 
     return new Map<string, FileData>();
+  }
+
+  private openDatabase(): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+      if (typeof indexedDB === 'undefined') {
+        reject(new Error('Android file cache requires IndexedDB'));
+        return;
+      }
+
+      let settled = false;
+      const request = indexedDB.open(FILE_MAP_DATABASE, 1);
+      const fail = (error: Error) => {
+        settled = true;
+        clearTimeout(timeout);
+        reject(error);
+      };
+      const timeout = setTimeout(
+        () => fail(new Error('Opening Android file cache timed out')),
+        DOWNLOAD_TIMEOUT_MS
+      );
+      request.onerror = () =>
+        fail(request.error || new Error('Opening Android file cache failed'));
+      request.onblocked = () =>
+        fail(new Error('Opening Android file cache is blocked'));
+      request.onupgradeneeded = () => {
+        if (settled) {
+          request.transaction?.abort();
+          return;
+        }
+        request.result.createObjectStore('files');
+      };
+      request.onsuccess = () => {
+        const database = request.result;
+        if (settled) {
+          database.close();
+          return;
+        }
+        settled = true;
+        clearTimeout(timeout);
+        database.onversionchange = () => database.close();
+        resolve(database);
+      };
+    });
+  }
+
+  private readFileMap(): Promise<Map<string, FileData>> {
+    return new Promise((resolve, reject) => {
+      const files = new Map<string, FileData>();
+      const transaction = this.database!.transaction('files', 'readonly');
+      const request = transaction.objectStore('files').openCursor();
+      let error: Error | undefined;
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (!cursor) return;
+        const file: unknown = cursor.value;
+        if (
+          typeof cursor.key !== 'string' ||
+          typeof file !== 'object' ||
+          file === null ||
+          !('url' in file) ||
+          typeof file.url !== 'string' ||
+          !('size' in file) ||
+          typeof file.size !== 'number'
+        ) {
+          error = new Error('Invalid Android IndexedDB file entry');
+          transaction.abort();
+          return;
+        }
+        files.set(cursor.key, { url: file.url, size: file.size });
+        cursor.continue();
+      };
+      transaction.oncomplete = () => resolve(files);
+      transaction.onabort = () =>
+        reject(
+          error ||
+            transaction.error ||
+            new Error('Reading Android file cache aborted')
+        );
+    });
+  }
+
+  private persistFileMap(
+    files: Map<string, FileData>,
+    replace = false
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const transaction = this.database!.transaction('files', 'readwrite');
+      transaction.oncomplete = () => resolve();
+      transaction.onabort = () =>
+        reject(
+          transaction.error || new Error('Writing Android file cache aborted')
+        );
+      try {
+        const store = transaction.objectStore('files');
+        if (replace) store.clear();
+        else {
+          for (const key of this.fileMap.keys()) {
+            if (!files.has(key)) store.delete(key);
+          }
+        }
+        for (const [key, file] of files) {
+          if (replace || this.fileMap.get(key) !== file) {
+            store.put(file, key);
+          }
+        }
+      } catch (error) {
+        transaction.abort();
+        reject(error);
+      }
+    });
   }
 
   private updateFileMap(
@@ -105,13 +220,11 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
       const started = performance.now();
       const updated = new Map(this.fileMap);
       update(updated);
-      const serialized = JSON.stringify(Array.from(updated.entries()));
-      const serializedAt = performance.now();
-      await setItem('FILE_MAP', serialized);
+      await this.persistFileMap(updated);
       this.fileMap = updated;
       if (import.meta.env.VITE_LOGGING === 'true') {
         console.log(
-          `[legacy performance] FILE_MAP entries=${updated.size} characters=${serialized.length} queue=${Math.round(started - queuedAt)}ms serialize=${Math.round(serializedAt - started)}ms bridge=${Math.round(performance.now() - serializedAt)}ms`
+          `[legacy performance] IndexedDB files=${updated.size} queue=${Math.round(started - queuedAt)}ms persist=${Math.round(performance.now() - started)}ms`
         );
       }
     });
@@ -124,7 +237,40 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   }
 
   async init(): Promise<void> {
-    this.fileMap = await this.loadFileMap();
+    if (this.database) return;
+    this.database = await this.openDatabase();
+    try {
+      const legacy = await getItem('FILE_MAP');
+      if (legacy === FILE_MAP_POINTER) {
+        this.fileMap = await this.readFileMap();
+        return;
+      }
+      const files = this.loadLegacyFileMap(legacy);
+      await this.persistFileMap(files, true);
+      const persisted = await this.readFileMap();
+      if (
+        persisted.size !== files.size ||
+        Array.from(files).some(
+          ([key, file]) =>
+            persisted.get(key)?.url !== file.url ||
+            persisted.get(key)?.size !== file.size
+        )
+      ) {
+        throw new Error('Android file cache migration verification failed');
+      }
+      // Publish only after commit and read-back; failed migrations retain FILE_MAP.
+      await setItem('FILE_MAP', FILE_MAP_POINTER);
+      this.fileMap = persisted;
+      if (import.meta.env.VITE_LOGGING === 'true') {
+        console.log(
+          `[legacy performance] Migrated ${files.size} Android cache entries to IndexedDB`
+        );
+      }
+    } catch (error) {
+      this.database.close();
+      this.database = undefined;
+      throw error;
+    }
   }
 
   async info(): Promise<StorageInfo> {
@@ -458,8 +604,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
 
     const mimeType =
       opts?.type === 'code' ? 'text/javascript' : 'application/json';
-    // Persist the payload through the wrapper's key/value API, not its ranged
-    // downloader. Data URLs also survive offline starts and content changes.
+    // Data URLs preserve offline reads without relying on IndexedDB Blob support.
     const item = {
       url: `data:${mimeType};charset=utf-8;castmill-revision=${this.fileRevision++},${encodeURIComponent(text)}`,
       size: new Blob([text]).size,
@@ -515,7 +660,9 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   }
 
   async close(): Promise<void> {
-    throw new Error('Method not implemented.');
+    await this.fileMapWrites;
+    this.database?.close();
+    this.database = undefined;
   }
 
   /*

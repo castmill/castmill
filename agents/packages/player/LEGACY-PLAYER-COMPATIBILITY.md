@@ -38,7 +38,7 @@ The Android adapter must not send JSON/configuration or widget code through the
 APK's native downloader: it assumes HEAD provides a nonnegative Content-Length
 and generates byte ranges from it. `Cache` and `MemoryCache` pass the item `type`
 to storage. Android uses authenticated XHR GETs for data/code and persists
-versioned data URLs in `FILE_MAP` for offline startup, without persisting headers.
+versioned data URLs in IndexedDB for offline reads, without persisting headers.
 Put revisions in the data URL's MIME parameters, never a `#fragment`: Crosswalk
 23/Chromium 53 includes that fragment in XHR responseText, breaking JSON/code.
 The fetch polyfill upgrades older fragment-versioned cache URLs while reading
@@ -55,13 +55,31 @@ which retains normal native cache eviction. Successful native media downloads,
 videos, and unrecognized media URLs keep the existing native path.
 
 Binary persistence is capped at 2 MiB per asset and 8 MiB total raw binary
-bytes in `FILE_MAP` (base64 adds about one-third). Abort oversized downloads
+bytes in the file cache (base64 adds about one-third). Abort oversized downloads
 using progress bytes even when the total is unknown, and check the final Blob
 size too. Reject empty, partial, non-image/font, or failed responses; never
 persist session-only blob URLs. Enforce the total budget inside serialized
 map writes and report capacity pressure through the cache's eviction path.
 Configuration/code do not count toward that binary budget. Failed downloads,
 encoding, and persistence must leave the old mapping intact.
+
+Android's `castmill-android-files` IndexedDB database stores the complete file
+map, including data URL strings and native media references. Native `FILE_MAP`
+contains only a compact database pointer. Keeping payloads in native preferences
+causes the unchanged APK's 30-second `LAST_SEEN` commit to serialize megabytes
+of XML on the Android UI thread.
+
+On upgrade, copy the old native map in one transaction, wait for completion,
+and read it back byte-for-byte before replacing native `FILE_MAP`. Keep cached
+URLs unchanged so existing `@castmill/cache` metadata and offline content still
+match. A failed migration must surface the error and retain the native map for
+retry. Subsequent writes/deletions are atomic IndexedDB transactions and do not
+rewrite native preferences. Use cursor/request events and plain objects/strings:
+do not require `getAll`, explicit transaction `commit`, or IndexedDB Blob support.
+Test large payloads, migration, offline reads and process restarts on physical
+Crosswalk hardware. The cache is origin-bound, and adapters predating this
+migration cannot read the new native pointer; do not roll back an offline player
+to an older adapter.
 
 Large incompatible media still needs hosting that supplies accurate HEAD
 lengths and actual `206` byte-range responses. The existing Android bridge

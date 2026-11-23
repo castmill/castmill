@@ -1,4 +1,5 @@
 import 'fake-indexeddb/auto';
+import IDBFactory from 'fake-indexeddb/lib/FDBFactory';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Cache, ItemType, ResourceManager } from '@castmill/cache';
@@ -6,9 +7,13 @@ import { BrowserMachine, Device } from '@castmill/device';
 import { AndroidLegacyFileStorage } from './android-legacy-file-storage';
 import '../polyfills/fetch';
 
+const native = vi.hoisted(() => ({ fileMap: null as string | null }));
+
 vi.mock('../android-legacy-api', () => ({
-  getItem: vi.fn().mockResolvedValue(null),
-  setItem: vi.fn().mockResolvedValue(undefined),
+  getItem: vi.fn(async () => native.fileMap),
+  setItem: vi.fn(async (_key: string, value: string) => {
+    native.fileMap = value;
+  }),
   downloadFile: vi
     .fn()
     .mockImplementation(
@@ -35,6 +40,18 @@ const responses = new Map<string, string>();
 const cachedReads: string[] = [];
 let binaryResponse: Blob | null = null;
 let progressLoaded = 0;
+
+function abortNextFileMapWrite() {
+  const put = IDBObjectStore.prototype.put;
+  vi.spyOn(IDBObjectStore.prototype, 'put').mockImplementationOnce(function (
+    this: IDBObjectStore,
+    ...args: Parameters<IDBObjectStore['put']>
+  ) {
+    const request = put.apply(this, args);
+    request.addEventListener('success', () => this.transaction.abort());
+    return request;
+  });
+}
 
 class MockXHR {
   method = '';
@@ -111,6 +128,24 @@ describe('AndroidLegacyFileStorage', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    native.fileMap = null;
+    vi.mocked(getItem)
+      .mockReset()
+      .mockImplementation(async () => native.fileMap);
+    vi.mocked(setItem)
+      .mockReset()
+      .mockImplementation(async (_key, value) => {
+        native.fileMap = value;
+      });
+    vi.mocked(downloadFile)
+      .mockReset()
+      .mockImplementation(
+        async (_url, localPath) => `content://com.castmill.files/${localPath}`
+      );
+    vi.mocked(fileExists).mockReset().mockResolvedValue(true);
+    vi.mocked(deleteFile).mockReset().mockResolvedValue(undefined);
+    vi.mocked(deletePath).mockReset().mockResolvedValue(undefined);
+    vi.stubGlobal('indexedDB', new IDBFactory());
     requests.length = 0;
     responses.clear();
     cachedReads.length = 0;
@@ -120,10 +155,229 @@ describe('AndroidLegacyFileStorage', () => {
     vi.stubGlobal('XMLHttpRequest', MockXHR);
     storage = new AndroidLegacyFileStorage('');
     await storage.init();
+    vi.mocked(setItem).mockClear();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await storage.close();
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
+  });
+
+  it('migrates legacy payloads without changing Cache identities and restores them offline', async () => {
+    const data = { data: [{ name: 'Å', id: 1 }] };
+    const text = JSON.stringify(data);
+    const entries = [
+      {
+        source: 'https://castmill.example/devices/migrated/channels',
+        file: {
+          url: `data:application/json;charset=utf-8;castmill-revision=1,${encodeURIComponent(text)}`,
+          size: new Blob([text]).size,
+        },
+        type: ItemType.Data,
+        mimeType: 'application/json',
+      },
+      {
+        source: 'https://castmill.example/fonts/migrated.otf',
+        file: {
+          url: 'data:font/otf;castmill-revision=2;base64,AAECAw==',
+          size: 4,
+        },
+        type: ItemType.Media,
+        mimeType: 'font/otf',
+      },
+      {
+        source: 'https://castmill.example/media/migrated.mp4',
+        file: { url: 'content://native-video', size: 100 },
+        type: ItemType.Media,
+        mimeType: 'video/mp4',
+      },
+    ];
+    await storage.close();
+    native.fileMap = JSON.stringify(
+      entries.map(({ source, file }) => [source, file])
+    );
+    storage = new AndroidLegacyFileStorage('');
+    const name = 'legacy-preferences-migration';
+    const cache = new Cache(storage, name, 10);
+    await cache.items.bulkPut(
+      entries.map(({ source, file, type, mimeType }) => ({
+        url: source,
+        cachedUrl: file.url,
+        size: file.size,
+        timestamp: Date.now(),
+        storedAt: Date.now(),
+        accessed: 0,
+        type,
+        mimeType,
+      }))
+    );
+    try {
+      await cache.init();
+      expect(native.fileMap!.length).toBeLessThan(150);
+      expect(native.fileMap).not.toContain('data:');
+      expect(await cache.items.count()).toBe(entries.length);
+      expect(await storage.listFiles()).toEqual(
+        entries.map(({ file }) => file)
+      );
+    } finally {
+      cache.close();
+      await storage.close();
+    }
+
+    storage = new AndroidLegacyFileStorage('');
+    const offline = new Cache(storage, name, 10);
+    const resources = new ResourceManager(offline);
+    response.event = 'error';
+    try {
+      await resources.init();
+      expect(await resources.getData(entries[0].source, 1000)).toEqual(data);
+      expect(await resources.getMedia(entries[1].source)).toBe(
+        entries[1].file.url
+      );
+      expect(await resources.getMedia(entries[2].source)).toBe(
+        entries[2].file.url
+      );
+      expect(requests).toHaveLength(0);
+      expect(downloadFile).not.toHaveBeenCalled();
+      expect(setItem).toHaveBeenCalledOnce();
+    } finally {
+      offline.close();
+    }
+  });
+
+  it('keeps native payloads intact if the migration transaction aborts and can retry', async () => {
+    await storage.close();
+    const source = 'https://castmill.example/migration/channels';
+    const file = { url: 'data:application/json,%7B%7D', size: 2 };
+    native.fileMap = JSON.stringify([[source, file]]);
+    const legacy = native.fileMap;
+    abortNextFileMapWrite();
+
+    await expect(storage.init()).rejects.toThrow();
+    expect(native.fileMap).toBe(legacy);
+    expect(setItem).not.toHaveBeenCalled();
+
+    await storage.init();
+    expect(await storage.retrieveFile(source)).toBe(file.url);
+    expect(native.fileMap).not.toBe(legacy);
+  });
+
+  it('does not publish the migration if IndexedDB read-back differs', async () => {
+    await storage.close();
+    native.fileMap = JSON.stringify([
+      ['source', { url: 'data:application/json,%7B%7D', size: 2 }],
+    ]);
+    const legacy = native.fileMap;
+    const put = IDBObjectStore.prototype.put;
+    vi.spyOn(IDBObjectStore.prototype, 'put').mockImplementationOnce(function (
+      this: IDBObjectStore,
+      _value: unknown,
+      key?: IDBValidKey
+    ) {
+      return put.call(
+        this,
+        { url: 'data:application/json,changed', size: 2 },
+        key
+      );
+    });
+
+    await expect(storage.init()).rejects.toThrow(
+      'migration verification failed'
+    );
+    expect(native.fileMap).toBe(legacy);
+    expect(setItem).not.toHaveBeenCalled();
+  });
+
+  it('retains the legacy map if publishing the database pointer fails', async () => {
+    await storage.close();
+    const source = 'https://castmill.example/migration/code.js';
+    const file = { url: 'data:text/javascript,void%200', size: 6 };
+    native.fileMap = JSON.stringify([[source, file]]);
+    const legacy = native.fileMap;
+    vi.mocked(setItem).mockRejectedValueOnce(new Error('Bridge write failed'));
+
+    await expect(storage.init()).rejects.toThrow('Bridge write failed');
+    expect(native.fileMap).toBe(legacy);
+    await storage.init();
+    expect(await storage.retrieveFile(source)).toBe(file.url);
+  });
+
+  it('fails explicitly without IndexedDB and leaves native storage untouched', async () => {
+    await storage.close();
+    const legacy = JSON.stringify([
+      ['source', { url: 'data:application/json,%7B%7D', size: 2 }],
+    ]);
+    native.fileMap = legacy;
+    vi.stubGlobal('indexedDB', undefined);
+
+    await expect(storage.init()).rejects.toThrow('requires IndexedDB');
+    expect(native.fileMap).toBe(legacy);
+    expect(setItem).not.toHaveBeenCalled();
+  });
+
+  it('persists and restores payloads without getAll, explicit commit, or IndexedDB Blobs', async () => {
+    const getAll = vi
+      .spyOn(IDBObjectStore.prototype, 'getAll')
+      .mockImplementation(() => {
+        throw new Error('Legacy IndexedDB does not support getAll');
+      });
+    const commit =
+      typeof IDBTransaction.prototype.commit === 'function'
+        ? vi
+            .spyOn(IDBTransaction.prototype, 'commit')
+            .mockImplementation(() => {
+              throw new Error('Legacy IndexedDB does not support commit');
+            })
+        : undefined;
+    const source = 'https://broker.images.castmill.io/legacy-persistence';
+    binaryResponse = new Blob([new Uint8Array(2 * 1024 * 1024)], {
+      type: 'image/jpeg',
+    });
+    const stored = await storage.storeFile(source, { type: 'media' });
+    expect(stored.result.code).toBe('SUCCESS');
+    await storage.close();
+    storage = new AndroidLegacyFileStorage('');
+    await storage.init();
+    expect(await storage.retrieveFile(source)).toBe(stored.item!.url);
+    expect(await storage.listFiles()).toEqual([stored.item]);
+    expect(getAll).not.toHaveBeenCalled();
+    if (commit) expect(commit).not.toHaveBeenCalled();
+    expect(setItem).not.toHaveBeenCalled();
+  });
+
+  it('preserves committed payloads after a synchronous quota failure', async () => {
+    const source = 'https://castmill.example/quota/channels';
+    const first = await storage.storeFile(source, { type: 'data' });
+    vi.spyOn(IDBObjectStore.prototype, 'put').mockImplementationOnce(() => {
+      throw new DOMException('Storage quota exceeded', 'QuotaExceededError');
+    });
+    response.text = '{"changed":true}';
+    const second = await storage.storeFile(source, { type: 'data' });
+    expect(second.result.code).toBe('FAILURE');
+    await storage.close();
+    storage = new AndroidLegacyFileStorage('');
+    await storage.init();
+    expect(await storage.retrieveFile(source)).toBe(first.item!.url);
+  });
+
+  it('persists deletions and cache clearing across reopen without native payload writes', async () => {
+    const first = 'https://castmill.example/clear/first';
+    const second = 'https://castmill.example/clear/second';
+    await storage.storeFile(first, { type: 'data' });
+    await storage.storeFile(second, { type: 'data' });
+    await storage.deleteFile(first);
+    await storage.close();
+    storage = new AndroidLegacyFileStorage('');
+    await storage.init();
+    expect(await storage.retrieveFile(first)).toBeUndefined();
+    expect(await storage.retrieveFile(second)).toMatch(/^data:/);
+    await storage.deleteAllFiles();
+    await storage.close();
+    storage = new AndroidLegacyFileStorage('');
+    await storage.init();
+    expect(await storage.listFiles()).toEqual([]);
+    expect(setItem).not.toHaveBeenCalled();
   });
 
   it('uses a new local URI when the same source URL is rewritten', async () => {
@@ -156,7 +410,7 @@ describe('AndroidLegacyFileStorage', () => {
 
     expect(deleteFile).toHaveBeenCalledWith(stored.item!.url);
     expect(await storage.retrieveFile(url)).toBeUndefined();
-    expect(setItem).toHaveBeenLastCalledWith('FILE_MAP', '[]');
+    expect(setItem).not.toHaveBeenCalled();
     expect(getItem).toHaveBeenCalledWith('FILE_MAP');
   });
 
@@ -189,7 +443,7 @@ describe('AndroidLegacyFileStorage', () => {
     storage = new AndroidLegacyFileStorage('');
 
     await expect(storage.init()).resolves.toBeUndefined();
-    expect(setItem).toHaveBeenCalledWith('FILE_MAP', '[]');
+    expect(JSON.parse(native.fileMap!)).toMatchObject({ version: 1 });
 
     const stored = await storage.storeFile(
       'https://castmill.example/media/recovered.png',
@@ -238,7 +492,7 @@ describe('AndroidLegacyFileStorage', () => {
     await storage.init();
 
     expect(await storage.listFiles()).toEqual([]);
-    expect(setItem).toHaveBeenCalledWith('FILE_MAP', '[]');
+    expect(JSON.parse(native.fileMap!)).toMatchObject({ version: 1 });
   });
 
   it('removes mappings whose native files have disappeared', async () => {
@@ -256,7 +510,7 @@ describe('AndroidLegacyFileStorage', () => {
     await storage.init();
 
     await expect(storage.listFiles()).resolves.toEqual([]);
-    expect(setItem).toHaveBeenLastCalledWith('FILE_MAP', '[]');
+    expect(JSON.parse(native.fileMap!)).toMatchObject({ version: 1 });
   });
 
   it('keeps mappings when an older Android wrapper lacks fileExists', async () => {
@@ -304,7 +558,7 @@ describe('AndroidLegacyFileStorage', () => {
 
     expect(deletePath).toHaveBeenCalledWith('');
     expect(await storage.listFiles()).toEqual([]);
-    expect(setItem).toHaveBeenLastCalledWith('FILE_MAP', '[]');
+    expect(setItem).not.toHaveBeenCalled();
   });
 
   it.each(['channels', 'automations'])(
@@ -333,7 +587,7 @@ describe('AndroidLegacyFileStorage', () => {
         });
         expect(requests[0].getResponseHeader()).toBeNull();
         expect(downloadFile).not.toHaveBeenCalled();
-        const saved = vi.mocked(setItem).mock.calls.at(-1)![1];
+        const saved = native.fileMap!;
         expect(saved).not.toContain('test-token');
 
         cache.close();
@@ -404,7 +658,7 @@ describe('AndroidLegacyFileStorage', () => {
     await storage.deleteFile(second.item!.url);
     expect(await storage.retrieveFile(url)).toBeUndefined();
     expect(deleteFile).not.toHaveBeenCalled();
-    expect(setItem).toHaveBeenLastCalledWith('FILE_MAP', '[]');
+    expect(setItem).not.toHaveBeenCalled();
   });
 
   it('keeps distinct cache identities for resources with identical content', async () => {
@@ -418,26 +672,18 @@ describe('AndroidLegacyFileStorage', () => {
     expect(await storage.retrieveFile(automations)).toBe(second.item?.url);
   });
 
-  it('preserves concurrently downloaded configuration in the persisted map', async () => {
-    let finishWrite!: () => void;
-    vi.mocked(setItem).mockImplementationOnce(
-      () =>
-        new Promise<void>((resolve) => {
-          finishWrite = resolve;
-        })
-    );
+  it('preserves concurrently downloaded configuration in IndexedDB without rewriting preferences', async () => {
     const channels = 'https://castmill.example/devices/1/channels';
     const automations = 'https://castmill.example/devices/1/automations';
     const first = storage.storeFile(channels, { type: 'data' });
     const second = storage.storeFile(automations, { type: 'data' });
-    await vi.waitFor(() => expect(setItem).toHaveBeenCalledOnce());
-    finishWrite();
     const stored = await Promise.all([first, second]);
-    const saved = JSON.parse(vi.mocked(setItem).mock.calls.at(-1)![1]);
-    expect(saved).toEqual([
-      [channels, stored[0].item],
-      [automations, stored[1].item],
-    ]);
+    await storage.close();
+    storage = new AndroidLegacyFileStorage('');
+    await storage.init();
+    expect(await storage.retrieveFile(channels)).toBe(stored[0].item!.url);
+    expect(await storage.retrieveFile(automations)).toBe(stored[1].item!.url);
+    expect(setItem).not.toHaveBeenCalled();
   });
 
   it('loads unknown-length configuration and reaches scheduled playback after registration', async () => {
@@ -574,7 +820,7 @@ describe('AndroidLegacyFileStorage', () => {
     const url = 'https://castmill.example/devices/1/channels';
     const first = await storage.storeFile(url, { type: 'data' });
     response.text = '{"data":[1]}';
-    vi.mocked(setItem).mockRejectedValueOnce(new Error('Storage write failed'));
+    abortNextFileMapWrite();
     const second = await storage.storeFile(url, { type: 'data' });
     expect(second.result.code).toBe('FAILURE');
     expect(await storage.retrieveFile(url)).toBe(first.item?.url);
@@ -628,7 +874,7 @@ describe('AndroidLegacyFileStorage', () => {
         headers: { Authorization: 'Bearer test-token' },
       });
       expect(downloadFile).not.toHaveBeenCalled();
-      const saved = vi.mocked(setItem).mock.calls.at(-1)![1];
+      const saved = native.fileMap!;
       expect(saved).not.toContain('test-token');
 
       vi.mocked(getItem).mockResolvedValueOnce(saved);
@@ -910,7 +1156,7 @@ describe('AndroidLegacyFileStorage', () => {
       expect(cachedUrl).toMatch(/^data:image\/jpeg;/);
       expect(await cache.items.count()).toBe(4);
       expect(await storage.retrieveFile(urls[0])).toBeUndefined();
-      const saved = vi.mocked(setItem).mock.calls.at(-1)![1];
+      const saved = native.fileMap!;
       cache.close();
 
       vi.mocked(getItem).mockResolvedValueOnce(saved);
@@ -939,7 +1185,7 @@ describe('AndroidLegacyFileStorage', () => {
     binaryResponse = new Blob(['first'], { type: 'image/jpeg' });
     const first = await storage.storeFile(url, { type: 'media' });
     binaryResponse = new Blob(['second'], { type: 'image/jpeg' });
-    vi.mocked(setItem).mockRejectedValueOnce(new Error('Storage write failed'));
+    abortNextFileMapWrite();
     const second = await storage.storeFile(url, { type: 'media' });
     expect(second.result.code).toBe('FAILURE');
     expect(await storage.retrieveFile(url)).toBe(first.item?.url);
