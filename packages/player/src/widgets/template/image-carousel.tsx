@@ -226,10 +226,64 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     )
   );
   let buildId = 0;
+  let hasBuiltTimeline = false;
   let hasReportedReady = false;
   let previousImageUrls: string[] | undefined;
   let previousImageDuration: number | undefined;
   let previousTransition: string | undefined;
+  const objectUrls = new Map<string, string>();
+
+  const displayImageUrl = (source: string): string => {
+    const match = /^data:(image\/[^;,]+(?:;[^,]*)?);base64,/i.exec(source);
+    if (
+      !match ||
+      typeof window.URL?.createObjectURL !== 'function' ||
+      typeof window.URL?.revokeObjectURL !== 'function' ||
+      typeof window.Blob !== 'function'
+    ) {
+      return source;
+    }
+    const existing = objectUrls.get(source);
+    if (existing) return existing;
+
+    try {
+      const decoded = window.atob(source.slice(match[0].length));
+      const bytes = new Uint8Array(decoded.length);
+      for (let index = 0; index < decoded.length; index++) {
+        bytes[index] = decoded.charCodeAt(index);
+      }
+      // Keep megabytes of base64 out of animated CSS; cache identities stay intact.
+      const url = window.URL.createObjectURL(
+        new window.Blob([bytes], { type: match[1] })
+      );
+      objectUrls.set(source, url);
+      return url;
+    } catch (error) {
+      console.warn(
+        'Could not create carousel image object URL, using data URL',
+        error
+      );
+      return source;
+    }
+  };
+
+  const setImageBackground = (image: HTMLElement, source: string): string => {
+    const url = displayImageUrl(source);
+    image.style.backgroundImage = backgroundImageUrl(url);
+    const activeBackgrounds = new Set(
+      Array.from(
+        parentRef?.children || [],
+        (child) => (child as HTMLElement).style.backgroundImage
+      )
+    );
+    objectUrls.forEach((objectUrl, dataUrl) => {
+      if (!activeBackgrounds.has(backgroundImageUrl(objectUrl))) {
+        window.URL.revokeObjectURL(objectUrl);
+        objectUrls.delete(dataUrl);
+      }
+    });
+    return url;
+  };
 
   const buildTimeline = async () => {
     const imageUrls = props.opts.images || [];
@@ -261,8 +315,8 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
         ]);
         if (currentBuild !== buildId) return;
         urls[index] = url;
-        images[index].style.backgroundImage = backgroundImageUrl(url);
-        if (index === 0) await preloadCarouselImages([url]);
+        const displayUrl = setImageBackground(images[index], url);
+        if (index === 0) await preloadCarouselImages([displayUrl]);
       });
       // Only the first frame gates a paused preview; later photos load independently.
       await loading[0];
@@ -270,7 +324,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       urls = await resolveCarouselImageUrls(props.resourceManager, sources);
       if (currentBuild !== buildId) return;
       urls.forEach((url, index) => {
-        images[index].style.backgroundImage = backgroundImageUrl(url);
+        setImageBackground(images[index], url);
       });
     }
     // A newer build (the images changed meanwhile) or a cleanup supersedes it.
@@ -281,10 +335,17 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     timeline.clear();
 
     images.forEach((image) => {
-      // Undo a previous build's transitions, as on a first render.
-      gsap.set(image, {
-        clearProps: 'transform,opacity,visibility',
-      });
+      // Fresh, unstyled images need no CSSPlugin initialization or layout read.
+      if (
+        hasBuiltTimeline ||
+        image.style.transform ||
+        image.style.opacity ||
+        image.style.visibility
+      ) {
+        gsap.set(image, {
+          clearProps: 'transform,opacity,visibility',
+        });
+      }
     });
 
     const targetArgs = {
@@ -339,6 +400,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     // Show the first image now: seeking a timeline that is already at 0
     // renders nothing, so it would stay hidden until playback moves.
     timeline.render(0, false, true);
+    hasBuiltTimeline = true;
     timelineItem.start = props.timeline.isRunning() ? props.timeline.time : 0;
     props.timeline.add(timelineItem);
     if (!hasReportedReady) {
@@ -351,6 +413,8 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     buildId++;
     props.timeline.remove(timelineItem);
     timeline.kill();
+    objectUrls.forEach((url) => window.URL.revokeObjectURL(url));
+    objectUrls.clear();
   });
 
   createEffect(() => {

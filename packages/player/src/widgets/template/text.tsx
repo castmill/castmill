@@ -294,6 +294,7 @@ export const Text: Component<TextProps> = (input) => {
   });
 
   const resetScrollTimeline = () => {
+    const wasScrolling = scrollTimeline !== undefined;
     if (timelineItem) {
       props.timeline.remove(timelineItem);
       timelineItem = undefined;
@@ -305,7 +306,7 @@ export const Text: Component<TextProps> = (input) => {
     }
 
     const element = textRef;
-    if (!element) {
+    if (!element || !wasScrolling) {
       return;
     }
 

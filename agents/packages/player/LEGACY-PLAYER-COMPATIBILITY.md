@@ -63,6 +63,14 @@ map writes and report capacity pressure through the cache's eviction path.
 Configuration/code do not count toward that binary budget. Failed downloads,
 encoding, and persistence must leave the old mapping intact.
 
+Image carousels convert cached base64 image data URLs to temporary Blob URLs
+before assigning CSS backgrounds. Megabyte-sized data URLs in animated inline
+styles stall old Crosswalk during transitions. Feature-detect the Blob URL APIs,
+preserve the MIME type and exact binary bytes, and revoke URLs after replacement
+or carousel cleanup. These URLs are render-only: cache metadata and IndexedDB
+must retain their original revisioned data URLs. This does not require storing
+Blobs in IndexedDB or changing the deployed Android APK.
+
 Android's `castmill-android-files` IndexedDB database stores the complete file
 map, including data URL strings and native media references. Native `FILE_MAP`
 contains only a compact database pointer. Keeping payloads in native preferences

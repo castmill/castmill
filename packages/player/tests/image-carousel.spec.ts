@@ -211,6 +211,197 @@ describe('ImageCarousel', () => {
       });
     });
 
+    it('renders and preloads exact cached bytes through reusable, render-only blob URLs', async () => {
+      const source =
+        'data:image/png;charset=iso-8859-1;castmill-revision=123;base64,AAECA/7/';
+      const blobs: Blob[] = [];
+      const revoked: string[] = [];
+      dom.window.URL.createObjectURL = (blob: Blob) => {
+        blobs.push(blob);
+        return `blob:carousel-${blobs.length}`;
+      };
+      dom.window.URL.revokeObjectURL = (url: string) => revoked.push(url);
+      const preloads: Array<{ src: string }> = [];
+      globals.Image = class {
+        complete = true;
+        naturalWidth = 100;
+        onload = null;
+        onerror = null;
+        src = '';
+        constructor() {
+          preloads.push(this);
+        }
+      };
+      const lookups: string[] = [];
+      const widget = new TemplateWidget(
+        {
+          getMedia: async (url: string) => {
+            lookups.push(url);
+            return source;
+          },
+        } as any,
+        {
+          widget: {
+            name: 'binary-carousel',
+            template: {
+              type: 'image-carousel',
+              name: 'binary-carousel',
+              opts: {
+                images: ['https://img/1', 'https://img/2'],
+                imageDuration: 5,
+                transition: 'fade',
+              },
+            },
+          } as any,
+          config: { options: {}, data: {} } as any,
+          globals: { target: 'preview', freezePreviewDuringLoad: true },
+        }
+      );
+      try {
+        await firstValueFrom(
+          widget.show(dom.window.document.getElementById('root'), 0)
+        );
+        await flush();
+        expect(blobs).to.have.length(1);
+        expect(blobs[0].type).to.equal(
+          'image/png;charset=iso-8859-1;castmill-revision=123'
+        );
+        const bytes = await new Promise<Uint8Array>((resolve, reject) => {
+          const reader = new dom.window.FileReader();
+          reader.onload = () =>
+            resolve(new Uint8Array(reader.result as ArrayBuffer));
+          reader.onerror = () => reject(reader.error);
+          reader.readAsArrayBuffer(blobs[0]);
+        });
+        expect(Array.from(bytes)).to.deep.equal([0, 1, 2, 3, 254, 255]);
+        const images = dom.window.document.querySelectorAll(
+          '[data-component="image"]'
+        );
+        expect(images[0].style.backgroundImage).to.contain('blob:carousel-1');
+        expect(images[1].style.backgroundImage).to.contain('blob:carousel-1');
+        expect(preloads[0].src).to.equal('blob:carousel-1');
+        await firstValueFrom(widget.seek(6500));
+        expect(images[1].style.opacity).to.equal('1');
+        expect(revoked).to.deep.equal([]);
+        expect(lookups).to.deep.equal(['https://img/1', 'https://img/2']);
+      } finally {
+        await widget.unload();
+      }
+      expect(revoked).to.deep.equal(['blob:carousel-1']);
+    });
+
+    it('keeps cached data URLs usable without Blob URL support', async () => {
+      const source = 'data:image/png;base64,AA==';
+      const widget = new TemplateWidget(
+        { getMedia: async () => source } as any,
+        {
+          widget: {
+            name: 'unsupported-blob-carousel',
+            template: {
+              type: 'image-carousel',
+              name: 'unsupported-blob-carousel',
+              opts: { images: ['https://img/1'], imageDuration: 5 },
+            },
+          } as any,
+          config: { options: {}, data: {} } as any,
+          globals: { target: 'poster' },
+        }
+      );
+      try {
+        await firstValueFrom(
+          widget.show(dom.window.document.getElementById('root'), 0)
+        );
+        expect(
+          dom.window.document.querySelector('[data-component="image"]').style
+            .backgroundImage
+        ).to.contain(source);
+      } finally {
+        await widget.unload();
+      }
+    });
+
+    it('does not allocate blob URLs for late preview loads after cleanup', async () => {
+      const created: Blob[] = [];
+      const revoked: string[] = [];
+      dom.window.URL.createObjectURL = (blob: Blob) => {
+        created.push(blob);
+        return `blob:preview-${created.length}`;
+      };
+      dom.window.URL.revokeObjectURL = (url: string) => revoked.push(url);
+      let resolveLater: ((url: string) => void) | undefined;
+      const widget = new TemplateWidget(
+        {
+          getMedia: (url: string) =>
+            url.endsWith('/1')
+              ? Promise.resolve('data:image/png;base64,AA==')
+              : new Promise<string>((resolve) => {
+                  resolveLater = resolve;
+                }),
+        } as any,
+        {
+          widget: {
+            name: 'late-blob-carousel',
+            template: {
+              type: 'image-carousel',
+              name: 'late-blob-carousel',
+              opts: {
+                images: ['https://img/1', 'https://img/2'],
+                imageDuration: 5,
+              },
+            },
+          } as any,
+          config: { options: {}, data: {} } as any,
+          globals: { target: 'preview', freezePreviewDuringLoad: true },
+        }
+      );
+      await firstValueFrom(
+        widget.show(dom.window.document.getElementById('root'), 0)
+      );
+      await widget.unload();
+      resolveLater!('data:image/png;base64,AQ==');
+      await flush();
+      expect(created).to.have.length(1);
+      expect(revoked).to.deep.equal(['blob:preview-1']);
+    });
+
+    it('does not clear transforms on fresh carousel images', async () => {
+      const prototype = dom.window.CSSStyleDeclaration.prototype;
+      const removeProperty = prototype.removeProperty;
+      let transformClears = 0;
+      prototype.removeProperty = function (property: string) {
+        if (property === 'transform' && this.backgroundImage) transformClears++;
+        return removeProperty.call(this, property);
+      };
+      const widget = new TemplateWidget(
+        { getMedia: async (url: string) => url } as any,
+        {
+          widget: {
+            name: 'fresh-carousel',
+            template: {
+              type: 'image-carousel',
+              name: 'fresh-carousel',
+              opts: {
+                images: ['https://img/1', 'https://img/2'],
+                imageDuration: 5,
+                transition: 'fade',
+              },
+            },
+          } as any,
+          config: { options: {}, data: {} } as any,
+          globals: { target: 'poster' },
+        }
+      );
+      try {
+        await firstValueFrom(
+          widget.show(dom.window.document.getElementById('root'), 0)
+        );
+        expect(transformClears).to.equal(0);
+      } finally {
+        await widget.unload();
+        prototype.removeProperty = removeProperty;
+      }
+    });
+
     it('cross-fades images in order even when downloads finish out of order', async function () {
       this.timeout(6000);
       const delays: Record<string, number> = {

@@ -151,6 +151,63 @@ describe('time-dependent template updates', () => {
     }
   };
 
+  it('does not initialize transforms for fitted text that never scrolls', async () => {
+    await withWidget(
+      {
+        type: 'text',
+        name: 'static-fitted-text',
+        opts: { text: 'Static text', autofit: { baseSize: 1 } },
+      },
+      {},
+      async (root) => {
+        await flush();
+        const span = root.querySelector('[data-component="text"] span')!;
+        expect((span as HTMLElement).style.transform).to.equal('');
+        globals.window.dispatchEvent(new globals.window.Event('resize'));
+        await flush();
+        expect((span as HTMLElement).style.transform).to.equal('');
+      }
+    );
+  });
+
+  it('resets an actual scroll transform when updated text no longer needs scrolling', async () => {
+    const later = new Date(2026, 0, 1, 11, 0).getTime();
+    await withWidget(
+      {
+        type: 'text',
+        name: 'scroll-reset',
+        opts: {
+          text: {
+            cond: { key: '@now', gte: later, then: 'After', else: 'Before' },
+          },
+          autofit: {
+            baseSize: 1,
+            minSize: {
+              cond: { key: '@now', gte: later, then: 0, else: 2 },
+            },
+          },
+        },
+      },
+      {},
+      async (root, widget, _media, advanceClock) => {
+        const span = root.querySelector(
+          '[data-component="text"] span'
+        ) as HTMLElement;
+        const x = () =>
+          Number(
+            /translate(?:3d)?\(([-\d.]+)/.exec(span.style.transform)?.[1] || 0
+          );
+        await flush();
+        await firstValueFrom(widget.seek(1500));
+        expect(x(), span.style.transform).to.be.lessThan(0);
+        advanceClock();
+        await flush();
+        expect(span.textContent).to.equal('After');
+        expect(x()).to.equal(0);
+      }
+    );
+  });
+
   it('reuses resolved text options during layout while preserving clock updates', async () => {
     let reads = 0;
     await withWidget(
@@ -329,6 +386,54 @@ describe('time-dependent template updates', () => {
         expect(media).to.have.length(initialMediaCount);
       }
     );
+  });
+
+  it('revokes replaced carousel blob URLs without revoking retained images', async () => {
+    const created: Blob[] = [];
+    const revoked: string[] = [];
+    await withWidget(
+      {
+        type: 'image-carousel',
+        name: 'blob-clock-carousel',
+        opts: {
+          images: {
+            list: {
+              key: 'data.images',
+              where: [{ key: '$.until', gte: '@now' }],
+              item: { key: '$.src' },
+            },
+          },
+          imageDuration: 2,
+        },
+      },
+      {
+        images: [
+          { src: 'expired.jpg', until: '2026-01-01T10:30:00' },
+          { src: 'current.jpg', until: '2026-01-01T12:00:00' },
+        ],
+      },
+      async (root, _widget, _media, advanceClock) => {
+        expect(created).to.have.length(2);
+        expect(revoked).to.deep.equal([]);
+        advanceClock();
+        await flush();
+        expect(created).to.have.length(2);
+        expect(revoked).to.deep.equal(['blob:clock-1']);
+        expect(
+          root.querySelector('[data-component="image"]')?.getAttribute('style')
+        ).to.contain('blob:clock-2');
+      },
+      () => {
+        window.URL.createObjectURL = (blob: Blob) => {
+          created.push(blob);
+          return `blob:clock-${created.length}`;
+        };
+        window.URL.revokeObjectURL = (url: string) => revoked.push(url);
+      },
+      async (url) =>
+        `data:image/png;base64,${url === 'expired.jpg' ? 'AA==' : 'AQ=='}`
+    );
+    expect(revoked).to.deep.equal(['blob:clock-1', 'blob:clock-2']);
   });
 
   it('rebuilds an unchanged carousel when its resolved transition changes', async () => {
