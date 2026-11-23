@@ -310,6 +310,21 @@ bubbling `input` and `change` events, so components keep using plain
 `<select onChange>`. `multiple`, `size > 1`, disabled selects and
 `data-native-select` (`NATIVE_SELECT_ATTRIBUTE`) are left native.
 
+### Metrics (`MetricGauge`, `StatTile`, `SegmentedBar`, `MetricGrid`)
+
+Dependency-free building blocks for health or usage dashboards (used by the
+device Overview health section). `MetricGauge` is an SVG 270° arc with
+`role="meter"`; `StatTile` shows an icon, label, value and hint;
+`SegmentedBar` is a stacked bar with a legend; `MetricGrid` is an auto-fit
+grid whose columns shrink to one on narrow containers (`minItemWidth`, em).
+Colour comes from a `tone` (`neutral | info | success | warning | error`)
+mapped to `--cm-*` tokens, so they work in light and dark themes. Use
+`metricTone(value, thresholds)` (`invert` for "higher is better" values such
+as signal strength), `usagePercent(used, total)` and `USAGE_THRESHOLDS`
+(warning 70, critical 90) instead of re-implementing thresholds. Cells use
+`--metric-cell-bg` (default `--cm-bg-elevated`) so they contrast inside a
+`SectionCard`.
+
 ### TableViewRef Interface
 
 Provides methods to interact with the table programmatically.
@@ -521,6 +536,14 @@ import {
   Filter,
   ToolBar,
   CircularProgress,
+
+  // Metrics
+  MetricGauge,
+  StatTile,
+  SegmentedBar,
+  MetricGrid,
+  metricTone,
+  usagePercent,
   
   // Interfaces
   SortOptions,

@@ -1359,6 +1359,24 @@
       "currentlyPlaying": "Derzeit vom Kanal geplant",
       "note": "Dies zeigt, was das Gerät jetzt basierend auf Kanalzeitplänen abspielen sollte, nicht unbedingt, was tatsächlich auf dem Gerät angezeigt wird."
     },
+    "health": {
+      "title": "Gerätezustand",
+      "description": "Überblick über Ressourcen, Online-Zeit und Cache des Players.",
+      "refresh": "Zustandsmetriken aktualisieren",
+      "offline": "Das Gerät ist offline. Zustandsmetriken werden angezeigt, wenn es verbunden ist.",
+      "loadError": "Zustandsmetriken konnten nicht vom Gerät geladen werden.",
+      "loading": "Zustandsmetriken werden geladen…",
+      "noData": "Dieses Gerät hat keine Zustandsmetriken gemeldet.",
+      "appMemory": "App-Speicher",
+      "cpu": "Prozessor",
+      "onlineFor": "Online seit",
+      "playerUptime": "Player-Laufzeit",
+      "systemUptime": "Systemlaufzeit",
+      "cacheSize": "Cache-Größe",
+      "cacheItems": "{{count}} Cache-Einträge",
+      "cacheUsage": "Cache-Nutzung nach Typ",
+      "usedOf": "{{used}} von {{total}}"
+    },
     "telemetry": {
       "placeholder": "Traces, Logs, Metriken und Konnektivität (WiFi-Qualität, etc.)",
       "storage": "Speicher",

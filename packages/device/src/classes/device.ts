@@ -26,6 +26,9 @@ import {
   TimerEntry,
   WeekDay,
   isOrientation,
+  TelemetryData,
+  DeviceTelemetryData,
+  CacheUsage,
 } from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Channel, JsonChannel } from './channel';
@@ -108,6 +111,30 @@ const getReconnectDelay = (tries: number): number => {
 };
 
 const supportedDebugModes = ['remote', 'local', 'none'];
+
+const getMonotonicNow = () =>
+  typeof performance !== 'undefined' && typeof performance.now === 'function'
+    ? performance.now()
+    : Date.now();
+
+/** Chromium's non-standard `performance.memory`, when exposed. */
+const getHeapUsage = () => {
+  const memory =
+    typeof performance !== 'undefined'
+      ? (
+          performance as Performance & {
+            memory?: { usedJSHeapSize?: number; jsHeapSizeLimit?: number };
+          }
+        ).memory
+      : undefined;
+  const usedBytes = memory?.usedJSHeapSize;
+  const limitBytes = memory?.jsHeapSizeLimit;
+  return typeof usedBytes === 'number' &&
+    typeof limitBytes === 'number' &&
+    limitBytes > 0
+    ? { usedBytes, limitBytes }
+    : undefined;
+};
 
 export enum Status {
   Registering = 'registering',
@@ -270,6 +297,8 @@ const toChannels = (rawChannels: unknown): Channel[] | undefined => {
  */
 export class Device extends EventEmitter {
   private closing = false;
+  private readonly startedAt = getMonotonicNow();
+  private connectedAt?: number;
   private maintenanceToastDelayMs = MAINTENANCE_TOAST_DELAY_MS;
   private cache: CacheBackend;
   private resourceManager?: ResourceManager;
@@ -1309,6 +1338,7 @@ export class Device extends EventEmitter {
         .join()
         .receive('ok', (response: { orientation?: unknown } = {}) => {
           if (this.closing) return;
+          this.connectedAt = getMonotonicNow();
           this.initOrientationListener(channel);
           if (response.orientation !== undefined) {
             void this.applyOrientation(response.orientation, channel);
@@ -1430,7 +1460,7 @@ export class Device extends EventEmitter {
           channel.push('res:get', { page, ref: opts.ref });
           break;
         case 'telemetry':
-          const telemetry = (await this.integration.getTelemetry?.()) ?? {};
+          const telemetry = await this.getTelemetry();
           channel.push('res:get', { telemetry, ref: opts.ref });
           break;
         case 'timers':
@@ -1611,6 +1641,56 @@ export class Device extends EventEmitter {
     channel.on('automation_run', (message: AutomationRunMessage) => {
       this.runAutomationNow(message);
     });
+  }
+
+  /**
+   * Platform telemetry plus player and cache statistics, which are available
+   * on every platform. A failing platform reading does not hide the rest.
+   */
+  async getTelemetry(): Promise<DeviceTelemetryData> {
+    let platform: TelemetryData = {};
+    try {
+      platform = (await this.integration.getTelemetry?.()) ?? {};
+    } catch (error) {
+      this.logger.error(`Unable to read platform telemetry: ${error}`);
+    }
+
+    const now = getMonotonicNow();
+    const player: NonNullable<DeviceTelemetryData['player']> = {
+      uptimeSeconds: Math.floor((now - this.startedAt) / 1000),
+    };
+    if (this.connectedAt !== undefined) {
+      player.connectedSeconds = Math.floor((now - this.connectedAt) / 1000);
+    }
+    const heap = getHeapUsage();
+    if (heap) player.heap = heap;
+
+    const telemetry: DeviceTelemetryData = { ...platform, player };
+    try {
+      telemetry.cache = await this.getCacheUsage();
+    } catch (error) {
+      this.logger.error(`Unable to read cache usage: ${error}`);
+    }
+    return telemetry;
+  }
+
+  private async getCacheUsage(): Promise<
+    NonNullable<DeviceTelemetryData['cache']>
+  > {
+    // One aggregate per type from the cache backend: consistent totals even
+    // when items are read or reordered while telemetry is collected.
+    const usage = (type: ItemType): Promise<CacheUsage> =>
+      this.cache.usage(type);
+    const [code, data, media] = await Promise.all([
+      usage(ItemType.Code),
+      usage(ItemType.Data),
+      usage(ItemType.Media),
+    ]);
+    return {
+      items: code.items + data.items + media.items,
+      bytes: code.bytes + data.bytes + media.bytes,
+      types: { code, data, media },
+    };
   }
 
   private async getCache({ page, page_size: perPage, type }: CachePage) {

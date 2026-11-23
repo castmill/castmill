@@ -1349,6 +1349,24 @@
       "currentlyPlaying": "Actuellement programmé depuis le canal",
       "note": "Ceci montre ce que l'appareil devrait jouer maintenant en fonction des horaires des canaux, pas nécessairement ce qui est réellement affiché sur l'appareil."
     },
+    "health": {
+      "title": "État de l'appareil",
+      "description": "Résumé des ressources, du temps en ligne et du cache du lecteur.",
+      "refresh": "Actualiser les métriques d'état",
+      "offline": "L'appareil est hors ligne. Les métriques s'affichent lorsqu'il est connecté.",
+      "loadError": "Impossible de charger les métriques de l'appareil.",
+      "loading": "Chargement des métriques…",
+      "noData": "Cet appareil n'a envoyé aucune métrique d'état.",
+      "appMemory": "Mémoire de l'application",
+      "cpu": "Processeur",
+      "onlineFor": "En ligne depuis",
+      "playerUptime": "Durée d'activité du lecteur",
+      "systemUptime": "Durée d'activité du système",
+      "cacheSize": "Taille du cache",
+      "cacheItems": "{{count}} éléments en cache",
+      "cacheUsage": "Utilisation du cache par type",
+      "usedOf": "{{used}} sur {{total}}"
+    },
     "telemetry": {
       "placeholder": "Traces, journaux, métriques et connectivité (qualité WiFi, etc.)",
       "storage": "Stockage",

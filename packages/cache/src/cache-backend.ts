@@ -5,6 +5,7 @@ export type CacheBackend = Pick<
   | 'init'
   | 'list'
   | 'count'
+  | 'usage'
   | 'get'
   | 'hasUrl'
   | 'set'

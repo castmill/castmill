@@ -1332,6 +1332,24 @@
       "currentlyPlaying": "För närvarande schemalagt från kanal",
       "note": "Detta visar vad enheten borde spela nu baserat på kanalscheman, inte nödvändigtvis vad som faktiskt visas på enheten."
     },
+    "health": {
+      "title": "Enhetens hälsa",
+      "description": "Snabb översikt över spelarens resurser, onlinetid och cache.",
+      "refresh": "Uppdatera hälsomätvärden",
+      "offline": "Enheten är offline. Hälsomätvärden visas när den är ansluten.",
+      "loadError": "Det gick inte att läsa in hälsomätvärden från enheten.",
+      "loading": "Läser in hälsomätvärden…",
+      "noData": "Enheten har inte rapporterat några hälsomätvärden.",
+      "appMemory": "Appminne",
+      "cpu": "Processor",
+      "onlineFor": "Online i",
+      "playerUptime": "Spelarens drifttid",
+      "systemUptime": "Systemets drifttid",
+      "cacheSize": "Cachestorlek",
+      "cacheItems": "{{count}} cachade objekt",
+      "cacheUsage": "Cacheanvändning per typ",
+      "usedOf": "{{used}} av {{total}}"
+    },
     "telemetry": {
       "placeholder": "Spår, loggar, mätvärden och anslutning (WiFi-kvalitet osv.)",
       "storage": "Lagring",

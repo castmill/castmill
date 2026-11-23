@@ -1399,6 +1399,24 @@
       "currentlyPlaying": "Currently scheduled from channel",
       "note": "This shows what the device should be playing now based on channel schedules, not necessarily what is actually displayed on the device."
     },
+    "health": {
+      "title": "Device health",
+      "description": "At-a-glance summary of the player's resources, online time and cache.",
+      "refresh": "Refresh health metrics",
+      "offline": "The device is offline. Health metrics are shown when it is connected.",
+      "loadError": "Could not load health metrics from the device.",
+      "loading": "Loading health metrics…",
+      "noData": "This device did not report any health metrics.",
+      "appMemory": "App memory",
+      "cpu": "CPU",
+      "onlineFor": "Online for",
+      "playerUptime": "Player uptime",
+      "systemUptime": "System uptime",
+      "cacheSize": "Cache size",
+      "cacheItems": "{{count}} cached items",
+      "cacheUsage": "Cache usage by type",
+      "usedOf": "{{used}} of {{total}}"
+    },
     "telemetry": {
       "placeholder": "Traces, Logs, Metrics and Connectivity (WiFi quality, etc.)",
       "storage": "Storage",

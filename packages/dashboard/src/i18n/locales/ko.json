@@ -1337,6 +1337,24 @@
       "currentlyPlaying": "현재 채널에서 예약됨",
       "note": "이것은 채널 일정에 따라 장치가 현재 재생해야 하는 내용을 보여주며, 장치에 실제로 표시되는 내용은 아닐 수 있습니다."
     },
+    "health": {
+      "title": "기기 상태",
+      "description": "플레이어 리소스, 온라인 시간 및 캐시 요약입니다.",
+      "refresh": "상태 지표 새로 고침",
+      "offline": "기기가 오프라인입니다. 연결되면 상태 지표가 표시됩니다.",
+      "loadError": "기기에서 상태 지표를 불러올 수 없습니다.",
+      "loading": "상태 지표 불러오는 중…",
+      "noData": "이 기기는 상태 지표를 보고하지 않았습니다.",
+      "appMemory": "앱 메모리",
+      "cpu": "프로세서",
+      "onlineFor": "온라인 시간",
+      "playerUptime": "플레이어 가동 시간",
+      "systemUptime": "시스템 가동 시간",
+      "cacheSize": "캐시 크기",
+      "cacheItems": "캐시 항목 {{count}}개",
+      "cacheUsage": "유형별 캐시 사용량",
+      "usedOf": "{{total}} 중 {{used}}"
+    },
     "telemetry": {
       "placeholder": "추적, 로그, 메트릭 및 연결성(WiFi 품질 등)",
       "storage": "저장소",
