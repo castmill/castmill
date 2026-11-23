@@ -1506,7 +1506,7 @@
       "memory": "Memoria",
       "gpu": "Gráficos",
       "graphicsAcceleration": "Aceleración gráfica",
-      "graphicsAccelerationHardware": "Hardware (GPU)",
+      "graphicsAccelerationHardware": "Por hardware (GPU)",
       "graphicsAccelerationSoftware": "Solo software (CPU)",
       "videoDecoding": "Decodificación de vídeo por hardware",
       "videoDecodingNone": "Ninguna",

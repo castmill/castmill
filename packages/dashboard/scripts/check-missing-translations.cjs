@@ -128,6 +128,9 @@ const ALLOWED_IDENTICAL_KEYS = {
   'devices.maintenance.systemGroup': ['sv', 'de'],
   'widgets.scope.system': ['sv', 'de'],
   'network.widgets.kind.system': ['sv', 'de'],
+  // Device hardware details: the same words in these languages
+  'devices.info.cpu': ['sv'],
+  'devices.info.graphicsAccelerationHardware': ['de'],
   // "Zone" is the same word in German and French
   'layouts.editor.zoneName': ['de', 'fr'],
   'layouts.editor.zonesHeading': ['fr'],
