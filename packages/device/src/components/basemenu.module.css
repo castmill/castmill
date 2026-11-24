@@ -80,6 +80,17 @@
   gap: 0.4em;
 }
 
+.submenuArrow {
+  width: 0.8em;
+  height: 0.8em;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.submenuArrow.expanded {
+  transform: rotate(90deg);
+}
+
 .badge {
   display: inline-block;
   width: 0.5em;
