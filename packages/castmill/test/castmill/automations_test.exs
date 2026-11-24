@@ -123,8 +123,9 @@ defmodule Castmill.AutomationsTest do
 
       assert names.(%{"key" => "name", "direction" => "descending"}) == ["Beta", "Alpha"]
       assert names.(%{"key" => "enabled", "direction" => "ascending"}) == ["Beta", "Alpha"]
-      # Unknown columns fall back to the name.
+      # Other columns fall back to the name.
       assert names.(%{"key" => "organization_id"}) == ["Alpha", "Beta"]
+      assert names.(%{"key" => "updated_at", "direction" => "descending"}) == ["Beta", "Alpha"]
     end
 
     test "gets automations only within the organization", %{

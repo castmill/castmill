@@ -54,9 +54,7 @@ defmodule Castmill.Automations do
   # resource lists send them); by name by default. The id keeps pages stable.
   @sort_keys %{
     "name" => :name,
-    "enabled" => :enabled,
-    "inserted_at" => :inserted_at,
-    "updated_at" => :updated_at
+    "enabled" => :enabled
   }
 
   defp sort_order(params) do

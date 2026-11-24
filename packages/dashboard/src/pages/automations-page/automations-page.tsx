@@ -108,15 +108,19 @@ const AutomationsPage: Component = () => {
     )
   );
 
+  // Only the latest request may set the quota: an older response (for
+  // example the one before a create) must not overwrite a newer one.
+  let quotaRequest = 0;
   const loadQuota = async () => {
     const organizationId = orgId();
     if (!organizationId) return;
+    const request = ++quotaRequest;
     try {
       const next = await QuotasService.getResourceQuota(
         organizationId,
         'automations'
       );
-      if (organizationId === orgId()) setQuota(next);
+      if (request === quotaRequest) setQuota(next);
     } catch (error) {
       console.error('Failed to load the automations quota:', error);
     }
@@ -369,6 +373,7 @@ const AutomationsPage: Component = () => {
           resource="automations"
           params={[searchParams, setSearchParams]}
           fetchData={fetchData}
+          initialSortOptions={{ key: 'name', direction: 'ascending' }}
           ref={(ref) => (tableRef = ref)}
           toolbar={{
             description: () => t('automations.description'),

@@ -170,18 +170,44 @@ describe('AutomationsPage', () => {
     );
   });
 
-  it('sorts by a column', async () => {
+  it('sorts by name ascending first, then by the clicked column', async () => {
     renderPage();
     await findRow();
-    fireEvent.click(screen.getByRole('columnheader', { name: /Name/ }));
+    expect(AutomationsService.list).toHaveBeenCalledWith(
+      'org-1',
+      expect.objectContaining({
+        sort: { key: 'name', direction: 'ascending' },
+      })
+    );
+    fireEvent.click(screen.getByRole('columnheader', { name: /Enabled/ }));
     await waitFor(() =>
       expect(AutomationsService.list).toHaveBeenLastCalledWith(
         'org-1',
         expect.objectContaining({
-          sort: expect.objectContaining({ key: 'name' }),
+          sort: { key: 'enabled', direction: 'ascending' },
         })
       )
     );
+  });
+
+  it('ignores a quota response older than the latest request', async () => {
+    let resolveFirst!: (q: { used: number; total: number }) => void;
+    vi.mocked(QuotasService.getResourceQuota)
+      .mockReturnValueOnce(new Promise((resolve) => (resolveFirst = resolve)))
+      .mockResolvedValue({ used: 5, total: 5 });
+    vi.mocked(AutomationsService.remove).mockResolvedValue(undefined);
+    renderPage();
+    const row = await findRow();
+    fireEvent.click(within(row).getByLabelText('Delete Spring campaign'));
+    fireEvent.click(await screen.findByText('Confirm'));
+    expect(await screen.findByText(/5\/5/)).toBeInTheDocument();
+    // The first request answers last: it must not replace 5/5.
+    resolveFirst({ used: 4, total: 5 });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(screen.queryByText(/4\/5/)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /New automation/ })
+    ).toBeDisabled();
   });
 
   it('shows placeholders for automations without rules or firings', async () => {
