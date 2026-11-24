@@ -1669,7 +1669,12 @@
       "rejectError": "Error rejecting invitation",
       "accountCreated": "Account created successfully!",
       "accountCreationFailed": "Failed to create account",
-      "passkeysNotSupported": "Passkeys are not supported in this browser"
+      "passkeysNotSupported": "Passkeys are not supported in this browser",
+      "passkeyNotFound": "No passkey was used. If this device has no passkey for your account, we can email you a link to add one.",
+      "lostPasskey": "Lost your passkey? Email me a link to add one",
+      "sendingRecovery": "Sending…",
+      "recoverySent": "Check your email and follow the link to add a passkey, then open this invitation again.",
+      "recoveryFailed": "Could not send the email. Please try again."
     },
     "notifications": {
       "title": "Notifications",
