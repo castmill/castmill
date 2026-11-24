@@ -39,6 +39,7 @@ describe('time-dependent template updates', () => {
       'Element',
       'MutationObserver',
       'getComputedStyle',
+      'Image',
     ];
     const saved: Record<string, unknown> = {};
     keys.forEach((key) => {
@@ -51,6 +52,13 @@ describe('time-dependent template updates', () => {
     globals.Element = dom.window.Element;
     globals.MutationObserver = dom.window.MutationObserver;
     globals.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
+    globals.Image = class {
+      complete = true;
+      naturalWidth = 100;
+      src = '';
+      onload = null;
+      onerror = null;
+    };
 
     dom.window.HTMLElement.prototype.getBoundingClientRect = () =>
       ({
@@ -446,6 +454,7 @@ describe('time-dependent template updates', () => {
         ],
       },
       async (root, _widget, _media, advanceClock) => {
+        await flush();
         expect(created).to.have.length(2);
         expect(revoked).to.deep.equal([]);
         advanceClock();

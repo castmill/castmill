@@ -7,9 +7,17 @@ import {
   ReplaySubject,
   forkJoin,
   from,
+  NEVER,
   of,
 } from 'rxjs';
-import { mergeMap, map, switchMap, take } from 'rxjs/operators';
+import {
+  catchError,
+  filter,
+  mergeMap,
+  map,
+  switchMap,
+  take,
+} from 'rxjs/operators';
 import { TimelineWidget } from '../timeline-widget';
 
 import { render } from 'solid-js/web';
@@ -200,7 +208,15 @@ export class TemplateWidget extends TimelineWidget {
    * @returns
    */
   private load() {
-    return forkJoin([this.loadFonts(), this.loadMedias()]);
+    return forkJoin([this.loadFonts(), this.loadMedias()]).pipe(
+      catchError((error) => {
+        console.error('Template assets could not be loaded', error);
+        const block: PlayerRuntimeError = { category: 'media-load', error };
+        this.globals.reportError?.(block);
+        this.setBlocked(this, block);
+        return NEVER;
+      })
+    );
   }
 
   private loadFonts() {
@@ -211,14 +227,17 @@ export class TemplateWidget extends TimelineWidget {
     return from(this.opts.fonts).pipe(
       mergeMap((font) =>
         from(this.resourceManager.getMedia(font.url)).pipe(
-          map((url) => {
+          mergeMap((url) => {
             if (!this.fontFaces[font.name]) {
               this.fontFaces[font.name] = this.loadFont(
                 font.name,
                 url || font.url
-              );
+              ).catch((error) => {
+                delete this.fontFaces[font.name];
+                throw error;
+              });
             }
-            return of(this.fontFaces[font.name]);
+            return from(this.fontFaces[font.name]);
           })
         )
       )
@@ -281,6 +300,7 @@ export class TemplateWidget extends TimelineWidget {
   }
 
   show(el: HTMLElement, offset: number) {
+    this.setBlocked(this);
     this.readinessActive = true;
     this.reportReadiness();
 
@@ -316,7 +336,7 @@ export class TemplateWidget extends TimelineWidget {
         // such as 10s for a video whose metadata hasn't loaded yet.
         return this.ready$.pipe(
           take(1),
-          map(() => {
+          switchMap(() => {
             // Seek to compensate for the time spent loading the assets. Time
             // spent waiting for a decoder is excluded: playlists hold their
             // clock while an item is blocked.
@@ -324,8 +344,9 @@ export class TemplateWidget extends TimelineWidget {
             const elapsed = isPreviewLoadFrozen(this.opts.globals)
               ? 0
               : Math.max(0, Date.now() - basetime - blocked);
-            this.seek(offset + elapsed);
-            return 'template-widget:shown';
+            return this.seek(offset + elapsed).pipe(
+              map(() => 'template-widget:shown')
+            );
           })
         );
       })
@@ -334,6 +355,18 @@ export class TemplateWidget extends TimelineWidget {
 
   mimeType(): string {
     return 'template/widget';
+  }
+
+  seek(offset: number): Observable<[number, number]> {
+    return super.seek(offset).pipe(
+      switchMap((result) =>
+        this.readiness.pipe(
+          filter((block) => !block),
+          take(1),
+          map(() => result)
+        )
+      )
+    );
   }
 
   setDurationHint(duration: number): void {

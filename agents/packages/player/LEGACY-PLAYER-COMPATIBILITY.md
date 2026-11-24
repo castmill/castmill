@@ -19,10 +19,23 @@ zones are immediately ready). Keep this signal after nested media initialization
 the dashboard uses renderer readiness to measure durations without polling a
 magic fallback value. This does not pre-load every later item in zone playlists.
 
-Paused dashboard carousel previews gate readiness only on the first image.
-Resolve later image URLs independently and update their backgrounds without
-rebuilding the timeline or delaying the first frame. Keep device playback's
-existing cache resolution and slot timing unchanged.
+Carousels gate initial readiness on the visible image loading (and decoding
+where `Image.decode` exists), then prepare only the next image. Keep at most
+the current and next photos assigned, releasing evicted backgrounds, preloader
+references and render-only Blob URLs. Remove inactive elements from layout with
+`display: none` as well; empty animated elements can retain GPU surfaces.
+Eagerly decoding a whole property gallery can exhaust legacy player memory.
+If the next photo is not ready at its
+transition, hold the fully loaded current photo and extend the slot by the wait.
+Seeks must also wait for their selected visible photos before handoff.
+Ordinary image components also wait for their selected background to load.
+Cache URL resolution or CSS background assignment alone is not readiness.
+Old Crosswalk uses image load events without requiring `Image.decode`.
+Image errors or a 30-second load/decode timeout report a media-load failure and
+block the item for the playlist's existing skip mechanism; never mark it ready.
+All declared fonts must finish loading and join `document.fonts` before rendering
+the template. The renderer keeps the outgoing layer until the incoming layer
+emits readiness; cancellation must not commit an unfinished handoff.
 
 Playlists with multiple items set `loopPlaylistItem: false` on their widgets.
 Carousels hold the last image instead of fading back to the first, keeping the

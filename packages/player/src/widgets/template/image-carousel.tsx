@@ -13,10 +13,10 @@ import { TemplateComponent, TemplateComponentType } from './template';
 import { ComponentAnimation } from './animation';
 import { BaseComponentProps } from './interfaces/base-component-props';
 import { ResourceManager } from '@castmill/cache';
-import {
-  isPreviewLoadFrozen,
-  PlayerGlobals,
-} from '../../interfaces/player-globals.interface';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
+import { prepareImage } from './image-loading';
+import { TimelineBasic } from './timeline';
+export { preloadImages as preloadCarouselImages } from './image-loading';
 
 export type ImageCarouselTransition = 'slide' | 'fade';
 
@@ -28,7 +28,6 @@ export interface ImageCarouselComponentOptions {
 
 const TRANSITION_SECONDS = 1;
 const MEDIA_CACHE_TIMEOUT_MS = 5000;
-const IMAGE_LOAD_TIMEOUT_MS = 5000;
 
 interface CarouselImageUrl {
   url: string;
@@ -122,38 +121,6 @@ function backgroundImageUrl(url: string): string {
   return `url("${escapedUrl}")`;
 }
 
-export function preloadCarouselImages(
-  urls: string[],
-  createImage: () => HTMLImageElement = () => new Image()
-): Promise<void> {
-  return Promise.all(
-    urls.map(
-      (url) =>
-        new Promise<void>((resolve) => {
-          const image = createImage();
-          let settled = false;
-          const finish = (error?: string) => {
-            if (settled) return;
-            settled = true;
-            clearTimeout(timeout);
-            image.onload = null;
-            image.onerror = null;
-            if (error) console.warn(`Carousel image ${error}`);
-            resolve();
-          };
-          const timeout = setTimeout(
-            () => finish('load timed out'),
-            IMAGE_LOAD_TIMEOUT_MS
-          );
-          image.onload = () => finish();
-          image.onerror = () => finish('could not be loaded');
-          image.src = url;
-          if (image.complete && image.naturalWidth > 0) finish();
-        })
-    )
-  ).then(() => undefined);
-}
-
 export class ImageCarouselComponent implements TemplateComponent {
   readonly type = TemplateComponentType.ImageCarousel;
 
@@ -214,13 +181,7 @@ interface ImageCarouselProps extends BaseComponentProps {
 
 export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
   let parentRef: HTMLDivElement | undefined;
-  const timeline: GSAPTimeline = gsap.timeline();
-  const timelineItem = {
-    start: 0, // Carousel should start immediately, not after other items
-    child: timeline,
-  };
-
-  props.timeline.add(timelineItem);
+  const timeline: GSAPTimeline = gsap.timeline({ paused: true });
 
   const style = createMemo(() =>
     Object.assign(
@@ -231,11 +192,14 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
         'background-repeat': 'no-repeat',
         'background-position': 'center',
         position: 'absolute',
+        display: 'none',
       },
       props.style
     )
   );
   let buildId = 0;
+  const loadBlock = {};
+  let disposed = false;
   let hasBuiltTimeline = false;
   let hasReportedReady = false;
   let previousImageUrls: string[] | undefined;
@@ -246,6 +210,68 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     sharedImageUrls.get(props.resourceManager) ||
     new Map<string, CarouselImageUrl>();
   sharedImageUrls.set(props.resourceManager, sharedObjectUrls);
+  interface PreparedImage {
+    ready: boolean;
+    release?: () => void;
+  }
+  const prepared = new Map<number, PreparedImage>();
+  let sources: string[] = [];
+  let images: HTMLElement[] = [];
+  let interval: ReturnType<typeof setInterval> | undefined;
+  let running = false;
+  let position = 0;
+  let started = 0;
+  let waiting = false;
+  let waitingSince: number | undefined;
+  let waited = 0;
+  const preparing = {
+    category: 'media-load' as const,
+    code: 'carousel-image-preparing',
+    error: new Error('Waiting for carousel image'),
+  };
+  const currentPosition = () =>
+    position + (running && !waiting ? Date.now() - started : 0);
+  const finishWaiting = () => {
+    if (waitingSince !== undefined) waited += Date.now() - waitingSince;
+    waitingSince = undefined;
+    waiting = false;
+    started = Date.now();
+    props.globals.setPlaybackReadinessBlocked?.(loadBlock);
+  };
+  const playback: TimelineBasic & {
+    getChildren: GSAPTimeline['getChildren'];
+  } = {
+    duration: () =>
+      timeline.duration() * 1000 +
+      waited +
+      (waitingSince === undefined ? 0 : Date.now() - waitingSince),
+    getChildren: (...args) => timeline.getChildren(...args),
+    seek: (offset) => {
+      playback.pause();
+      if (offset === 0) waited = 0;
+      position = Math.max(0, offset - waited);
+      syncImages();
+    },
+    play: (offset) => {
+      playback.pause();
+      position = Math.max(0, offset - waited);
+      running = true;
+      started = Date.now();
+      if (waiting) waitingSince = started;
+      syncImages();
+      interval = setInterval(syncImages, 16);
+    },
+    pause: () => {
+      position = currentPosition();
+      if (waitingSince !== undefined) waited += Date.now() - waitingSince;
+      waitingSince = undefined;
+      running = false;
+      clearInterval(interval);
+      interval = undefined;
+    },
+  };
+  const timelineItem = { start: 0, child: playback };
+  props.timeline.add(timelineItem);
 
   const releaseImageUrl = (source: string, imageUrl: CarouselImageUrl) => {
     objectUrls.delete(source);
@@ -299,9 +325,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     }
   };
 
-  const setImageBackground = (image: HTMLElement, source: string): string => {
-    const url = displayImageUrl(source);
-    image.style.backgroundImage = backgroundImageUrl(url);
+  const releaseUnusedUrls = () => {
     const activeBackgrounds = new Set(
       Array.from(
         parentRef?.children || [],
@@ -313,8 +337,110 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
         releaseImageUrl(dataUrl, imageUrl);
       }
     });
-    return url;
   };
+
+  const clearPreparedImages = (keep: number[] = []) => {
+    prepared.forEach((image, index) => {
+      if (keep.indexOf(index) !== -1) return;
+      prepared.delete(index);
+      image.release?.();
+      if (images[index]) {
+        images[index].style.backgroundImage = '';
+        // Empty transformed elements can still retain full-size GPU surfaces.
+        images[index].style.display = 'none';
+      }
+    });
+    releaseUnusedUrls();
+  };
+
+  const prepare = (index: number) => {
+    if (prepared.has(index)) return;
+    const image: PreparedImage = { ready: false };
+    const generation = buildId;
+    prepared.set(index, image);
+    void resolveCarouselImageUrls(props.resourceManager, [sources[index]])
+      .then(async ([source]) => {
+        if (generation !== buildId || prepared.get(index) !== image) return;
+        const url = displayImageUrl(source);
+        images[index].style.display = '';
+        images[index].style.backgroundImage = backgroundImageUrl(url);
+        const loading = prepareImage(url);
+        image.release = loading.release;
+        await loading.ready;
+        if (generation !== buildId || prepared.get(index) !== image) return;
+        image.ready = true;
+        syncImages();
+      })
+      .catch((error) => {
+        if (generation === buildId && prepared.get(index) === image) {
+          reportLoadError(error);
+        }
+      });
+  };
+
+  function syncImages() {
+    if (disposed || !sources.length) return;
+    const time = Math.min(currentPosition(), timeline.duration() * 1000);
+    const slot = ((previousImageDuration || 0) + TRANSITION_SECONDS) * 1000;
+    const index = Math.min(Math.floor(time / slot), sources.length - 1);
+    const local = time - index * slot;
+    const next =
+      index + 1 < sources.length
+        ? index + 1
+        : props.globals.loopPlaylistItem !== false && sources.length > 1
+          ? 0
+          : undefined;
+    const transitioning = local >= slot - TRANSITION_SECONDS * 1000;
+    const required =
+      transitioning && next !== undefined ? [index, next] : [index];
+    if (!required.every((item) => prepared.get(item)?.ready)) {
+      if (!waiting) {
+        position = time;
+        waiting = true;
+        if (running) waitingSince = Date.now();
+      }
+      props.globals.setPlaybackReadinessBlocked?.(loadBlock, preparing);
+      if (!prepared.get(index)?.ready) {
+        // A seek may jump across the gallery. Keep one displayed photo while
+        // preparing the target, rather than retaining the whole old window.
+        const displayed = Array.from(prepared.keys()).find(
+          (candidate) =>
+            candidate !== index &&
+            images[candidate].style.visibility !== 'hidden' &&
+            Number(images[candidate].style.opacity || 1) > 0
+        );
+        if (displayed !== undefined) {
+          timeline.totalTime((displayed * slot) / 1000, true);
+        }
+        clearPreparedImages(
+          displayed === undefined ? [index] : [displayed, index]
+        );
+        prepare(index);
+      } else if (next !== undefined) {
+        // Hold the fully loaded photo at the start of its transition.
+        timeline.totalTime(
+          (index * slot + slot - TRANSITION_SECONDS * 1000) / 1000,
+          true
+        );
+        clearPreparedImages([index, next]);
+        prepare(next);
+      }
+      return;
+    }
+
+    position = time;
+    started = Date.now();
+    if (waiting) finishWaiting();
+    timeline.totalTime(time / 1000, true);
+    const keep = next === undefined ? [index] : [index, next];
+    clearPreparedImages(keep);
+    keep.forEach(prepare);
+    props.globals.setPlaybackBlocked?.(loadBlock);
+    if (!hasReportedReady) {
+      hasReportedReady = true;
+      props.onReady();
+    }
+  }
 
   const buildTimeline = async () => {
     const imageUrls = props.opts.images || [];
@@ -329,39 +455,39 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     ) {
       return;
     }
+    const nextImages = Array.from(parentRef?.children || []) as HTMLElement[];
+    const nextSources = imageUrls.slice(0, nextImages.length);
+    const retained: Array<[number, PreparedImage, string]> = [];
+    prepared.forEach((image, index) => {
+      const nextIndex = nextSources.indexOf(sources[index]);
+      if (image.ready && nextIndex >= 0 && nextIndex < 2) {
+        retained.push([nextIndex, image, images[index].style.backgroundImage]);
+        prepared.delete(index);
+      }
+    });
+    images.forEach((image) => {
+      image.style.backgroundImage = '';
+      image.style.display = 'none';
+    });
+    retained.forEach(([index, , background]) => {
+      nextImages[index].style.backgroundImage = background;
+      nextImages[index].style.display = '';
+    });
     previousImageUrls = imageUrls.slice();
     previousImageDuration = imageDuration;
     previousTransition = transition;
     const transitionArgs = carouselTransitionArgs(transition);
-    const currentBuild = ++buildId;
-    const images = Array.from(parentRef?.children || []) as HTMLElement[];
-
-    const sources = imageUrls.slice(0, images.length);
-    let urls: string[];
-    if (isPreviewLoadFrozen(props.globals)) {
-      urls = sources.slice();
-      const loading = sources.map(async (source, index) => {
-        const [url] = await resolveCarouselImageUrls(props.resourceManager, [
-          source,
-        ]);
-        if (currentBuild !== buildId) return;
-        urls[index] = url;
-        const displayUrl = setImageBackground(images[index], url);
-        if (index === 0) await preloadCarouselImages([displayUrl]);
-      });
-      // Only the first frame gates a paused preview; later photos load independently.
-      await loading[0];
-    } else {
-      urls = await resolveCarouselImageUrls(props.resourceManager, sources);
-      if (currentBuild !== buildId) return;
-      urls.forEach((url, index) => {
-        setImageBackground(images[index], url);
-      });
-    }
-    // A newer build (the images changed meanwhile) or a cleanup supersedes it.
-    if (currentBuild !== buildId) return;
-
+    ++buildId;
     props.timeline.remove(timelineItem);
+    prepared.forEach((image) => image.release?.());
+    prepared.clear();
+    releaseUnusedUrls();
+    images = nextImages;
+    sources = nextSources;
+    retained.forEach(([index, image]) => prepared.set(index, image));
+    position = 0;
+    waited = 0;
+    finishWaiting();
     timeline.pause(0);
     timeline.clear();
 
@@ -387,15 +513,15 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       scale: 1,
     };
 
-    if (urls.length === 1) {
+    if (sources.length === 1) {
       timeline.set(images[0], Object.assign({}, targetArgs), 0);
       timeline.duration(imageDuration);
-    } else if (urls.length > 1) {
-      urls.forEach((_url, index) => {
+    } else if (sources.length > 1) {
+      sources.forEach((_url, index) => {
         const image = images[index];
 
         if (index === 0) {
-          timeline.set(images[urls.length - 1], {
+          timeline.set(images[sources.length - 1], {
             visibility: 'hidden',
           });
           timeline.set(image, Object.assign({}, targetArgs));
@@ -412,7 +538,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
 
         // When the last image leaves, the first one comes back in.
         let position = `>+=${imageDuration}`;
-        if (index === urls.length - 1) {
+        if (index === sources.length - 1) {
           if (props.globals.loopPlaylistItem === false) {
             // Keep the slot duration, but hold the last photo until replacement.
             timeline.to({}, { duration: TRANSITION_SECONDS }, position);
@@ -439,21 +565,40 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     hasBuiltTimeline = true;
     timelineItem.start = props.timeline.isRunning() ? props.timeline.time : 0;
     props.timeline.add(timelineItem);
-    if (!hasReportedReady) {
+    if (!sources.length && !hasReportedReady) {
       hasReportedReady = true;
       props.onReady();
     }
+    syncImages();
+  };
+
+  const reportLoadError = (error: unknown) => {
+    if (disposed) return;
+    console.warn('Carousel images could not be prepared', error);
+    props.globals.reportError?.({ category: 'media-load', error });
+    props.globals.setPlaybackBlocked?.(loadBlock, {
+      category: 'media-load',
+      error,
+    });
   };
 
   onCleanup(() => {
+    disposed = true;
+    props.globals.setPlaybackBlocked?.(loadBlock);
+    props.globals.setPlaybackReadinessBlocked?.(loadBlock);
     buildId++;
     props.timeline.remove(timelineItem);
+    clearPreparedImages();
     timeline.kill();
     objectUrls.forEach((imageUrl, source) => releaseImageUrl(source, imageUrl));
   });
 
   createEffect(() => {
-    void buildTimeline();
+    const loading = buildTimeline();
+    const currentBuild = buildId;
+    void loading.catch((error) => {
+      if (currentBuild === buildId) reportLoadError(error);
+    });
   });
 
   return (

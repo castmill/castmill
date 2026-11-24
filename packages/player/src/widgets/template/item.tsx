@@ -120,6 +120,7 @@ export const Item: Component<{
             animations={props.component.animations}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
+            globals={props.globals}
             onReady={props.onReady}
           />
         </Match>

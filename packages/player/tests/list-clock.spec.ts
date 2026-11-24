@@ -42,6 +42,7 @@ const withClockWidget = async (
     'Element',
     'MutationObserver',
     'getComputedStyle',
+    'Image',
   ];
   const saved: Record<string, unknown> = {};
   globalKeys.forEach((key) => {
@@ -76,6 +77,13 @@ const withClockWidget = async (
   globals.Element = dom.window.Element;
   globals.MutationObserver = dom.window.MutationObserver;
   globals.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
+  globals.Image = class {
+    complete = true;
+    naturalWidth = 100;
+    src = '';
+    onload = null;
+    onerror = null;
+  };
   // Rendered templates are not disposed, so their pending frame callbacks may
   // run after the test: keep this shim unless another one was defined before.
   // Pending frames must not keep the test process alive either.

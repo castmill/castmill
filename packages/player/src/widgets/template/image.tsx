@@ -13,6 +13,7 @@ import { ComponentAnimation, applyAnimations } from './animation';
 import { BaseComponentProps } from './interfaces/base-component-props';
 import { ResourceManager } from '@castmill/cache';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
+import { preloadImages } from './image-loading';
 
 export interface ImageComponentOptions {
   url?: string;
@@ -81,6 +82,7 @@ export class ImageComponent implements TemplateComponent {
 interface ImageProps extends BaseComponentProps {
   opts: ImageComponentOptions;
   resourceManager: ResourceManager;
+  globals: PlayerGlobals;
 }
 
 export const Image: Component<ImageProps> = (props: ImageProps) => {
@@ -88,6 +90,7 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
   let cleanUpAnimations: () => void;
   let loadId = 0;
   let hasReportedReady = false;
+  const loadBlock = {};
 
   const merged = createMemo(() => {
     const effectiveUrl =
@@ -107,6 +110,7 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
 
   onCleanup(() => {
     loadId++;
+    props.globals.setPlaybackBlocked?.(loadBlock);
     cleanUpAnimations?.();
   });
 
@@ -127,6 +131,7 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
     const sourceUrl =
       props.opts.url?.trim?.() || props.opts.fallbackUrl?.trim?.() || '';
     const currentLoad = ++loadId;
+    props.globals.setPlaybackBlocked?.(loadBlock);
     if (!imageRef) return;
 
     if (!sourceUrl) {
@@ -140,7 +145,11 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
 
     void props.resourceManager
       .getMedia(sourceUrl)
-      .then((cachedUrl) => {
+      .catch((error) => {
+        console.warn('Image cache lookup failed, using original URL', error);
+        return undefined;
+      })
+      .then(async (cachedUrl) => {
         if (currentLoad !== loadId || !imageRef) return;
         if (!cachedUrl) {
           console.warn(
@@ -148,6 +157,8 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
           );
         }
         imageRef.style.backgroundImage = `url(${cachedUrl || sourceUrl})`;
+        await preloadImages([cachedUrl || sourceUrl]);
+        if (currentLoad !== loadId) return;
         if (!hasReportedReady) {
           hasReportedReady = true;
           props.onReady();
@@ -156,11 +167,11 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
       .catch((error) => {
         if (currentLoad !== loadId || !imageRef) return;
         console.warn(`Image ${sourceUrl} could not be loaded`, error);
-        imageRef.style.backgroundImage = `url(${sourceUrl})`;
-        if (!hasReportedReady) {
-          hasReportedReady = true;
-          props.onReady();
-        }
+        props.globals.reportError?.({ category: 'media-load', error });
+        props.globals.setPlaybackBlocked?.(loadBlock, {
+          category: 'media-load',
+          error,
+        });
       });
   });
 
