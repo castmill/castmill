@@ -519,4 +519,39 @@ defmodule CastmillWeb.DevicesChannelTest do
       assert_reply ref, :error, %{reason: _}
     end
   end
+
+  describe "Castmill OS updates: device identity" do
+    test "a report goes to the device whose token joined, not the one in the connect params",
+         %{device: device, token: token, organization: organization} do
+      {:ok, registration} =
+        device_registration_fixture(%{hardware_id: "victim-hw", pincode: "vict1234"})
+
+      {:ok, {victim, _}} =
+        Castmill.Devices.register_device(organization.id, registration.pincode, %{name: "Victim"})
+
+      # The attacker's socket claims the victim's ID in its connect params,
+      # but joins its own topic with its own token.
+      socket =
+        CastmillWeb.DeviceSocket
+        |> socket("device_id", %{
+          device: %{device_id: victim.id, hardware_id: "test", device_ip: {127, 0, 0, 1}}
+        })
+
+      {:ok, _, socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      ref =
+        push(socket, "os_update:report", %{
+          "compatible" => "castmill-os-raspberrypi5",
+          "state" => "idle"
+        })
+
+      assert_reply ref, :ok
+
+      assert Castmill.Devices.get_device(device.id).os_status["compatible"] ==
+               "castmill-os-raspberrypi5"
+
+      assert Castmill.Devices.get_device(victim.id).os_status == nil
+    end
+  end
 end

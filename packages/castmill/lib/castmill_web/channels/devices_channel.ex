@@ -22,6 +22,10 @@ defmodule CastmillWeb.DevicesChannel do
         # Schedule the heartbeat check
         socket = schedule_heartbeat_check(self(), socket)
 
+        # The device whose token was verified (the topic's ID). The ID in the
+        # socket's connect params is client-supplied and not authenticated.
+        socket = assign(socket, :verified_device_id, device.id)
+
         # Push saved schedule timers to device after a short delay
         Process.send_after(self(), :sync_schedule, 1_000)
         # Castmill OS devices: the OS version they should run
@@ -198,7 +202,7 @@ defmodule CastmillWeb.DevicesChannel do
   # Castmill OS update progress (castmill-os ADR-0010). The first report
   # tells the backend the device's hardware family, so it gets its target.
   def handle_in("os_update:report", %{} = report, socket) do
-    device_id = socket.assigns.device.device_id
+    device_id = socket.assigns.verified_device_id
 
     case Castmill.OsUpdates.record_status(device_id, report) do
       {:ok, device, compatible_changed?} ->
@@ -296,7 +300,7 @@ defmodule CastmillWeb.DevicesChannel do
   end
 
   def handle_info(:sync_os_update, socket) do
-    Castmill.OsUpdates.push_target(socket.assigns.device.device_id)
+    Castmill.OsUpdates.push_target(socket.assigns.verified_device_id)
     {:noreply, socket}
   end
 

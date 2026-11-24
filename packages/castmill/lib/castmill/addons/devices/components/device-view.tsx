@@ -255,8 +255,16 @@ const DeviceView: Component<{
     },
   ];
 
-  const sections = createMemo(() =>
-    allSections.filter((section) => !section.visible || section.visible())
+  // Same array while the visible sections don't change: live status updates
+  // must not remount the open panel (unsaved edits would be lost).
+  const sections = createMemo(
+    () =>
+      allSections.filter((section) => !section.visible || section.visible()),
+    undefined,
+    {
+      equals: (a, b) =>
+        a.length === b.length && a.every((section, i) => section === b[i]),
+    }
   );
   // The selected section is kept by id, so it stays selected when a section
   // appears or disappears.
@@ -266,13 +274,16 @@ const DeviceView: Component<{
       sections().findIndex((section) => section.id === activeId())
     );
 
+  const activeSection = createMemo(() => sections()[activeIndex()]);
+
   const tabId = (index: number) => `device-${props.device.id}-tab-${index}`;
   const panelId = () => `device-${props.device.id}-panel`;
-  const tabRefs: HTMLButtonElement[] = [];
+  // By section id: tabs move when a section appears.
+  const tabRefs: Record<string, HTMLButtonElement> = {};
 
   const selectSection = (index: number, focus = false) => {
     setActiveId(sections()[index].id);
-    revealTab(tabRefs[index], focus);
+    revealTab(tabRefs[sections()[index].id], focus);
   };
 
   const onTabKeyDown = (event: KeyboardEvent) => {
@@ -313,7 +324,7 @@ const DeviceView: Component<{
           <For each={sections()}>
             {(section, index) => (
               <button
-                ref={(el) => (tabRefs[index()] = el)}
+                ref={(el) => (tabRefs[section.id] = el)}
                 type="button"
                 role="tab"
                 id={tabId(index())}
@@ -340,7 +351,7 @@ const DeviceView: Component<{
         id={panelId()}
         aria-labelledby={tabId(activeIndex())}
       >
-        {sections()[activeIndex()].content()}
+        {activeSection().content()}
       </div>
       <LoadingOverlay show={loading()} />
     </div>
