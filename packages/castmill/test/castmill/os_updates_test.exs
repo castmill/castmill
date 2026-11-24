@@ -235,6 +235,42 @@ defmodule Castmill.OsUpdatesTest do
       assert OsUpdates.target_for(device) == %{version: nil}
     end
 
+    test "a policy change looks up each release once for the whole organization", %{
+      org: org,
+      device: device
+    } do
+      others = for _ <- 1..4, do: castmill_os_device(org)
+
+      {:ok, _} =
+        OsUpdates.set_device_override(hd(others).id, %{"mode" => "version", "version" => "0.3.0"})
+
+      for d <- [device | others], do: Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{d.id}")
+
+      test_pid = self()
+      handler = "os-release-queries-#{inspect(test_pid)}"
+
+      :ok =
+        :telemetry.attach(
+          handler,
+          [:castmill, :repo, :query],
+          fn _event, _measurements, %{source: source}, _ ->
+            if self() == test_pid and source == "os_releases", do: send(test_pid, :release_query)
+          end,
+          nil
+        )
+
+      on_exit(fn -> :telemetry.detach(handler) end)
+
+      assert {:ok, _} = OsUpdates.set_policy(org.id, %{"mode" => "latest"})
+      :telemetry.detach(handler)
+
+      for _ <- 1..5, do: assert_receive(%{event: "os_update", payload: %{version: "0.3.0"}})
+
+      # One query for the latest release, one for the override's version.
+      queries = Stream.repeatedly(fn -> receive do: (:release_query -> 1), after: (0 -> nil) end)
+      assert queries |> Enum.take_while(& &1) |> length() == 2
+    end
+
     test "rejects unknown modes and versions", %{org: org, device: device} do
       assert {:error, :invalid_mode} = OsUpdates.set_policy(org.id, %{"mode" => "yolo"})
 

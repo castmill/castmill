@@ -1553,6 +1553,8 @@
       "securityTag": "säkerhetsuppdatering",
       "saved": "Sparat",
       "saveFailed": "Kunde inte spara: {{error}}",
+      "loadFailed": "Det gick inte att läsa in OS-versionerna och organisationens policy.",
+      "retry": "Försök igen",
       "state": {
         "idle": "Uppdaterad",
         "installing": "Laddar ner och installerar",

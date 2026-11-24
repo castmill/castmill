@@ -1586,6 +1586,8 @@
       "securityTag": "actualización de seguridad",
       "saved": "Guardado",
       "saveFailed": "No se pudo guardar: {{error}}",
+      "loadFailed": "No se pudieron cargar las versiones del sistema ni la política de la organización.",
+      "retry": "Reintentar",
       "state": {
         "idle": "Al día",
         "installing": "Descargando e instalando",

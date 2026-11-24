@@ -1570,6 +1570,8 @@
       "securityTag": "mise à jour de sécurité",
       "saved": "Enregistré",
       "saveFailed": "Échec de l'enregistrement : {{error}}",
+      "loadFailed": "Impossible de charger les versions du système et la politique de l'organisation.",
+      "retry": "Réessayer",
       "state": {
         "idle": "À jour",
         "installing": "Téléchargement et installation",

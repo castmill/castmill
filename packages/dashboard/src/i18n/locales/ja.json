@@ -1559,6 +1559,8 @@
       "securityTag": "セキュリティ更新",
       "saved": "保存しました",
       "saveFailed": "保存できませんでした: {{error}}",
+      "loadFailed": "OS のリリースと組織のポリシーを読み込めませんでした。",
+      "retry": "再試行",
       "state": {
         "idle": "最新",
         "installing": "ダウンロードしてインストール中",

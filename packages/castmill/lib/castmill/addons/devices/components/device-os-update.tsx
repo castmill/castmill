@@ -42,18 +42,22 @@ export const DeviceOsUpdate: Component<{
   t: T;
 }> = (props) => {
   const toast = useToast();
-  const [data, { mutate }] = createResource(
+  const [data, { mutate, refetch }] = createResource(
     () => props.organizationId,
     (orgId) => DevicesService.getOsUpdates(props.baseUrl, orgId)
   );
   const [saving, setSaving] = createSignal(false);
+  // data() throws while the resource is in its error state: read it only
+  // once loaded, so a failed request shows an error here instead of
+  // replacing the whole Devices page.
+  const loaded = () => (data.state === 'ready' ? data() : undefined);
 
   const status = () => props.device.os_status;
   const override = (): OsUpdateOverride =>
     props.device.os_update ?? { mode: 'follow' };
   // All releases (the organization policy covers every kind of device) and
   // those with a bundle for this device's hardware (the device override).
-  const allReleases = (): OsRelease[] => data()?.releases ?? [];
+  const allReleases = (): OsRelease[] => loaded()?.releases ?? [];
   const releases = (): OsRelease[] => {
     const compatible = status()?.compatible;
     return allReleases().filter(
@@ -80,7 +84,10 @@ export const DeviceOsUpdate: Component<{
       : label;
   };
 
+  // One save at a time (the controls are disabled meanwhile), so responses
+  // can't arrive out of order and persist or show an older selection.
   const save = async (fn: () => Promise<unknown>) => {
+    if (saving()) return;
     setSaving(true);
     try {
       await fn();
@@ -111,12 +118,12 @@ export const DeviceOsUpdate: Component<{
         props.organizationId,
         next
       );
-      const current = data();
+      const current = loaded();
       if (current) mutate({ ...current, policy });
     });
 
   const policy = (): OsUpdatePolicy =>
-    data()?.policy ?? { mode: 'manual', prereleases: false };
+    loaded()?.policy ?? { mode: 'manual', prereleases: false };
 
   return (
     <div class="device-os-update">
@@ -168,6 +175,7 @@ export const DeviceOsUpdate: Component<{
           <Dropdown
             id="os-update-override"
             label={props.t('devices.osUpdate.version')}
+            disabled={saving()}
             value={
               override().mode === 'version'
                 ? (override().version ?? null)
@@ -203,10 +211,24 @@ export const DeviceOsUpdate: Component<{
         <p class="device-os-update-help">
           {props.t('devices.osUpdate.organizationHelp')}
         </p>
+        <Show when={data.error}>
+          <div class="device-os-update-error">
+            <p class="device-os-update-help warning">
+              {props.t('devices.osUpdate.loadFailed')}
+            </p>
+            <Button
+              label={props.t('devices.osUpdate.retry')}
+              color="secondary"
+              disabled={data.loading}
+              onClick={() => refetch()}
+            />
+          </div>
+        </Show>
         <div class="device-os-update-controls">
           <Dropdown
             id="os-update-policy"
             label={props.t('devices.osUpdate.policy')}
+            disabled={saving() || !loaded()}
             value={
               policy().mode === 'version'
                 ? (policy().version ?? null)
@@ -241,13 +263,13 @@ export const DeviceOsUpdate: Component<{
             name={props.t('devices.osUpdate.includePrereleases')}
             key="prereleases"
             isActive={policy().prereleases}
-            disabled={saving() || policy().mode !== 'latest'}
+            disabled={saving() || !loaded() || policy().mode !== 'latest'}
             onToggle={() =>
               setPolicy({ ...policy(), prereleases: !policy().prereleases })
             }
           />
         </div>
-        <Show when={releases().length === 0 && !data.loading}>
+        <Show when={loaded() && releases().length === 0}>
           <p class="device-os-update-help">
             {props.t('devices.osUpdate.noReleases')}
           </p>

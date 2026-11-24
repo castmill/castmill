@@ -1558,6 +1558,8 @@
       "securityTag": "보안 업데이트",
       "saved": "저장됨",
       "saveFailed": "저장할 수 없음: {{error}}",
+      "loadFailed": "OS 릴리스와 조직 정책을 불러올 수 없습니다.",
+      "retry": "다시 시도",
       "state": {
         "idle": "최신 상태",
         "installing": "다운로드 및 설치 중",

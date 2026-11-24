@@ -222,37 +222,72 @@ defmodule Castmill.OsUpdates do
   `%{version: nil}` for "no update", or `nil` when the device isn't a Castmill
   OS device (it has never reported a status).
   """
-  def target_for(%Device{os_status: %{"compatible" => compatible}} = device)
-      when is_binary(compatible) do
-    override = device.os_update || %{}
-
-    {release, override?} =
-      case override do
-        %{"mode" => "version", "version" => version} ->
-          {get_release(version), true}
-
-        _ ->
-          {policy_release(get_policy(device.organization_id)), false}
-      end
-
-    case release && release.artifacts[compatible] do
-      %{"url" => url, "sha256" => sha256, "size" => size} ->
-        %{
-          version: release.version,
-          url: url,
-          sha256: sha256,
-          size: size,
-          security: release.security,
-          activate: if(override? and override["now"] == true, do: "now", else: "window"),
-          override: override?
-        }
-
-      _ ->
-        %{version: nil}
-    end
+  def target_for(%Device{} = device) do
+    {target, _cache} = resolve_target(device, %{})
+    target
   end
 
   def target_for(_device), do: nil
+
+  # The target of a device, with a cache of the organization policies and
+  # releases it looked up: bulk pushes resolve each of them once, not once
+  # per device.
+  defp resolve_target(%Device{os_status: %{"compatible" => compatible}} = device, cache)
+       when is_binary(compatible) do
+    {release, override?, cache} =
+      case device.os_update || %{} do
+        %{"mode" => "version", "version" => version} ->
+          {release, cache} = cached(cache, {:release, version}, fn -> get_release(version) end)
+          {release, true, cache}
+
+        _ ->
+          {policy, cache} =
+            cached(cache, {:policy, device.organization_id}, fn ->
+              get_policy(device.organization_id)
+            end)
+
+          {release, cache} =
+            cached(cache, {:policy_release, policy}, fn -> policy_release(policy) end)
+
+          {release, false, cache}
+      end
+
+    target =
+      case release && release.artifacts[compatible] do
+        %{"url" => url, "sha256" => sha256, "size" => size} ->
+          %{
+            version: release.version,
+            url: url,
+            sha256: sha256,
+            size: size,
+            security: release.security,
+            activate:
+              if(override? and (device.os_update || %{})["now"] == true,
+                do: "now",
+                else: "window"
+              ),
+            override: override?
+          }
+
+        _ ->
+          %{version: nil}
+      end
+
+    {target, cache}
+  end
+
+  defp resolve_target(_device, cache), do: {nil, cache}
+
+  defp cached(cache, key, fun) do
+    case cache do
+      %{^key => value} ->
+        {value, cache}
+
+      _ ->
+        value = fun.()
+        {value, Map.put(cache, key, value)}
+    end
+  end
 
   defp policy_release(%{"mode" => "version", "version" => version}), do: get_release(version)
 
@@ -263,16 +298,8 @@ defmodule Castmill.OsUpdates do
 
   @doc "Pushes the current target to a connected device (no-op for other devices)."
   def push_target(%Device{} = device) do
-    case target_for(device) do
-      nil ->
-        :ok
-
-      target ->
-        Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device.id}", %{
-          event: "os_update",
-          payload: target
-        })
-    end
+    {target, _cache} = resolve_target(device, %{})
+    broadcast_target(device, target)
   end
 
   def push_target(device_id) when is_binary(device_id) do
@@ -285,13 +312,32 @@ defmodule Castmill.OsUpdates do
   defp push_organization_targets(organization_id) do
     from(d in Device, where: d.organization_id == ^organization_id and not is_nil(d.os_status))
     |> Repo.all()
-    |> Enum.each(&push_target/1)
+    |> push_targets()
   end
 
   defp push_all_targets do
     from(d in Device, where: not is_nil(d.os_status))
     |> Repo.all()
-    |> Enum.each(&push_target/1)
+    |> push_targets()
+  end
+
+  defp push_targets(devices) do
+    Enum.reduce(devices, %{}, fn device, cache ->
+      {target, cache} = resolve_target(device, cache)
+      broadcast_target(device, target)
+      cache
+    end)
+
+    :ok
+  end
+
+  defp broadcast_target(_device, nil), do: :ok
+
+  defp broadcast_target(device, target) do
+    Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device.id}", %{
+      event: "os_update",
+      payload: target
+    })
   end
 
   # ---- status reports --------------------------------------------------------

@@ -1580,6 +1580,8 @@
       "securityTag": "Sicherheitsupdate",
       "saved": "Gespeichert",
       "saveFailed": "Speichern fehlgeschlagen: {{error}}",
+      "loadFailed": "Die OS-Versionen und die Richtlinie der Organisation konnten nicht geladen werden.",
+      "retry": "Erneut versuchen",
       "state": {
         "idle": "Aktuell",
         "installing": "Wird heruntergeladen und installiert",

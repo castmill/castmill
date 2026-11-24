@@ -29,6 +29,7 @@ interface DropdownProps {
   variant?: 'default' | 'inline'; // Inline variant for use in table cells
   id?: string; // Optional id for the select element (for forms and accessibility)
   name?: string; // Optional name for the select element (for forms)
+  disabled?: boolean;
 }
 
 // Generate a unique ID for the dropdown if not provided
@@ -116,6 +117,7 @@ export const Dropdown: Component<DropdownProps> = (props) => {
           id={dropdownId}
           name={props.name || dropdownId}
           onChange={handleChange}
+          disabled={props.disabled}
           value={selectedValue() ?? ''}
           classList={{ 'is-placeholder': selectedValue() === null }}
           aria-label={props.label}
@@ -129,7 +131,7 @@ export const Dropdown: Component<DropdownProps> = (props) => {
             <option value={item.value}>{item.name}</option>
           ))}
         </select>
-        <Show when={shouldShowClear()}>
+        <Show when={shouldShowClear() && !props.disabled}>
           <button
             type="button"
             class="clear-button"

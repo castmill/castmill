@@ -1558,6 +1558,8 @@
       "securityTag": "安全更新",
       "saved": "已保存",
       "saveFailed": "无法保存：{{error}}",
+      "loadFailed": "无法加载系统版本和组织策略。",
+      "retry": "重试",
       "state": {
         "idle": "已是最新",
         "installing": "正在下载并安装",

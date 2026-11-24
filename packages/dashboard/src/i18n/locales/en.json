@@ -1595,6 +1595,8 @@
       "securityTag": "security update",
       "saved": "Saved",
       "saveFailed": "Could not save: {{error}}",
+      "loadFailed": "Could not load the OS releases and the organization policy.",
+      "retry": "Retry",
       "state": {
         "idle": "Up to date",
         "installing": "Downloading and installing",
