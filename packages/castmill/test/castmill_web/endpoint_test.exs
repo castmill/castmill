@@ -82,5 +82,7 @@ defmodule CastmillWeb.EndpointTest do
 
     assert response(conn, 200)
     assert get_resp_header(conn, "service-worker-allowed") == ["/"]
+    # A fixed name: caches must revalidate it so deploys reach players.
+    assert get_resp_header(conn, "cache-control") == ["no-cache"]
   end
 end

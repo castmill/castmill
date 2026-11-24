@@ -65,11 +65,16 @@ defmodule CastmillWeb.Endpoint do
 
   # The browser player at "/" registers /assets/sw.js. Without this header the
   # worker scope is limited to /assets/ and can never control the player page.
+  # Its name never changes, so caches (browsers, CDNs) must revalidate it or a
+  # new worker only reaches players hours after a deploy. Set before sending:
+  # Plug.Static writes its own cache-control.
   defp allow_device_service_worker_scope(
          %Plug.Conn{method: "GET", request_path: "/assets/sw.js"} = conn,
          _opts
        ) do
-    Plug.Conn.put_resp_header(conn, "service-worker-allowed", "/")
+    conn
+    |> Plug.Conn.put_resp_header("service-worker-allowed", "/")
+    |> Plug.Conn.register_before_send(&Plug.Conn.put_resp_header(&1, "cache-control", "no-cache"))
   end
 
   defp allow_device_service_worker_scope(conn, _opts), do: conn
