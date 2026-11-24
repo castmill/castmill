@@ -487,6 +487,32 @@ describe('Table card layout', () => {
     });
   });
 
+  it('starts ascending when selecting a visible column with a hidden descending sort', async () => {
+    const onSort = vi.fn();
+    render(() => (
+      <Table
+        columns={columns}
+        data={data}
+        cardLayout
+        onSort={onSort}
+        sortOptions={{ key: 'updated_at', direction: 'descending' }}
+      />
+    ));
+    resizeTo(PHONE_WIDTH);
+
+    const select = screen.getByLabelText('Sort by') as HTMLSelectElement;
+    expect(select.value).toBe('');
+    expect(select.options[0].textContent).toBe('—');
+    expect(screen.getByRole('button', { name: 'Descending' })).toBeDisabled();
+
+    select.value = 'role';
+    await fireEvent.change(select);
+    expect(onSort).toHaveBeenLastCalledWith({
+      key: 'role',
+      direction: 'ascending',
+    });
+  });
+
   it('uses English defaults and hides the toolbar when nothing applies', () => {
     const { container, unmount } = render(() => (
       <Table columns={columns} data={data} cardLayout />

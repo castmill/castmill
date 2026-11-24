@@ -443,6 +443,7 @@ export const TableView = <
             actionsLabel={props.table.actionsLabel}
             onRowSelect={handleRowSelect}
             onSort={handleSort}
+            sortOptions={sortOptions()}
             onRowClick={props.table.defaultRowAction?.handler}
             itemIdKey={props.itemIdKey}
             hideCheckboxes={props.table.hideCheckboxes}
