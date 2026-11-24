@@ -1065,7 +1065,8 @@
       "keepEditing": "編集を続ける",
       "removeItemTitle": "項目を削除しますか？",
       "removeItemMessage": "このプレイリストから「{{name}}」を削除しますか？"
-    }
+    },
+    "widgetConfigFailed": "このウィジェットの設定を表示できませんでした。このウィンドウを閉じて、別のウィジェットを選択してください。"
   },
   "layouts": {
     "title": "レイアウト",

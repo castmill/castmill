@@ -1064,7 +1064,8 @@
       "keepEditing": "继续编辑",
       "removeItemTitle": "移除项目？",
       "removeItemMessage": "要从此播放列表中移除“{{name}}”吗？"
-    }
+    },
+    "widgetConfigFailed": "无法显示此小组件的设置。请关闭此窗口并选择其他小组件。"
   },
   "layouts": {
     "title": "布局",

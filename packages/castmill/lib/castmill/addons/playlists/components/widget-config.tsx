@@ -123,6 +123,54 @@ export type SchemaAttributeType =
   | LocationFieldAttributes
   | ListFieldAttributes;
 
+/**
+ * A JSON Schema object (`{"type": "object", "properties": {...}}`), as some
+ * widgets declare their options, in Castmill's flat schema: its properties,
+ * with `required` and `minimum`/`maximum` moved onto each field.
+ */
+const flattenJsonSchema = (schema: {
+  properties: Record<string, any>;
+  required?: unknown;
+}): Record<string, SchemaAttributeType> => {
+  const required = Array.isArray(schema.required) ? schema.required : [];
+  return Object.fromEntries(
+    Object.entries(schema.properties).map(([key, field]) => {
+      if (!field || typeof field !== 'object') return [key, field];
+      const { minimum, maximum, ...rest } = field;
+      return [
+        key,
+        {
+          ...rest,
+          ...(minimum !== undefined && rest.min === undefined
+            ? { min: minimum }
+            : {}),
+          ...(maximum !== undefined && rest.max === undefined
+            ? { max: maximum }
+            : {}),
+          ...(required.includes(key) ? { required: true } : {}),
+        },
+      ];
+    })
+  );
+};
+
+const isJsonSchemaObject = (
+  schema: unknown
+): schema is { properties: Record<string, any>; required?: unknown } =>
+  !!schema &&
+  typeof schema === 'object' &&
+  !Array.isArray(schema) &&
+  (schema as any).type === 'object' &&
+  !!(schema as any).properties &&
+  typeof (schema as any).properties === 'object';
+
+/** A field definition: a type name, or an object with a type. */
+const isFieldDefinition = (value: unknown): boolean =>
+  typeof value === 'string' ||
+  (!!value &&
+    typeof value === 'object' &&
+    typeof (value as any).type === 'string');
+
 export const normalizeSchemaEntries = (
   rawOptionsSchema: unknown
 ): [string, SchemaAttributeType][] => {
@@ -133,10 +181,18 @@ export const normalizeSchemaEntries = (
       (item: any) => [item.key, item] as [string, SchemaAttributeType]
     );
   } else {
+    const schema = isJsonSchemaObject(rawOptionsSchema)
+      ? flattenJsonSchema(rawOptionsSchema)
+      : rawOptionsSchema;
     entries = Object.entries(
-      (rawOptionsSchema || {}) as Record<string, SchemaAttributeType>
+      (schema || {}) as Record<string, SchemaAttributeType>
     ) as [string, SchemaAttributeType][];
   }
+
+  // Entries that aren't field definitions can't be rendered (or saved).
+  entries = entries.filter(
+    ([key, value]) => typeof key === 'string' && isFieldDefinition(value)
+  );
 
   return entries.sort((a, b) => {
     const orderA = (a[1] as FieldAttributes).order ?? Infinity;
@@ -1421,7 +1477,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       case 'map':
         return <div>Map type not implemented yet</div>;
       default:
-        throw new Error(`Unknown type: ${type}`);
+        // An option this form can't edit must not break the whole form.
+        console.warn(`Widget option "${key}" has an unsupported type`, type);
+        return null;
     }
   }
 

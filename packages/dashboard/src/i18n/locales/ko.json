@@ -1064,7 +1064,8 @@
       "keepEditing": "계속 편집",
       "removeItemTitle": "항목을 제거할까요?",
       "removeItemMessage": "이 재생 목록에서 \"{{name}}\"을(를) 제거할까요?"
-    }
+    },
+    "widgetConfigFailed": "이 위젯의 설정을 표시할 수 없습니다. 이 창을 닫고 다른 위젯을 선택하세요."
   },
   "layouts": {
     "title": "레이아웃",

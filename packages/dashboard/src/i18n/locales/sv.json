@@ -1059,7 +1059,8 @@
       "keepEditing": "Fortsätt redigera",
       "removeItemTitle": "Ta bort objekt?",
       "removeItemMessage": "Ta bort \"{{name}}\" från den här spellistan?"
-    }
+    },
+    "widgetConfigFailed": "Widgetens inställningar kunde inte visas. Stäng fönstret och välj en annan widget."
   },
   "layouts": {
     "title": "Layouter",

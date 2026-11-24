@@ -1076,7 +1076,8 @@
       "keepEditing": "Continuer la modification",
       "removeItemTitle": "Retirer l'élément ?",
       "removeItemMessage": "Retirer « {{name}} » de cette playlist ?"
-    }
+    },
+    "widgetConfigFailed": "Les paramètres de ce widget n'ont pas pu être affichés. Fermez cette fenêtre et choisissez un autre widget."
   },
   "layouts": {
     "title": "Mises en page",

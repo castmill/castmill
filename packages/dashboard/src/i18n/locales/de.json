@@ -1086,7 +1086,8 @@
       "keepEditing": "Weiter bearbeiten",
       "removeItemTitle": "Element entfernen?",
       "removeItemMessage": "\"{{name}}\" aus dieser Playlist entfernen?"
-    }
+    },
+    "widgetConfigFailed": "Die Einstellungen dieses Widgets konnten nicht angezeigt werden. Schließen Sie dieses Fenster und wählen Sie ein anderes Widget."
   },
   "layouts": {
     "title": "Layoutvorlagen",

@@ -202,6 +202,38 @@ describe('WidgetConfig - Schema Entries Normalization', () => {
     const entries = normalizeSchemaEntries(schema).map(([key]) => key);
     expect(entries).toEqual(['first', 'second', 'third', 'unordered']);
   });
+
+  it('reads the properties of a JSON Schema object', () => {
+    // The RSS News widget declared its options like this, and the form saw
+    // two options called "type" and "properties".
+    const schema = {
+      type: 'object',
+      required: ['feed_url'],
+      properties: {
+        max_items: { type: 'integer', minimum: 1, maximum: 10, order: 2 },
+        feed_url: { type: 'url', order: 1 },
+      },
+    };
+
+    expect(normalizeSchemaEntries(schema)).toEqual([
+      ['feed_url', { type: 'url', order: 1, required: true }],
+      ['max_items', { type: 'integer', min: 1, max: 10, order: 2 }],
+    ]);
+  });
+
+  it('drops entries that are not field definitions', () => {
+    const schema = {
+      title: { type: 'string' },
+      broken: { description: 'no type' },
+      nothing: null,
+      shorthand: 'string',
+    };
+
+    expect(normalizeSchemaEntries(schema).map(([key]) => key)).toEqual([
+      'title',
+      'shorthand',
+    ]);
+  });
 });
 
 describe('WidgetConfig - Layout Ref Validation Logic', () => {
