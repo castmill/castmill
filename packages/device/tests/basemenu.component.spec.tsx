@@ -40,6 +40,23 @@ describe('BaseMenu component', () => {
     ];
   });
 
+  it('draws submenu arrows without font glyphs', () => {
+    const { getByText } = render(() => (
+      <BaseMenu header={<div>Menu Header</div>} entries={mockEntries} />
+    ));
+    fireEvent.click(window);
+
+    // Rows are rebuilt when a submenu opens: look the header up each time.
+    const arrow = () => getByText('Submenu Item').querySelector('svg')!;
+    // Some players' fonts have no "▶" and showed an empty box.
+    expect(getByText('Submenu Item').textContent).not.toMatch(/[▶▼]/);
+    expect(arrow().getAttribute('data-expanded')).toBe('false');
+
+    fireEvent.click(getByText('Submenu Item'));
+    expect(getByText('Sub Action')).toBeInTheDocument();
+    expect(arrow().getAttribute('data-expanded')).toBe('true');
+  });
+
   it('shows menu on click', () => {
     const { queryByRole } = render(() => (
       <BaseMenu header={<div>Menu Header</div>} entries={mockEntries} />
