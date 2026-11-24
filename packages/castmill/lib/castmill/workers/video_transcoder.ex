@@ -39,7 +39,7 @@ defmodule Castmill.Workers.VideoTranscoder do
       {:ok, input_file} ->
         result =
           try do
-            do_process(input_file, media_id, organization_id)
+            do_process(input_file, media_id, organization_id, args["actor_id"])
           rescue
             e ->
               stacktrace = __STACKTRACE__
@@ -59,14 +59,14 @@ defmodule Castmill.Workers.VideoTranscoder do
     end
   end
 
-  defp do_process(input_file, media_id, organization_id) do
+  defp do_process(input_file, media_id, organization_id, actor_id) do
     with {:ok, total_duration} <- get_video_duration(input_file),
          :ok <- store_video_duration(media_id, total_duration),
          {:ok, transcoded_files_metadata, total_size} <-
            transcode_assets(input_file, media_id, organization_id, total_duration),
          {:ok, media_file_records} <-
            persist_transcoded_files(transcoded_files_metadata, media_id, organization_id) do
-      notify_media_progress(media_id, 100.0, media_file_records, total_size, true)
+      notify_media_progress(media_id, 100.0, media_file_records, total_size, actor_id: actor_id)
       {:ok, media_file_records, total_size}
     end
   end
@@ -535,7 +535,7 @@ defmodule Castmill.Workers.VideoTranscoder do
          progress,
          media_file_records \\ nil,
          total_size \\ nil,
-         send_notification \\ false
+         notification \\ nil
        ) do
     # Update media status and broadcast progress
     status = if progress == 100.0, do: :ready, else: :transcoding
@@ -547,7 +547,9 @@ defmodule Castmill.Workers.VideoTranscoder do
       })
 
     # Send notification only when explicitly requested (final 100% with files)
-    if send_notification && progress == 100.0 do
+    # `notification` (a keyword list, `actor_id:` the uploader) sends the
+    # "media uploaded" notification: only for the final 100%, with files.
+    if notification && progress == 100.0 do
       # Get the full media record to access organization_id, name, and mimetype
       media = Resources.get_media(media_id)
 
@@ -555,17 +557,17 @@ defmodule Castmill.Workers.VideoTranscoder do
         "Sending media upload notification for media: #{media.id}, org: #{media.organization_id}, name: #{media.name}"
       )
 
-      # Send organization-wide notification (Media doesn't track user_id)
+      # Organization-wide notification, naming the uploader if known
       result =
         Events.notify_media_uploaded(
           media.id,
           media.name,
           media.mimetype,
-          # org-wide notification (no user_id in Media schema)
           nil,
           media.organization_id,
           # no role filter - all users in org will see it
-          []
+          [],
+          Keyword.take(notification, [:actor_id])
         )
 
       Logger.info("Notification result: #{inspect(result)}")
@@ -580,15 +582,17 @@ defmodule Castmill.Workers.VideoTranscoder do
   end
 
   @doc """
-  Schedules a video transcoding job.
+  Schedules a video transcoding job. `actor_id` is the uploader, named
+  in the "media uploaded" notification.
   """
-  def schedule(media, filepath, mime_type \\ nil) do
+  def schedule(media, filepath, mime_type \\ nil, actor_id \\ nil) do
     # Convert Ecto struct to plain map with string keys for BullMQ serialization
     media_map = media_to_map(media)
 
     args = %{
       "media" => media_map,
-      "filepath" => filepath
+      "filepath" => filepath,
+      "actor_id" => actor_id
     }
 
     # Add mime_type if provided (for compatibility)

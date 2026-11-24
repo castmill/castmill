@@ -68,50 +68,25 @@ defmodule CastmillWeb.NotificationsChannel do
     {:noreply, socket}
   end
 
-  # Listen for notifications broadcast via PubSub (with pre-computed count)
+  # Listen for notifications broadcast via PubSub. The count is the
+  # recipient's when the notification is addressed to this user; organization
+  # and team broadcasts carry a placeholder, so it is computed per user.
   @impl true
   def handle_info({:new_notification, notification, unread_count}, socket) do
-    require Logger
-
     user_id = socket.assigns.user.id
-    notif_id = notification[:id] || notification.id
 
-    Logger.info(
-      "NotificationsChannel received notification #{notif_id} for user #{user_id} with count #{unread_count}"
-    )
+    count =
+      if Map.get(notification, :user_id) == user_id,
+        do: unread_count,
+        else: :compute
 
-    payload = %{
-      notification: normalize_notification(notification),
-      unread_count: unread_count
-    }
-
-    push(socket, "new_notification", payload)
-
-    {:noreply, socket}
+    push_notification(socket, notification, count)
   end
 
   # Listen for notifications broadcast via PubSub (compute count)
   @impl true
   def handle_info({:new_notification, notification}, socket) do
-    require Logger
-
-    user_id = socket.assigns.user.id
-    notif_id = notification[:id] || notification.id
-
-    Logger.info("NotificationsChannel received notification #{notif_id} for user #{user_id}")
-
-    count = Notifications.count_unread_notifications(user_id)
-
-    payload = %{
-      notification: normalize_notification(notification),
-      unread_count: count
-    }
-
-    Logger.info("Pushing notification payload to WebSocket: #{inspect(payload)}")
-    push(socket, "new_notification", payload)
-    Logger.info("Pushed notification to user #{user_id} via WebSocket, unread count: #{count}")
-
-    {:noreply, socket}
+    push_notification(socket, notification, :compute)
   end
 
   # Handle notification_read event broadcast
@@ -155,18 +130,51 @@ defmodule CastmillWeb.NotificationsChannel do
     {:noreply, socket}
   end
 
-  # Helper to normalize notification (handles both struct and map)
+  # Pushes a notification only to users who may see it (the rules of the
+  # notifications list: recipient, membership, roles, exclusions).
+  defp push_notification(socket, notification, count) do
+    require Logger
+
+    user_id = socket.assigns.user.id
+    notif_id = Map.get(notification, :id)
+
+    if Notifications.visible_to_user?(notification, user_id) do
+      count =
+        if count == :compute, do: Notifications.count_unread_notifications(user_id), else: count
+
+      push(socket, "new_notification", %{
+        notification: normalize_notification(notification),
+        unread_count: count
+      })
+
+      Logger.debug("Pushed notification #{notif_id} to user #{user_id}, unread count: #{count}")
+    end
+
+    {:noreply, socket}
+  end
+
+  # Helper to normalize notification (handles both struct and map). Access
+  # syntax (`notification[:id]`) raises for structs, so use Map.get.
   defp normalize_notification(notification) do
     %{
-      id: notification[:id] || notification.id,
-      title_key: notification[:title_key] || Map.get(notification, :title_key),
-      description_key: notification[:description_key] || Map.get(notification, :description_key),
-      link: notification[:link] || Map.get(notification, :link),
-      type: notification[:type] || Map.get(notification, :type),
-      read: notification[:read] || Map.get(notification, :read, false),
-      metadata: notification[:metadata] || Map.get(notification, :metadata),
-      inserted_at: notification[:inserted_at] || Map.get(notification, :inserted_at)
+      id: Map.get(notification, :id),
+      title_key: Map.get(notification, :title_key),
+      description_key: Map.get(notification, :description_key),
+      link: Map.get(notification, :link),
+      type: Map.get(notification, :type),
+      read: Map.get(notification, :read, false),
+      metadata: Map.get(notification, :metadata),
+      actor: normalize_actor(notification),
+      inserted_at: Map.get(notification, :inserted_at)
     }
+  end
+
+  # Same shape as `CastmillWeb.NotificationJSON`.
+  defp normalize_actor(notification) do
+    case Map.get(notification, :actor_type) do
+      nil -> nil
+      type -> %{type: type, name: Map.get(notification, :actor_name)}
+    end
   end
 
   # Only the user can join their own notification channel

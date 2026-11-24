@@ -1671,6 +1671,7 @@
       "title": "Notifikationer",
       "empty": "Inga notifikationer än",
       "markAllRead": "Markera alla som lästa",
+      "byUser": "av {{name}}",
       "types": {
         "organizationInvitation": {
           "title": "Organisationsinbjudan",

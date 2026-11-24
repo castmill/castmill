@@ -305,7 +305,9 @@ defmodule CastmillWeb.OrganizationController do
         Castmill.Notifications.Events.notify_device_registration(
           device.name,
           device.id,
-          organization_id
+          organization_id,
+          [],
+          actor_id: CastmillWeb.CurrentUser.id(conn)
         )
 
         conn
@@ -730,7 +732,9 @@ defmodule CastmillWeb.OrganizationController do
         "organization_id" => organization_id,
         "user_id" => user_id
       }) do
-    case Organizations.remove_user(organization_id, user_id) do
+    case Organizations.remove_user(organization_id, user_id,
+           actor_id: CastmillWeb.CurrentUser.id(conn)
+         ) do
       {:ok, _} ->
         conn
         |> put_status(:ok)

@@ -18,6 +18,22 @@ import { useNavigate } from '@solidjs/router';
 import { store } from '../../store';
 import './notification-dialog.scss';
 
+/**
+ * Notification types whose actor is also their subject, already named in the
+ * text (e.g. "Ana joined the organization").
+ */
+const SELF_ACTOR_TYPES = new Set(['invitation_accepted']);
+
+/** The name of the user who performed the action, if it adds anything. */
+export const notificationActorName = (
+  notification: Notification
+): string | undefined => {
+  const actor = notification.actor;
+  if (actor?.type !== 'user' || !actor.name) return undefined;
+  if (SELF_ACTOR_TYPES.has(notification.type)) return undefined;
+  return actor.name;
+};
+
 interface NotificationDialogProps {
   onClose: () => void;
   onNotificationRead: (unreadCount: number) => void;
@@ -407,6 +423,7 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
                   const description = notification.description_key
                     ? t(notification.description_key, notification.metadata)
                     : undefined;
+                  const actorName = notificationActorName(notification);
 
                   return (
                     <div
@@ -428,6 +445,18 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
                             new Date(notification.inserted_at),
                             'PPp'
                           )}
+                          <Show when={actorName}>
+                            {(name) => (
+                              <>
+                                {' · '}
+                                <span class="notification-actor">
+                                  {t('organizations.notifications.byUser', {
+                                    name: name(),
+                                  })}
+                                </span>
+                              </>
+                            )}
+                          </Show>
                         </div>
                       </div>
                       <Show when={!notification.read}>
