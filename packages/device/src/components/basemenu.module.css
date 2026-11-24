@@ -102,3 +102,23 @@
 .infoValue {
   color: #d3d3d3;
 }
+
+.input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+
+.input input {
+  font: inherit;
+  color: #eee;
+  background: #2a2a2a;
+  border: 1px solid #5a5a5a;
+  border-radius: 3px;
+  padding: 4px 6px;
+}
+
+.input input:focus {
+  outline: 2px solid #59b0e9;
+  outline-offset: -1px;
+}

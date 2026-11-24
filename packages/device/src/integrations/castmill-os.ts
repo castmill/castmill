@@ -5,6 +5,8 @@ import type {
   OsUpdateTarget,
   SettingKey,
   TelemetryData,
+  WifiNetwork,
+  WifiStatus,
 } from '../interfaces/machine';
 
 /**
@@ -145,6 +147,20 @@ export class CastmillOSMachine implements Machine {
     await this.call('setOsUpdate', target);
   }
 
+  /** Undefined on Castmill OS versions without Wi-Fi in the menu (0.3 and older). */
+  async getWifiStatus(): Promise<WifiStatus | undefined> {
+    try {
+      return pickWifiStatus(await this.call<unknown>('getWifiStatus'));
+    } catch {
+      return undefined;
+    }
+  }
+
+  /** Castmill OS only joins while the device is offline. */
+  async connectWifi(ssid: string, psk: string, hidden = false): Promise<void> {
+    await this.call('connectWifi', ssid, psk, hidden);
+  }
+
   /** Undefined on Castmill OS versions without OS update support (0.2 and older). */
   async getOsUpdateStatus(): Promise<OsUpdateStatus | undefined> {
     try {
@@ -184,4 +200,40 @@ export function pickHardwareInfo(value: unknown): Partial<DeviceInfo> {
       .slice(0, MAX_VIDEO_FORMATS);
   }
   return out;
+}
+
+const MAX_WIFI_NETWORKS = 30;
+
+const pickWifiNetwork = (value: unknown): WifiNetwork | undefined => {
+  if (!value || typeof value !== 'object') return undefined;
+  const n = value as Record<string, unknown>;
+  if (typeof n.ssid !== 'string' || n.ssid === '' || n.ssid.length > 32) {
+    return undefined;
+  }
+  const signal = typeof n.signal === 'number' ? n.signal : 0;
+  return {
+    ssid: n.ssid,
+    signal: Math.max(0, Math.min(100, Math.round(signal))),
+    secure: n.secure === true,
+    active: n.active === true,
+  };
+};
+
+/** A WifiStatus with the right types only (the menu renders it). */
+export function pickWifiStatus(value: unknown): WifiStatus | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const s = value as Record<string, unknown>;
+  const networks = Array.isArray(s.networks)
+    ? s.networks
+        .map(pickWifiNetwork)
+        .filter((n): n is WifiNetwork => !!n)
+        .slice(0, MAX_WIFI_NETWORKS)
+    : [];
+  return {
+    available: s.available === true,
+    online: s.online === true,
+    current: pickWifiNetwork(s.current),
+    networks,
+    error: typeof s.error === 'string' ? s.error.slice(0, 200) : undefined,
+  };
 }

@@ -319,6 +319,39 @@ export interface Machine {
    * (`os_update:report`). Undefined when the OS can't report it.
    */
   getOsUpdateStatus?(): Promise<OsUpdateStatus | undefined>;
+
+  /**
+   * Wi-Fi of the device, for the menu: the network it's connected to and,
+   * while it's offline, the networks in range. Undefined when the platform
+   * can't report it.
+   */
+  getWifiStatus?(): Promise<WifiStatus | undefined>;
+
+  /**
+   * Joins a Wi-Fi network (`psk` empty for open networks). Platforms may
+   * refuse while the device is online, so that whoever can reach a working
+   * screen can't change its network; the error says why.
+   */
+  connectWifi?(ssid: string, psk: string, hidden?: boolean): Promise<void>;
+}
+
+export interface WifiNetwork {
+  ssid: string;
+  /** Signal strength, 0-100. */
+  signal: number;
+  secure: boolean;
+  /** The device is connected to it. */
+  active?: boolean;
+}
+
+export interface WifiStatus {
+  /** The device has Wi-Fi. */
+  available: boolean;
+  online: boolean;
+  current?: WifiNetwork;
+  /** In range, strongest first; only listed while the device is offline. */
+  networks: WifiNetwork[];
+  error?: string;
 }
 
 /** The OS version Castmill wants a Castmill OS device to run. */
