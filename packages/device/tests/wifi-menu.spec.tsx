@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@solidjs/testing-library';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createSignal } from 'solid-js';
 
 import type { Device } from '../src/classes/device';
 import type { WifiStatus } from '../src/interfaces/machine';
@@ -140,6 +141,81 @@ describe('Wi-Fi menu', () => {
     const again = (await screen.findByText('Password for Venue'))
       .nextElementSibling as HTMLInputElement;
     expect(again.value).toBe('');
+  });
+
+  it('keeps a typed password with its network when a scan reorders them', async () => {
+    const [status, setStatus] = createSignal<WifiStatus>(offline);
+    const device = {
+      getWifiStatus: vi.fn(async () => status()),
+      connectWifi: vi.fn(async () => {}),
+    } as unknown as Device;
+    let refresh!: () => void;
+    render(() => {
+      const wifi = createWifiMenu(device);
+      refresh = wifi.refresh;
+      return (
+        <BaseMenu
+          header={<h1>Menu</h1>}
+          footer={<p>footer</p>}
+          entries={wifi.entry() ? [wifi.entry()!] : []}
+        />
+      );
+    });
+    await openWifi();
+    fireEvent.click(screen.getByText('Venue · 80%'));
+    const input = (await screen.findByText('Password for Venue'))
+      .nextElementSibling as HTMLInputElement;
+    fireEvent.input(input, { target: { value: 'venue-pass' } });
+
+    // A rescan puts another secured network first.
+    setStatus({
+      ...offline,
+      networks: [
+        { ssid: 'Office', signal: 90, secure: true },
+        { ssid: 'Venue', signal: 70, secure: true },
+      ],
+    });
+    refresh();
+    await screen.findByText('Office · 90%');
+    const again = screen.getByText('Password for Venue')
+      .nextElementSibling as HTMLInputElement;
+    expect(again.value).toBe('venue-pass');
+
+    fireEvent.click(again.closest('li')!);
+    key(13);
+    expect(device.connectWifi).toHaveBeenCalledWith(
+      'Venue',
+      'venue-pass',
+      false
+    );
+  });
+
+  it('keeps passwords of different hidden networks apart', async () => {
+    const { connect } = setup(
+      offline,
+      vi.fn(async () => {})
+    );
+    await openWifi();
+    const hidden = async (name: string) => {
+      fireEvent.click(screen.getByText('Other network…'));
+      const field = (await screen.findByText('Network name'))
+        .nextElementSibling as HTMLInputElement;
+      fireEvent.input(field, { target: { value: name } });
+      fireEvent.click(field.closest('li')!);
+      key(13);
+      return (await screen.findByText(new RegExp(`Password for ${name}`)))
+        .nextElementSibling as HTMLInputElement;
+    };
+
+    const first = await hidden('Backstage');
+    fireEvent.input(first, { target: { value: 'backstage-pass' } });
+
+    const second = await hidden('Storage');
+    expect(second.value).toBe('');
+    fireEvent.input(second, { target: { value: 'storage-pass' } });
+    fireEvent.click(second.closest('li')!);
+    key(13);
+    expect(connect).toHaveBeenCalledWith('Storage', 'storage-pass', true);
   });
 });
 

@@ -27,6 +27,12 @@ export const wifiErrorMessage = (error: unknown): string => {
 const networkLabel = (n: WifiNetwork) =>
   `${n.ssid} · ${n.signal}%${n.secure ? '' : ' · open'}`;
 
+// Row ids follow the network, not its place in the scan: the menu keeps the
+// selection and typed passwords by id, and a scan can reorder the networks.
+const networkId = (ssid: string) => `wifi-network:${ssid}`;
+const passwordId = (ssid: string, hidden: boolean) =>
+  `wifi-password:${hidden ? 'hidden' : 'visible'}:${ssid}`;
+
 const info = (id: string, text: string): MenuEntry => ({
   id,
   type: 'info',
@@ -105,9 +111,9 @@ export function createWifiMenu(device: Device): {
         )
       );
     } else if (!connecting) {
-      s.networks.forEach((n, i) => {
+      s.networks.forEach((n) => {
         children.push({
-          id: `wifi-network-${i}`,
+          id: networkId(n.ssid),
           type: 'action',
           name: networkLabel(n),
           action: () => {
@@ -118,7 +124,7 @@ export function createWifiMenu(device: Device): {
         const p = pending();
         if (p && !p.hidden && p.ssid === n.ssid) {
           children.push({
-            id: `wifi-password-${i}`,
+            id: passwordId(n.ssid, false),
             type: 'input',
             inputType: 'password',
             name: `Password for ${n.ssid}`,
@@ -157,7 +163,7 @@ export function createWifiMenu(device: Device): {
       const p = pending();
       if (p?.hidden) {
         children.push({
-          id: 'wifi-other-password',
+          id: passwordId(p.ssid, true),
           type: 'input',
           inputType: 'password',
           name: `Password for ${p.ssid} (empty if open)`,

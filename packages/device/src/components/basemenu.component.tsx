@@ -129,8 +129,11 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
   const [timer, setTimer] = createSignal(0);
   // menu visibility signal
   const [visible, setVisible] = createSignal(false);
-  // the currently selected item index
-  const [selected, setSelected] = createSignal(0);
+  // The selected row, by id: rows can be added, removed or reordered while the
+  // menu is open (e.g. a Wi-Fi scan), and the selection must follow its row.
+  const [selectedId, setSelectedId] = createSignal<string>();
+  // Where the selection was, for when its row disappears.
+  let lastIndex = 0;
   // the currently active item id. Used to highlight the item when triggering action
   const [active, setActive] = createSignal();
   // checkbox states
@@ -284,9 +287,13 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
                 placeholder={entry.placeholder}
                 value={inputValues()[entry.id] ?? ''}
                 autocomplete="off"
+                // Typing (also pasting or an on-screen keyboard, which send
+                // no keydown) keeps the menu open for the longer timeout.
+                onFocus={showMenu}
                 onInput={(e) => {
                   const value = e.currentTarget.value;
                   setInputValues((v) => ({ ...v, [entry.id]: value }));
+                  showMenu();
                 }}
               />
             </label>
@@ -311,6 +318,30 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
   };
 
   const items = createMemo(() => getItems(props.entries));
+
+  // Index of the selected row; the nearest row when it disappeared.
+  const selected = createMemo(() => {
+    const list = items();
+    const i = list.findIndex((item) => item.id === selectedId());
+    lastIndex = i >= 0 ? i : Math.max(0, Math.min(lastIndex, list.length - 1));
+    return lastIndex;
+  });
+  const setSelected = (index: number | ((current: number) => number)) => {
+    const list = items();
+    if (list.length === 0) return;
+    const i = typeof index === 'function' ? index(selected()) : index;
+    lastIndex = i;
+    setSelectedId(list[i]?.id);
+  };
+
+  // Keep the selected row visible in a scrolled menu.
+  createEffect(() => {
+    if (!visible()) return;
+    selected();
+    menuRef
+      ?.querySelector('li[data-selected]')
+      ?.scrollIntoView?.({ block: 'nearest' });
+  });
 
   // Focus the selected input row (also after its row was rebuilt); leave a
   // field when the selection moves away from it.
@@ -359,6 +390,11 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
 
       const currentItems = items();
 
+      if (currentItems.length === 0) {
+        if (e.keyCode === Key.Escape || e.keyCode === Key.WebosBack) hideMenu();
+        return;
+      }
+
       switch (e.keyCode) {
         case Key.Up:
           setSelected(
@@ -370,7 +406,7 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
           break;
         case Key.Enter:
           const item = currentItems[selected()];
-          if (!item.nonInteractive) {
+          if (item && !item.nonInteractive) {
             item.action();
           }
           break;
@@ -399,7 +435,7 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
   return (
     <Show when={visible()}>
       <div class={styles.menu} ref={menuRef}>
-        <div role="menu">
+        <div role="menu" class={styles.menuBody}>
           <div class={styles.menuHead}>{props.header}</div>
           <ul>
             <For each={items()}>
@@ -414,6 +450,7 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
                     showMenu();
                     setSelected(i());
                   }}
+                  data-selected={selected() === i() ? '' : undefined}
                   classList={{
                     [styles.menuItem]: true,
                     [styles.selected]: selected() === i(),

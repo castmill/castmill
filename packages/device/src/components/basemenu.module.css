@@ -9,6 +9,23 @@
   border-bottom-right-radius: 0.5em;
   border-right: 1px solid #484848;
   border-bottom: 1px solid #484848;
+  /* Never taller than the screen: the entries scroll (e.g. Wi-Fi networks). */
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.menuBody {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.menuBody > ul {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .menuHead {
