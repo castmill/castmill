@@ -541,6 +541,69 @@ describe('ImageCarousel', () => {
       widget.stop();
     });
 
+    for (const count of [1, 2]) {
+      it(`${count === 1 ? 'loops back' : 'holds the last image'} at the end of a ${count}-widget playlist item`, async () => {
+        const resourceManager = { getMedia: async (url: string) => url };
+        const playlist = Playlist.fromJSON(
+          {
+            name: 'carousel-boundary',
+            items: Array.from({ length: count }, (_value, index) => ({
+              name: `carousel-${index}`,
+              widget: {
+                name: `carousel-${index}`,
+                template: {
+                  type: 'image-carousel',
+                  name: `carousel-${index}`,
+                  opts: {
+                    images: ['https://img/1', 'https://img/2', 'https://img/3'],
+                    imageDuration: 5,
+                    transition: 'fade',
+                  },
+                },
+              },
+              config: { options: {}, data: {} },
+            })),
+          } as any,
+          resourceManager as any,
+          { target: 'preview', freezePreviewDuringLoad: true }
+        );
+        const root = dom.window.document.getElementById('root');
+        const renderer = new Renderer(root);
+        try {
+          await firstValueFrom(playlist.show(renderer));
+          const images = root.querySelectorAll('[data-component="image"]');
+          expect(playlist.layers[0].duration()).to.equal(18000);
+          await firstValueFrom(playlist.layers[0].seek(17500));
+          if (count === 1) {
+            expect(Number(images[0].style.opacity)).to.be.within(0.5, 1);
+            expect(Number(images[2].style.opacity)).to.be.within(0, 0.5);
+          } else {
+            expect(Number(images[0].style.opacity)).to.equal(0);
+            expect(Number(images[2].style.opacity)).to.equal(1);
+            await firstValueFrom(playlist.layers[0].seek(20000));
+            expect(Number(images[0].style.opacity)).to.equal(0);
+            expect(Number(images[2].style.opacity)).to.equal(1);
+
+            const clock = useFakeTimers();
+            const timer = new Subject<number>();
+            const playing = playlist.layers[0].play(timer).subscribe();
+            try {
+              await clock.tickAsync(2000);
+              expect(Number(images[0].style.opacity)).to.equal(0);
+              expect(Number(images[2].style.opacity)).to.equal(1);
+            } finally {
+              playing.unsubscribe();
+              await playlist.layers[0].stop();
+              clock.restore();
+            }
+          }
+        } finally {
+          playlist.unload();
+          renderer.clean();
+        }
+      });
+    }
+
     it('does not show the carousel until the incoming image has loaded', async () => {
       const preloads: Array<{ onload: ((event: Event) => void) | null }> = [];
       globals.Image = class {

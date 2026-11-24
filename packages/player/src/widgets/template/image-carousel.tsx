@@ -413,6 +413,11 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
         // When the last image leaves, the first one comes back in.
         let position = `>+=${imageDuration}`;
         if (index === urls.length - 1) {
+          if (props.globals.loopPlaylistItem === false) {
+            // Keep the slot duration, but hold the last photo until replacement.
+            timeline.to({}, { duration: TRANSITION_SECONDS }, position);
+            return;
+          }
           timeline.from(
             images[0],
             Object.assign({}, props.startArgs || transitionArgs.startArgs),

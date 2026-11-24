@@ -24,6 +24,12 @@ Resolve later image URLs independently and update their backgrounds without
 rebuilding the timeline or delaying the first frame. Keep device playback's
 existing cache resolution and slot timing unchanged.
 
+Playlists with multiple items set `loopPlaylistItem: false` on their widgets.
+Carousels hold the last image instead of fading back to the first, keeping the
+same slot duration. Their root timelines also stop at the end so preparing the
+next widget cannot briefly restart the outgoing one. Single-item playlists and
+standalone previews retain the loop-back transition.
+
 Autofitted text keeps its initial synchronous fit for readiness. Coalesce later
 resize and content notifications into one animation-frame fit, using the latest
 text and container dimensions, and cancel queued work on cleanup.

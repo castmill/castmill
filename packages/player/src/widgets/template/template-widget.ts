@@ -81,6 +81,7 @@ export class TemplateWidget extends TimelineWidget {
     private opts: TemplateWidgetOptions
   ) {
     super(resourceManager, opts);
+    this.timeline.setLoop(opts.globals.loopPlaylistItem !== false);
 
     this.globals = Object.assign({}, opts.globals, {
       setPlaybackBlocked: (source: object, block?: PlayerRuntimeError) =>
