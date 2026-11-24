@@ -529,8 +529,10 @@ defmodule Castmill.Devices do
   @doc """
   Removes a device and all its entries.
   Notifies the device via WebSocket if it's connected.
+
+  `actor_id:` in `opts` is the user who removed it, shown in the notification.
   """
-  def delete_device(%Device{} = device) do
+  def delete_device(%Device{} = device, opts \\ []) do
     # Delete the device from the database first
     result = Repo.delete(device)
 
@@ -544,7 +546,12 @@ defmodule Castmill.Devices do
         })
 
         # Notify organization users about device removal
-        Events.notify_device_removal(deleted_device.name, deleted_device.organization_id)
+        Events.notify_device_removal(
+          deleted_device.name,
+          deleted_device.organization_id,
+          deleted_device.id,
+          Keyword.take(opts, [:actor_id])
+        )
 
       {:error, _} ->
         :ok

@@ -190,6 +190,22 @@ defmodule CastmillWeb.NotificationsChannelTest do
       }
     end
 
+    test "pushes who performed the action", %{user: user, organization: org} do
+      {:ok, _, _socket} =
+        CastmillWeb.UserSocket
+        |> socket(user.id, %{user: user})
+        |> subscribe_and_join(
+          CastmillWeb.NotificationsChannel,
+          "notifications:#{user.id}"
+        )
+
+      Castmill.Notifications.Events.notify_member_removed("Bob", org.id, user.id)
+
+      assert_push "new_notification", %{
+        notification: %{actor: %{type: "user", name: "Test User"}}
+      }
+    end
+
     test "receives organization-wide notifications", %{user: user, organization: org} do
       {:ok, _, _socket} =
         CastmillWeb.UserSocket

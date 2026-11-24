@@ -1686,6 +1686,7 @@
       "title": "Notifications",
       "empty": "No notifications yet",
       "markAllRead": "Mark all as read",
+      "byUser": "by {{name}}",
       "types": {
         "organizationInvitation": {
           "title": "Organization Invitation",

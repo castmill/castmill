@@ -82,22 +82,30 @@ defmodule Castmill.Notifications.Events do
     - device_id: The ID of the device
     - organization_id: The ID of the organization
     - roles: Optional list of roles to restrict notification (e.g., ["admin", "device_manager"])
+    - opts: `actor_id:` the user who registered the device (else the device
+      is the actor)
   """
-  def notify_device_registration(device_name, device_id, organization_id, roles \\ []) do
-    Notifications.create_organization_notification(%{
+  def notify_device_registration(
+        device_name,
+        device_id,
+        organization_id,
+        roles \\ [],
+        opts \\ []
+      ) do
+    %{
       organization_id: organization_id,
       title_key: "organizations.notifications.types.deviceRegistration.title",
       description_key: "organizations.notifications.types.deviceRegistration.description",
       link: "/org/#{organization_id}/devices?device=#{device_id}",
       type: "device_registration",
       roles: roles,
-      actor_id: device_id,
-      actor_type: "device",
       metadata: %{
         device_id: device_id,
         device_name: device_name
       }
-    })
+    }
+    |> Map.merge(actor(opts, "device", device_id))
+    |> Notifications.create_organization_notification()
   end
 
   @doc """
@@ -107,19 +115,21 @@ defmodule Castmill.Notifications.Events do
     - device_name: The name of the device
     - organization_id: The ID of the organization
     - device_id: The ID of the device (for actor tracking)
+    - opts: `actor_id:` the user who removed the device (else the device is
+      the actor)
   """
-  def notify_device_removal(device_name, organization_id, device_id \\ nil) do
-    Notifications.create_organization_notification(%{
+  def notify_device_removal(device_name, organization_id, device_id \\ nil, opts \\ []) do
+    %{
       organization_id: organization_id,
       title_key: "organizations.notifications.types.deviceRemoval.title",
       description_key: "organizations.notifications.types.deviceRemoval.description",
       type: "device_removal",
-      actor_id: device_id,
-      actor_type: "device",
       metadata: %{
         device_name: device_name
       }
-    })
+    }
+    |> Map.merge(actor(opts, "device", device_id))
+    |> Notifications.create_organization_notification()
   end
 
   @doc """
@@ -402,8 +412,17 @@ defmodule Castmill.Notifications.Events do
     - user_id: The ID of the user who uploaded (nil for org-wide)
     - organization_id: The ID of the organization
     - roles: Optional list of roles for org-wide notifications
+    - opts: `actor_id:` the user who uploaded it, for org-wide notifications
   """
-  def notify_media_uploaded(media_id, media_name, mimetype, user_id, organization_id, roles \\ []) do
+  def notify_media_uploaded(
+        media_id,
+        media_name,
+        mimetype,
+        user_id,
+        organization_id,
+        roles \\ [],
+        opts \\ []
+      ) do
     # Determine media type from mimetype
     media_type =
       cond do
@@ -440,20 +459,21 @@ defmodule Castmill.Notifications.Events do
 
       organization_id != nil ->
         # Organization-wide notification with optional role filtering
-        Notifications.create_organization_notification(%{
+        %{
           organization_id: organization_id,
           title_key: title_key,
           description_key: description_key,
           link: "/content/medias?media=#{media_id}",
           type: "media_uploaded",
           roles: roles,
-          actor_type: "system",
           metadata: %{
             media_id: media_id,
             media_name: media_name,
             media_type: media_type
           }
-        })
+        }
+        |> Map.merge(actor(opts, "system", nil))
+        |> Notifications.create_organization_notification()
 
       true ->
         {:error, :missing_recipient}
@@ -491,6 +511,15 @@ defmodule Castmill.Notifications.Events do
     |> case do
       {:ok, notifications} -> {:ok, Enum.reverse(notifications)}
       error -> error
+    end
+  end
+
+  # The user who performed the action (`actor_id:` in `opts`), or the given
+  # fallback actor when there is none (a device, the system).
+  defp actor(opts, fallback_type, fallback_id) do
+    case Keyword.get(opts, :actor_id) do
+      nil -> %{actor_type: fallback_type, actor_id: fallback_id}
+      user_id -> %{actor_type: "user", actor_id: user_id}
     end
   end
 

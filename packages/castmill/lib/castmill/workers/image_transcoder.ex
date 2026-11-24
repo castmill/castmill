@@ -109,17 +109,17 @@ defmodule Castmill.Workers.ImageTranscoder do
             "Sending media upload notification for image: #{media.id}, org: #{media.organization_id}, name: #{media.name}"
           )
 
-          # Send organization-wide notification (Media doesn't track user_id)
+          # Organization-wide notification, naming the uploader if known
           result =
             Events.notify_media_uploaded(
               media.id,
               media.name,
               media.mimetype,
-              # org-wide notification (no user_id in Media schema)
               nil,
               media.organization_id,
               # no role filter - all users in org will see it
-              []
+              [],
+              actor_id: args["actor_id"]
             )
 
           Logger.info("Notification result: #{inspect(result)}")
@@ -156,9 +156,10 @@ defmodule Castmill.Workers.ImageTranscoder do
   end
 
   @doc """
-  Schedules an image transcoding job.
+  Schedules an image transcoding job. `actor_id` is the uploader, named
+  in the "media uploaded" notification.
   """
-  def schedule(media, filepath, mime_type) do
+  def schedule(media, filepath, mime_type, actor_id \\ nil) do
     # Convert Ecto struct to plain map with string keys for BullMQ serialization
     media_map = media_to_map(media)
 
@@ -168,7 +169,8 @@ defmodule Castmill.Workers.ImageTranscoder do
       %{
         "media" => media_map,
         "filepath" => filepath,
-        "mime_type" => mime_type
+        "mime_type" => mime_type,
+        "actor_id" => actor_id
       },
       job_id: "image_transcode:#{media_map["id"]}"
     )

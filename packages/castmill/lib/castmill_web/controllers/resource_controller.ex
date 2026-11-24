@@ -953,7 +953,10 @@ defmodule CastmillWeb.ResourceController do
         |> halt()
 
       device ->
-        with {:ok, %Device{}} <- Castmill.Devices.delete_device(device) do
+        with {:ok, %Device{}} <-
+               Castmill.Devices.delete_device(device,
+                 actor_id: CastmillWeb.CurrentUser.id(conn)
+               ) do
           send_resp(conn, :no_content, "")
         else
           {:error, reason} ->

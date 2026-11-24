@@ -1676,6 +1676,7 @@
       "title": "알림",
       "empty": "아직 알림이 없습니다",
       "markAllRead": "모두 읽음으로 표시",
+      "byUser": "{{name}} 님",
       "types": {
         "organizationInvitation": {
           "title": "조직 초대",

@@ -1676,6 +1676,7 @@
       "title": "通知",
       "empty": "暂无通知",
       "markAllRead": "标记全部为已读",
+      "byUser": "由 {{name}}",
       "types": {
         "organizationInvitation": {
           "title": "组织邀请",

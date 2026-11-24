@@ -1544,8 +1544,10 @@ defmodule Castmill.Organizations do
   @doc """
     Remove a user from an organization.
     If this is the user's last organization, their account will be deleted automatically.
+
+    `actor_id:` in `opts` is the user who removed them, shown in the notification.
   """
-  def remove_user(organization_id, user_id) do
+  def remove_user(organization_id, user_id, opts \\ []) do
     with %OrganizationsUsers{} = org_user <-
            Repo.get_by(OrganizationsUsers,
              organization_id: organization_id,
@@ -1558,7 +1560,11 @@ defmodule Castmill.Organizations do
       user = Castmill.Accounts.get_user(user_id)
 
       if user do
-        Castmill.Notifications.Events.notify_member_removed(user.name, organization_id)
+        Castmill.Notifications.Events.notify_member_removed(
+          user.name,
+          organization_id,
+          Keyword.get(opts, :actor_id)
+        )
       end
 
       {:ok, "User successfully removed."}

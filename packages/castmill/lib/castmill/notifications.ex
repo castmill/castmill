@@ -136,7 +136,37 @@ defmodule Castmill.Notifications do
         end
       end)
 
-    {notifications, length(rows) == page_size}
+    {put_actor_names(notifications), length(rows) == page_size}
+  end
+
+  @doc """
+  Fills in `actor_name` for notifications whose actor is a user, with one
+  query. Users that no longer exist leave it `nil`.
+  """
+  def put_actor_names(notifications) when is_list(notifications) do
+    user_ids =
+      for %Notification{actor_type: "user", actor_id: id} <- notifications,
+          is_binary(id),
+          match?({:ok, _}, Ecto.UUID.cast(id)),
+          uniq: true,
+          do: id
+
+    names =
+      if user_ids == [] do
+        %{}
+      else
+        from(u in User, where: u.id in ^user_ids, select: {u.id, u.name})
+        |> Repo.all()
+        |> Map.new()
+      end
+
+    Enum.map(notifications, fn
+      %Notification{actor_type: "user", actor_id: id} = notification ->
+        %{notification | actor_name: Map.get(names, id)}
+
+      notification ->
+        notification
+    end)
   end
 
   @doc """
@@ -327,6 +357,9 @@ defmodule Castmill.Notifications do
   # Private function to broadcast notification via Phoenix PubSub
   defp broadcast_notification({:ok, notification} = result) do
     require Logger
+
+    # Recipients' dashboards show who did it.
+    [notification] = put_actor_names([notification])
 
     # Broadcast to user channel if user_id is present
     if notification.user_id do

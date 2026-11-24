@@ -18,6 +18,19 @@ import { useNavigate } from '@solidjs/router';
 import { store } from '../../store';
 import './notification-dialog.scss';
 
+/**
+ * The name of the user who performed the action, unless the notification is
+ * about that same user (e.g. "Ana joined the organization").
+ */
+export const notificationActorName = (
+  notification: Notification
+): string | undefined => {
+  const actor = notification.actor;
+  if (actor?.type !== 'user' || !actor.name) return undefined;
+  if (notification.metadata?.user_name === actor.name) return undefined;
+  return actor.name;
+};
+
 interface NotificationDialogProps {
   onClose: () => void;
   onNotificationRead: (unreadCount: number) => void;
@@ -407,6 +420,7 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
                   const description = notification.description_key
                     ? t(notification.description_key, notification.metadata)
                     : undefined;
+                  const actorName = notificationActorName(notification);
 
                   return (
                     <div
@@ -428,6 +442,18 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
                             new Date(notification.inserted_at),
                             'PPp'
                           )}
+                          <Show when={actorName}>
+                            {(name) => (
+                              <>
+                                {' · '}
+                                <span class="notification-actor">
+                                  {t('organizations.notifications.byUser', {
+                                    name: name(),
+                                  })}
+                                </span>
+                              </>
+                            )}
+                          </Show>
                         </div>
                       </div>
                       <Show when={!notification.read}>

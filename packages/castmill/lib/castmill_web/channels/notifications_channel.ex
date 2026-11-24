@@ -74,7 +74,7 @@ defmodule CastmillWeb.NotificationsChannel do
     require Logger
 
     user_id = socket.assigns.user.id
-    notif_id = notification[:id] || notification.id
+    notif_id = Map.get(notification, :id)
 
     Logger.info(
       "NotificationsChannel received notification #{notif_id} for user #{user_id} with count #{unread_count}"
@@ -96,7 +96,7 @@ defmodule CastmillWeb.NotificationsChannel do
     require Logger
 
     user_id = socket.assigns.user.id
-    notif_id = notification[:id] || notification.id
+    notif_id = Map.get(notification, :id)
 
     Logger.info("NotificationsChannel received notification #{notif_id} for user #{user_id}")
 
@@ -155,18 +155,28 @@ defmodule CastmillWeb.NotificationsChannel do
     {:noreply, socket}
   end
 
-  # Helper to normalize notification (handles both struct and map)
+  # Helper to normalize notification (handles both struct and map). Access
+  # syntax (`notification[:id]`) raises for structs, so use Map.get.
   defp normalize_notification(notification) do
     %{
-      id: notification[:id] || notification.id,
-      title_key: notification[:title_key] || Map.get(notification, :title_key),
-      description_key: notification[:description_key] || Map.get(notification, :description_key),
-      link: notification[:link] || Map.get(notification, :link),
-      type: notification[:type] || Map.get(notification, :type),
-      read: notification[:read] || Map.get(notification, :read, false),
-      metadata: notification[:metadata] || Map.get(notification, :metadata),
-      inserted_at: notification[:inserted_at] || Map.get(notification, :inserted_at)
+      id: Map.get(notification, :id),
+      title_key: Map.get(notification, :title_key),
+      description_key: Map.get(notification, :description_key),
+      link: Map.get(notification, :link),
+      type: Map.get(notification, :type),
+      read: Map.get(notification, :read, false),
+      metadata: Map.get(notification, :metadata),
+      actor: normalize_actor(notification),
+      inserted_at: Map.get(notification, :inserted_at)
     }
+  end
+
+  # Same shape as `CastmillWeb.NotificationJSON`.
+  defp normalize_actor(notification) do
+    case Map.get(notification, :actor_type) do
+      nil -> nil
+      type -> %{type: type, name: Map.get(notification, :actor_name)}
+    end
   end
 
   # Only the user can join their own notification channel

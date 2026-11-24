@@ -137,6 +137,34 @@ defmodule CastmillWeb.NotificationControllerTest do
       assert %{"data" => [], "has_more" => false} = page.(3)
     end
 
+    test "includes who performed the action", %{
+      conn_session: conn,
+      user: user,
+      organization: org
+    } do
+      {:ok, _} = Castmill.Organizations.add_user(org.id, user.id, :admin)
+      Castmill.Notifications.Events.notify_member_removed("Bob", org.id, user.id)
+
+      {:ok, _} =
+        Notifications.create_user_notification(%{
+          type: "info",
+          user_id: user.id,
+          actor_type: "system"
+        })
+
+      actors =
+        get(conn, "/dashboard/notifications")
+        |> json_response(200)
+        |> Map.fetch!("data")
+        |> Enum.map(& &1["actor"])
+        |> Enum.sort_by(& &1["type"])
+
+      assert actors == [
+               %{"type" => "system", "name" => nil},
+               %{"type" => "user", "name" => user.name}
+             ]
+    end
+
     test "returns empty list when no notifications", %{conn_session: conn} do
       conn = get(conn, "/dashboard/notifications")
 

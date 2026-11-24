@@ -30,8 +30,17 @@ defmodule CastmillWeb.NotificationJSON do
       read: notification.read,
       metadata: notification.metadata,
       roles: notification.roles || [],
+      actor: actor(notification),
       inserted_at: notification.inserted_at,
       updated_at: notification.updated_at
     }
+  end
+
+  # Who performed the action: a user (with their name, when they still
+  # exist), a device or the system. Device names are in the metadata.
+  defp actor(%Notification{actor_type: nil}), do: nil
+
+  defp actor(%Notification{} = notification) do
+    %{type: notification.actor_type, name: notification.actor_name}
   end
 end

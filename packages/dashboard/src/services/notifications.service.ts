@@ -9,8 +9,18 @@ export interface Notification {
   type: string;
   read: boolean;
   metadata?: Record<string, any>;
+  /**
+   * Who performed the action. `name` is set for users that still exist;
+   * devices are named in the metadata.
+   */
+  actor?: NotificationActor | null;
   inserted_at: string;
   updated_at: string;
+}
+
+export interface NotificationActor {
+  type: 'user' | 'device' | 'system' | string;
+  name?: string | null;
 }
 
 export interface NotificationsResponse {

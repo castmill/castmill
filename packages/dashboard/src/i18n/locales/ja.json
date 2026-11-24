@@ -1677,6 +1677,7 @@
       "title": "通知",
       "empty": "まだ通知はありません",
       "markAllRead": "すべて既読にする",
+      "byUser": "{{name}} さん",
       "types": {
         "organizationInvitation": {
           "title": "組織への招待",

@@ -1671,6 +1671,7 @@
       "title": "Benachrichtigungen",
       "empty": "Noch keine Benachrichtigungen",
       "markAllRead": "Alle als gelesen markieren",
+      "byUser": "von {{name}}",
       "types": {
         "organizationInvitation": {
           "title": "Organisationseinladung",

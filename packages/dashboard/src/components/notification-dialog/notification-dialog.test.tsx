@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, waitFor, fireEvent } from '@solidjs/testing-library';
 import {
   NotificationDialog,
+  notificationActorName,
   resolveNotificationLink,
 } from './notification-dialog';
 import { I18nProvider } from '../../i18n';
@@ -127,6 +128,63 @@ describe('NotificationDialog Component', () => {
     await waitFor(() => {
       const items = document.querySelectorAll('.notification-item');
       expect(items.length).toBe(2);
+    });
+  });
+
+  it('shows who performed the action', async () => {
+    (notificationsService.getNotifications as any).mockResolvedValue({
+      data: [
+        {
+          ...mockNotifications[1],
+          actor: { type: 'user', name: 'Ana Andersson' },
+        },
+        {
+          ...mockNotifications[0],
+          id: '3',
+          actor: { type: 'device', name: null },
+        },
+      ],
+      unread_count: 0,
+    });
+
+    renderWithI18n(() => (
+      <NotificationDialog onClose={vi.fn()} onNotificationRead={vi.fn()} />
+    ));
+
+    await waitFor(() => {
+      const actors = document.querySelectorAll('.notification-actor');
+      expect(actors.length).toBe(1);
+      expect(actors[0].textContent).toBe('by Ana Andersson');
+    });
+  });
+
+  describe('notificationActorName', () => {
+    const base = mockNotifications[0];
+
+    it('names user actors only', () => {
+      expect(
+        notificationActorName({
+          ...base,
+          actor: { type: 'user', name: 'Ana' },
+        })
+      ).toBe('Ana');
+      expect(
+        notificationActorName({ ...base, actor: { type: 'device' } })
+      ).toBeUndefined();
+      expect(
+        notificationActorName({ ...base, actor: { type: 'user', name: null } })
+      ).toBeUndefined();
+      expect(notificationActorName(base)).toBeUndefined();
+    });
+
+    it('skips the actor when the notification is about them', () => {
+      expect(
+        notificationActorName({
+          ...base,
+          metadata: { user_name: 'Ana' },
+          actor: { type: 'user', name: 'Ana' },
+        })
+      ).toBeUndefined();
     });
   });
 
