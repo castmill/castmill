@@ -986,6 +986,13 @@ defmodule CastmillWeb.DeviceControllerTest do
           uri: "http://localhost:4000/medias/#{organization.id}/orphan.png"
         })
 
+      {:ok, external_file} =
+        Castmill.FilesFixtures.file_fixture(%{
+          organization_id: organization.id,
+          name: "external.png",
+          uri: "https://images.example.com/external.png"
+        })
+
       other_organization = organization_fixture(%{name: "Other cache org"})
 
       {:ok, _} =
@@ -1002,6 +1009,7 @@ defmodule CastmillWeb.DeviceControllerTest do
 
       media_url = "https://cdn.example.com/#{organization.id}/#{media.id}/summer.mp4?v=1"
       orphan_url = "https://cdn.example.com/medias/#{organization.id}/orphan.png"
+      external_url = external_file.uri
       secret_url = "https://cdn.example.com/#{other_organization.id}/secret.png"
       playlist_url = "https://api.example.com/devices/#{device.id}/playlists/#{playlist.id}"
 
@@ -1012,7 +1020,15 @@ defmodule CastmillWeb.DeviceControllerTest do
 
       entries =
         Enum.map(
-          [media_url, orphan_url, secret_url, playlist_url, other_playlist_url, unknown_url],
+          [
+            media_url,
+            orphan_url,
+            external_url,
+            secret_url,
+            playlist_url,
+            other_playlist_url,
+            unknown_url
+          ],
           &%{"url" => &1, "size" => 10}
         )
 
@@ -1021,20 +1037,24 @@ defmodule CastmillWeb.DeviceControllerTest do
           fn ->
             get(conn, "/dashboard/devices/#{device.id}/cache?type=media&page=1&page_size=10")
           end,
-          %{"data" => entries, "count" => 6}
+          %{"data" => entries, "count" => 7}
         )
 
       response = json_response(conn, 200)
-      assert response["count"] == 6
+      assert response["count"] == 7
       names = Map.new(response["data"], &{&1["url"], &1["name"]})
 
       assert names[media_url] == "Summer campaign"
       assert names[orphan_url] == orphan_file.name
+      assert names[external_url] == external_file.name
       assert names[playlist_url] == "Lobby loop"
       assert names[secret_url] == nil
       assert names[other_playlist_url] == nil
       assert names[unknown_url] == nil
       assert Enum.all?(response["data"], &(&1["size"] == 10))
+
+      assert Castmill.Devices.name_cache_entries(organization.id, [%{"url" => external_url}]) ==
+               [%{"url" => external_url, "name" => external_file.name}]
     end
 
     test "rejects an invalid cache type with a proper inclusion error", %{

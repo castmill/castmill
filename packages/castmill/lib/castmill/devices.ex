@@ -1256,32 +1256,50 @@ defmodule Castmill.Devices do
 
     suffixes = keys |> Enum.map(&elem(&1, 1)) |> Enum.uniq()
 
-    if suffixes == [] do
-      %{}
-    else
-      names_by_key =
-        from(file in Castmill.Files.File,
-          left_join: files_medias in Castmill.Files.FilesMedias,
-          on: files_medias.file_id == file.id,
-          left_join: media in Castmill.Resources.Media,
-          on: media.id == files_medias.media_id,
-          where: file.organization_id == ^organization_id,
-          where: fragment("split_part(?, ?, 2)", file.uri, ^delimiter) in ^suffixes,
-          order_by: [asc: files_medias.inserted_at],
-          select: {file.uri, coalesce(media.name, file.name)}
-        )
-        |> Repo.all()
-        |> Enum.reduce(%{}, fn {uri, name}, acc ->
-          case cache_media_key(uri, delimiter) do
-            nil -> acc
-            key -> Map.put_new(acc, key, name)
-          end
-        end)
+    {names_by_uri, names_by_key} =
+      from(file in Castmill.Files.File,
+        left_join: files_medias in Castmill.Files.FilesMedias,
+        on: files_medias.file_id == file.id,
+        left_join: media in Castmill.Resources.Media,
+        on: media.id == files_medias.media_id,
+        where: file.organization_id == ^organization_id,
+        where:
+          file.uri in ^urls or
+            fragment("split_part(?, ?, 2)", file.uri, ^delimiter) in ^suffixes,
+        order_by: [asc: files_medias.inserted_at],
+        select: {file.uri, coalesce(media.name, file.name)}
+      )
+      |> Repo.all()
+      |> Enum.reduce({%{}, %{}}, fn {uri, name}, {uris, keys} ->
+        uris = Map.put_new(uris, uri, name)
 
-      for {url, key} <- keys, Map.has_key?(names_by_key, key), into: %{} do
-        {url, Map.fetch!(names_by_key, key)}
+        keys =
+          case cache_media_key(uri, delimiter) do
+            nil -> keys
+            key -> Map.put_new(keys, key, name)
+          end
+
+        {uris, keys}
+      end)
+
+    Enum.reduce(urls, %{}, fn url, names ->
+      case Map.fetch(names_by_uri, url) do
+        {:ok, name} ->
+          Map.put(names, url, name)
+
+        :error ->
+          case cache_media_key(url, delimiter) do
+            nil ->
+              names
+
+            key ->
+              case Map.fetch(names_by_key, key) do
+                {:ok, name} -> Map.put(names, url, name)
+                :error -> names
+              end
+          end
       end
-    end
+    end)
   end
 
   defp cache_media_key(url, delimiter) do
