@@ -1092,7 +1092,8 @@
       "keepEditing": "Seguir editando",
       "removeItemTitle": "¿Quitar elemento?",
       "removeItemMessage": "¿Quitar \"{{name}}\" de esta lista de reproducción?"
-    }
+    },
+    "widgetConfigFailed": "No se pudo mostrar la configuración de este widget. Cierra esta ventana y elige otro widget."
   },
   "layouts": {
     "title": "Diseños",

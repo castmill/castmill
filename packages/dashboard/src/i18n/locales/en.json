@@ -1101,7 +1101,8 @@
       "keepEditing": "Keep editing",
       "removeItemTitle": "Remove item?",
       "removeItemMessage": "Remove \"{{name}}\" from this playlist?"
-    }
+    },
+    "widgetConfigFailed": "This widget's settings couldn't be shown. Close this window and choose another widget."
   },
   "layouts": {
     "title": "Layouts",

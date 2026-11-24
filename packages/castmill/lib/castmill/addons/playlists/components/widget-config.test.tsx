@@ -89,6 +89,59 @@ describe('WidgetConfig footer', () => {
   });
 });
 
+describe('WidgetConfig unsupported option types', () => {
+  const withSchema = (
+    options_schema: Record<string, unknown>,
+    options: Record<string, unknown> = {}
+  ) =>
+    ({
+      duration: 10000,
+      widget: { id: 1, name: 'Places', options_schema },
+      config: { options },
+    }) as unknown as JsonPlaylistItem;
+
+  it('skips optional options it cannot edit', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    renderConfig({
+      item: withSchema({
+        title: { type: 'string', required: true },
+        city: { type: 'city' },
+      }),
+    });
+
+    expect(screen.getByText('title')).toBeInTheDocument();
+    warn.mockRestore();
+  });
+
+  it('skips required ones that have a value or a default', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    renderConfig({
+      item: withSchema(
+        {
+          city: { type: 'city', required: true },
+          area: { type: 'area', required: true, default: 'north' },
+        },
+        { city: 'Lund' }
+      ),
+    });
+
+    expect(button('playlists.editor.addToPlaylist')).toBeEnabled();
+    warn.mockRestore();
+  });
+
+  // Submit could never be enabled: the playlist editor's error boundary
+  // explains it instead.
+  it('fails on a required one without a value', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(() =>
+      renderConfig({
+        item: withSchema({ city: { type: 'city', required: true } }),
+      })
+    ).toThrow(/"city" is required but has an unsupported type/);
+    warn.mockRestore();
+  });
+});
+
 describe('WidgetConfig conditional fields', () => {
   const conditionalItem = (
     id?: number,
