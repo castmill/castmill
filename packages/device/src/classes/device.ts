@@ -322,6 +322,8 @@ export class Device extends EventEmitter {
       viewport?: Viewport;
       transport?: new (endpoint: string) => object;
       createVideoPlaybackController?: VideoPlaybackControllerFactory;
+      /** Report an interrupted player session on the next startup. */
+      reportUnexpectedExit?: boolean;
       /**
        * Automation sources and actions supported by this player. Defaults to
        * the clock source and the interrupt action.
@@ -334,7 +336,9 @@ export class Device extends EventEmitter {
       opts?.automationRegistry || createDefaultRegistry();
 
     this.logger.setLogger(new NullLogger());
-    this.errorReporter = new DeviceErrorReporter();
+    this.errorReporter = new DeviceErrorReporter(undefined, {
+      trackSession: opts?.reportUnexpectedExit,
+    });
     this.errorReporter.enableRuntimeCapture();
     this.orientationManager = new OrientationManager(this.integration, () => {
       if (this.opts?.viewport) this.renderer?.setViewport(this.opts.viewport);
@@ -1924,8 +1928,10 @@ export class Device extends EventEmitter {
       setTimeout(resolve, this.maintenanceToastDelayMs)
     );
     try {
+      this.errorReporter.expectExit();
       await run();
     } catch (error) {
+      this.errorReporter.resumeSession();
       this.logger.error(`Maintenance action ${action} failed: ${error}`);
       this.errorReporter.report({ category: 'device', error });
       showDeviceToast(toast.failure);

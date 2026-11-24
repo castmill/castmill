@@ -18,7 +18,7 @@ vi.mock('../android-legacy-api', () => ({
     .fn()
     .mockImplementation(
       async (_url: string, localPath: string) =>
-        `content://com.castmill.files/${localPath}`
+        `content://com.optimalbits.fileprovider/cache/${localPath}`
     ),
   fileExists: vi.fn().mockResolvedValue(true),
   deleteFile: vi.fn().mockResolvedValue(undefined),
@@ -140,7 +140,8 @@ describe('AndroidLegacyFileStorage', () => {
     vi.mocked(downloadFile)
       .mockReset()
       .mockImplementation(
-        async (_url, localPath) => `content://com.castmill.files/${localPath}`
+        async (_url, localPath) =>
+          `content://com.optimalbits.fileprovider/cache/${localPath}`
       );
     vi.mocked(fileExists).mockReset().mockResolvedValue(true);
     vi.mocked(deleteFile).mockReset().mockResolvedValue(undefined);
@@ -414,12 +415,86 @@ describe('AndroidLegacyFileStorage', () => {
     expect(getItem).toHaveBeenCalledWith('FILE_MAP');
   });
 
+  it.each([
+    'https://broker.images.castmill.io/listing/photo?w=1920&v=4',
+    'http://media.example/uncached.jpg',
+    'blob:http://player.example/temporary-image',
+    'file:///data/data/com.optimalbits/files/unknown',
+    'content://unrelated.provider/cache/photo',
+    'content://com.optimalbits.fileprovider/other/photo',
+    'content://com.optimalbits.fileprovider/cache/',
+  ])(
+    'does not send an unowned cache URL to the crashing native delete API: %s',
+    async (url) => {
+      await storage.deleteFile(url);
+      expect(deleteFile).not.toHaveBeenCalled();
+    }
+  );
+
+  it('evicts uncached broker metadata under capacity pressure without deleting a remote URL or another native file', async () => {
+    const cache = new Cache(storage, 'legacy-broker-eviction', 2);
+    const remote = 'https://broker.images.castmill.io/listing/photo?w=1920&v=4';
+    const video = 'https://castmill.example/kept.mp4';
+    try {
+      await cache.init();
+      const kept = await cache.set(video, ItemType.Media, 'video/mp4');
+      await cache.items.put({
+        url: remote,
+        cachedUrl: remote,
+        timestamp: 0,
+        accessed: 0,
+        size: 100,
+        type: ItemType.Media,
+        mimeType: 'image/jpeg',
+      });
+      await cache.set(
+        'https://castmill.example/new/data',
+        ItemType.Data,
+        'application/json'
+      );
+      await cache.invalidate(remote);
+      expect(await cache.get(remote)).toBeUndefined();
+      expect(await storage.retrieveFile(video)).toBe(kept!.cachedUrl);
+      expect(deleteFile).not.toHaveBeenCalled();
+    } finally {
+      cache.close();
+    }
+  });
+
+  it('retains the mapping and reports a native cache-file deletion failure', async () => {
+    const url = 'https://castmill.example/kept.mp4';
+    const stored = await storage.storeFile(url, { type: 'media' });
+    vi.mocked(deleteFile).mockRejectedValueOnce(
+      new Error('native deletion failed')
+    );
+    await expect(storage.deleteFile(url)).rejects.toThrow(
+      'native deletion failed'
+    );
+    expect(await storage.retrieveFile(url)).toBe(stored.item!.url);
+  });
+
+  it('removes a migrated remote mapping without sending its URL to native deletion', async () => {
+    await storage.close();
+    const source = 'https://broker.images.castmill.io/listing/photo';
+    vi.mocked(getItem).mockResolvedValueOnce(
+      JSON.stringify([[source, { url: source, size: 100 }]])
+    );
+    storage = new AndroidLegacyFileStorage('');
+    await storage.init();
+    await storage.deleteFile(source);
+    expect(deleteFile).not.toHaveBeenCalled();
+    expect(await storage.retrieveFile(source)).toBeUndefined();
+  });
+
   it('deletes stale mapped localhost files before replacing their mapping', async () => {
     vi.mocked(getItem).mockResolvedValueOnce(
       JSON.stringify([
         [
           'https://192.168.1.10/media/image.png',
-          { url: 'content://stale-file', size: 123 },
+          {
+            url: 'content://com.optimalbits.fileprovider/cache/stale-file',
+            size: 123,
+          },
         ],
       ])
     );
@@ -432,7 +507,40 @@ describe('AndroidLegacyFileStorage', () => {
       await storage.storeFile('https://localhost/media/image.png', {
         type: 'media',
       });
-      expect(deleteFile).toHaveBeenCalledWith('content://stale-file');
+      expect(deleteFile).toHaveBeenCalledWith(
+        'content://com.optimalbits.fileprovider/cache/stale-file'
+      );
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it('replaces a stale mapped data URL without passing it to native deletion', async () => {
+    await storage.close();
+    vi.mocked(getItem).mockResolvedValueOnce(
+      JSON.stringify([
+        [
+          'https://192.168.1.10/media/image.png',
+          {
+            url: 'data:image/png;base64,AA==',
+            size: 1,
+          },
+        ],
+      ])
+    );
+    vi.stubEnv('VITE_FILE_HOST', '192.168.1.10');
+    storage = new AndroidLegacyFileStorage('');
+    try {
+      await storage.init();
+      const result = await storage.storeFile(
+        'https://localhost/media/image.png',
+        { type: 'media' }
+      );
+      expect(result.result.code).toBe('SUCCESS');
+      expect(deleteFile).not.toHaveBeenCalled();
+      expect(
+        await storage.retrieveFile('https://localhost/media/image.png')
+      ).toBe(result.item!.url);
     } finally {
       vi.unstubAllEnvs();
     }

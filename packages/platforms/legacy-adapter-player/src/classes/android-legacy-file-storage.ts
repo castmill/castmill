@@ -33,6 +33,7 @@ const DOWNLOAD_TIMEOUT_MS = 30_000;
 const MAX_BINARY_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_BINARY_CACHE_BYTES = 8 * 1024 * 1024;
 const FILE_MAP_DATABASE = 'castmill-android-files';
+const NATIVE_CACHE_URL_PREFIX = 'content://com.optimalbits.fileprovider/cache/';
 const FILE_MAP_POINTER = JSON.stringify({
   indexedDB: FILE_MAP_DATABASE,
   version: 1,
@@ -52,6 +53,13 @@ const BINARY_MIME_TYPES = new Map<string, string>([
   ['woff2', 'font/woff2'],
   ['eot', 'application/vnd.ms-fontobject'],
 ]);
+
+function isNativeCacheUrl(url: string): boolean {
+  return (
+    url.startsWith(NATIVE_CACHE_URL_PREFIX) &&
+    url.length > NATIVE_CACHE_URL_PREFIX.length
+  );
+}
 
 class BinaryAssetLimitError extends Error {
   constructor(
@@ -387,7 +395,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
       // when it differs.
       if (mappedUrl !== url) {
         const staleMappedFile = this.fileMap.get(mappedUrl);
-        if (staleMappedFile) {
+        if (staleMappedFile && isNativeCacheUrl(staleMappedFile.url)) {
           await deleteFile(staleMappedFile.url);
         }
       }
@@ -630,22 +638,18 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
    */
   async deleteFile(url: string): Promise<void> {
     const entry = this.getFileEntry(url);
-
+    const localUrl = entry?.file.url ?? url;
+    // Cache may evict an uncached HTTPS fallback or a replaced data URL.
+    // The deployed APK crashes if ContentResolver receives a non-provider URI.
+    if (isNativeCacheUrl(localUrl)) {
+      await deleteFile(localUrl);
+    }
     if (entry) {
-      if (!entry.file.url.startsWith('data:')) {
-        await deleteFile(entry.file.url);
-      }
       await this.updateFileMap((files) => {
         if (files.get(entry.key) === entry.file) {
           files.delete(entry.key);
         }
       });
-    } else {
-      // Cache replaces a source URL with a newly downloaded local URI before
-      // asking the integration to remove the superseded local URI.
-      if (!url.startsWith('data:')) {
-        await deleteFile(url);
-      }
     }
   }
 

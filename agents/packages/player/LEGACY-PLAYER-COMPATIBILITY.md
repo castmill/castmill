@@ -52,6 +52,31 @@ Electron. Keep startup and diagnostics strings in English; do not add locale
 files or language selection to `packages/platforms/legacy-adapter-player/`.
 Dashboard localization remains separate.
 
+### Android legacy crash recovery events
+
+The Android adapter opts into the `Device` option `reportUnexpectedExit`. A small per-device
+`castmill.device-session:*` localStorage marker checkpoints every 15 seconds.
+It does not use native settings or store media URLs, payloads, or credentials.
+After an interrupted session, the next authenticated startup queues a
+`runtime` event with code `player-unclean-exit` through the existing Device Events
+error reporter. Recovery reports are persisted immediately and retain the normal
+offline retry and server acknowledgement/deduplication behavior.
+
+The report includes the previous start/heartbeat times, bounded mounted template
+names and image counts, and a JS heap estimate when available. That estimate is
+not native/GPU/process memory and cannot establish OOM. A fatal native crash cannot
+run JavaScript: this is a **possible crash/unclean exit**, indistinguishable from
+an OS kill or power loss, reported only after restart and reconnection. It cannot
+recover crashes that happened before this adapter update or after storage loss.
+
+Normal page unloads and `Device.stop()` mark the session clean. Maintenance actions
+mark an expected exit before invoking the platform, with a 60-second grace period
+for delayed native restarts/reboots; failed actions resume tracking immediately.
+Do not silently enable this for other player types without validating their
+shutdown behavior. Regression tests cover recovery delivery, ordinary refreshes,
+maintenance, malformed markers and unavailable storage; verify process-loss
+recovery on physical Crosswalk as well.
+
 QR generation must work without `TextEncoder` (missing on Chromium 38).
 Pass UTF-8 bytes as a QR byte segment on those engines; the encoder's string
 path requires `TextEncoder`. Keep the optimized string path on modern browsers
@@ -85,6 +110,15 @@ from a recognized extension for missing/octet-stream types). Other recognized
 images use the same fallback after a native download error, except `CacheFull`,
 which retains normal native cache eviction. Successful native media downloads,
 videos, and unrecognized media URLs keep the existing native path.
+
+Native deletion must only receive app-owned
+`content://com.optimalbits.fileprovider/cache/` file URLs. The deployed APK calls
+`ContentResolver.delete` without catching Java exceptions; sending an HTTPS
+fallback URL kills the entire app. Cache eviction/reconciliation can supply an
+original source URL without a storage mapping. Treat unowned URLs as having no
+native file, including mapped remote/data URLs and stale mapped replacements.
+Keep deleting orphaned or superseded app-owned content URLs, preserve replacement
+mappings, and propagate real native deletion failures before removing metadata.
 
 Binary persistence is capped at 2 MiB per asset and 8 MiB total raw binary
 bytes in the file cache (base64 adds about one-third). Abort oversized downloads

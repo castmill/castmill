@@ -14,6 +14,47 @@ class TestStorage {
 }
 
 describe('DeviceErrorReporter', () => {
+  it('persists crash recovery before reconnecting and delivers it through the Device Events error channel', async () => {
+    const storage = new TestStorage();
+    const first = new DeviceErrorReporter(storage, { trackSession: true });
+    await first.init('device-1');
+    const key = 'castmill.device-session:device-1';
+    const interrupted = storage.getItem(key)!;
+    await first.close();
+    storage.setItem(key, interrupted);
+
+    const recovered = new DeviceErrorReporter(storage, { trackSession: true });
+    try {
+      await recovered.init('device-1');
+      await recovered.init('device-1');
+      const reports = JSON.parse(
+        storage.getItem('castmill.device-error-buffer:device-1')!
+      ).reports;
+      expect(reports).toHaveLength(1);
+      expect(reports[0]).toMatchObject({
+        category: 'runtime',
+        code: 'player-unclean-exit',
+        count: 1,
+      });
+      const response = {
+        receive: vi.fn((status: string, callback: () => void) => {
+          if (status === 'ok') callback();
+          return response;
+        }),
+      };
+      const channel = { push: vi.fn(() => response) };
+      recovered.attach(channel as any);
+      expect(channel.push).toHaveBeenCalledWith(
+        'errors:report',
+        expect.objectContaining({
+          reports: [expect.objectContaining({ code: 'player-unclean-exit' })],
+        })
+      );
+    } finally {
+      await recovered.close();
+    }
+  });
+
   it('aggregates and sanitizes repeated errors before persistence', async () => {
     const storage = new TestStorage();
     const reporter = new DeviceErrorReporter(storage);

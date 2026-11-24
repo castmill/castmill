@@ -66,6 +66,11 @@ describe('Legacy Electron dashboard updates', () => {
     const machine = new ElectronLegacyMachine();
     const device = Object.create(Device.prototype);
     device.integration = machine;
+    device.errorReporter = {
+      expectExit: vi.fn(),
+      resumeSession: vi.fn(),
+      report: vi.fn(),
+    };
     const handlers = new Map<string, (payload: unknown) => Promise<void>>();
     device.initListeners({
       on: (event: string, handler: (payload: unknown) => Promise<void>) => {

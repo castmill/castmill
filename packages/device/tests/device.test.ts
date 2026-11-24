@@ -840,6 +840,7 @@ describe('Device - Commands', () => {
       vi.useFakeTimers();
       device['maintenanceToastDelayMs'] = MAINTENANCE_TOAST_DELAY_MS;
       mockIntegration[method] = vi.fn().mockResolvedValue(undefined);
+      const expectExit = vi.spyOn(device['errorReporter'], 'expectExit');
       const mockChannel = { on: vi.fn(), push: vi.fn(), join: vi.fn() };
       device['initListeners'](mockChannel as any);
       const commandHandler = mockChannel.on.mock.calls.find(
@@ -850,8 +851,10 @@ describe('Device - Commands', () => {
 
       expect(toastText()).toBe(message);
       expect(mockIntegration[method]).not.toHaveBeenCalled();
+      expect(expectExit).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(MAINTENANCE_TOAST_DELAY_MS);
       expect(mockIntegration[method]).toHaveBeenCalledOnce();
+      expect(expectExit).toHaveBeenCalledOnce();
       vi.useRealTimers();
     }
   );
@@ -880,10 +883,12 @@ describe('Device - Commands', () => {
   it('shows a failure toast and reports instead of rejecting when an action fails', async () => {
     mockIntegration.reboot = vi.fn().mockRejectedValue(new Error('denied'));
     const report = vi.spyOn(device['errorReporter'], 'report');
+    const resumeSession = vi.spyOn(device['errorReporter'], 'resumeSession');
 
     await expect(device.reboot()).resolves.toBeUndefined();
 
     expect(toastText()).toBe('Reboot failed');
+    expect(resumeSession).toHaveBeenCalledOnce();
     expect(report).toHaveBeenCalledWith(
       expect.objectContaining({ category: 'device' })
     );

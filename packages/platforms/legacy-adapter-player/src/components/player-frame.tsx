@@ -223,7 +223,9 @@ export const PlayerFrame: Component = () => {
             createVideoPlaybackController: createWebosVideoPlayback,
             cacheBackend: memoryCache,
           }
-        : undefined
+        : platform === 'android'
+          ? { reportUnexpectedExit: true }
+          : undefined
     );
     const configuredServerUrl = getLegacyBaseUrl(
       window.location,
