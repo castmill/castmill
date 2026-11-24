@@ -7,6 +7,8 @@ import {
   createMemo,
   JSX,
   onCleanup,
+  createEffect,
+  on,
 } from 'solid-js';
 import { BsThreeDots } from 'solid-icons/bs';
 import { FaSolidSortDown } from 'solid-icons/fa';
@@ -91,6 +93,11 @@ export interface TableProps<
   columns: Column<IdType, Item>[] | (() => Column<IdType, Item>[]); // Can be array or function returning array
   data: Item[];
   onSort?: (options: SortOptions) => void;
+  /**
+   * The current sort, when the parent owns it (e.g. an initial sort or one
+   * restored from the URL): headers show it and the next click toggles it.
+   */
+  sortOptions?: SortOptions;
   actions?: TableAction<Item>[] | (() => TableAction<Item>[]); // Can be array or function returning array
   actionsLabel?: string | (() => string); // Label for the Actions column header
   onRowSelect?: (selectedIds: Set<IdType>) => void;
@@ -136,10 +143,20 @@ export const Table = <
   const tableId = createUniqueId();
   const selectAllCheckboxId = `select-all-checkbox-${tableId}`;
 
-  const [sortConfig, setSortConfig] = createSignal({
-    key: undefined,
-    direction: 'ascending',
-  } as SortOptions);
+  const [sortConfig, setSortConfig] = createSignal(
+    props.sortOptions ??
+      ({
+        key: undefined,
+        direction: 'ascending',
+      } as SortOptions)
+  );
+  createEffect(
+    on(
+      () => props.sortOptions,
+      (options) => options && setSortConfig(options),
+      { defer: true }
+    )
+  );
   const [selectedRows, setSelectedRows] = createSignal(new Set<IdType>());
 
   // Expose a method for the parent to clear the selection
@@ -372,6 +389,15 @@ export const Table = <
     columns().filter((column) => column.sortable)
   );
 
+  // The sort column, if it's one the card "Sort by" menu offers (a default
+  // sort such as updated_at may not be).
+  const cardSortKey = () => {
+    const key = sortConfig().key;
+    return sortableColumns().some((column) => column.key === key)
+      ? key
+      : undefined;
+  };
+
   const applySort = (options: SortOptions) => {
     setSortConfig(options);
     props.onSort?.(options);
@@ -470,16 +496,20 @@ export const Table = <
               </label>
               <select
                 id={`card-sort-${tableId}`}
-                value={sortConfig().key ?? ''}
+                value={cardSortKey() ?? ''}
                 onChange={(e) =>
                   e.currentTarget.value &&
                   applySort({
                     key: e.currentTarget.value,
-                    direction: sortConfig().direction,
+                    // Keep the direction of a column the menu shows; start
+                    // ascending after a hidden default sort.
+                    direction: cardSortKey()
+                      ? sortConfig().direction
+                      : 'ascending',
                   })
                 }
               >
-                <Show when={!sortConfig().key}>
+                <Show when={!cardSortKey()}>
                   <option value="">—</option>
                 </Show>
                 <For each={sortableColumns()}>
@@ -491,7 +521,7 @@ export const Table = <
               <button
                 type="button"
                 class={style['card-sort-direction']}
-                disabled={!sortConfig().key}
+                disabled={!cardSortKey()}
                 aria-label={
                   sortConfig().direction === 'ascending'
                     ? cardLabel('sortAscending', 'Ascending')
