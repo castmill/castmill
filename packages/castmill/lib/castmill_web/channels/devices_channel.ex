@@ -24,6 +24,8 @@ defmodule CastmillWeb.DevicesChannel do
 
         # Push saved schedule timers to device after a short delay
         Process.send_after(self(), :sync_schedule, 1_000)
+        # Castmill OS devices: the OS version they should run
+        Process.send_after(self(), :sync_os_update, 2_000)
 
         {:ok, %{orientation: device.orientation}, socket}
 
@@ -193,6 +195,21 @@ defmodule CastmillWeb.DevicesChannel do
   # Handle all messages that are not handled by the
   # `handle_in/3` callbacks above
   @impl true
+  # Castmill OS update progress (castmill-os ADR-0010). The first report
+  # tells the backend the device's hardware family, so it gets its target.
+  def handle_in("os_update:report", %{} = report, socket) do
+    device_id = socket.assigns.device.device_id
+
+    case Castmill.OsUpdates.record_status(device_id, report) do
+      {:ok, device, compatible_changed?} ->
+        if compatible_changed?, do: Castmill.OsUpdates.push_target(device)
+        {:reply, :ok, socket}
+
+      {:error, reason} ->
+        {:reply, {:error, %{reason: inspect(reason)}}, socket}
+    end
+  end
+
   def handle_in(event, payload, socket) do
     IO.puts("Unhandled event: #{inspect(event)}")
     IO.puts("Unhandled payload: #{inspect(payload)}")
@@ -273,6 +290,16 @@ defmodule CastmillWeb.DevicesChannel do
   end
 
   @impl true
+  def handle_info(%{event: "os_update", payload: target}, socket) do
+    push(socket, "os_update", target)
+    {:noreply, socket}
+  end
+
+  def handle_info(:sync_os_update, socket) do
+    Castmill.OsUpdates.push_target(socket.assigns.device.device_id)
+    {:noreply, socket}
+  end
+
   def handle_info(:sync_schedule, socket) do
     device_id = socket.assigns.device.device_id
 

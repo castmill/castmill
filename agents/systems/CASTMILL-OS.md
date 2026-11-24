@@ -41,6 +41,31 @@ Not implemented on purpose: `shutdown`, `update` (the shell is part of the OS
 image), `updateFirmware` (until the backend manages OS versions) and
 `setOrientation` (the device uses CSS rotation). Capabilities follow from this.
 
+## OS updates
+
+Castmill decides which Castmill OS version each device runs
+(castmill-os ADR-0010, `Castmill.OsUpdates`):
+
+- `Castmill.OsUpdates.Importer` imports releases hourly from the GitHub
+  releases of `castmill/castmill-os` (`manifest.json` per release: bundle URL,
+  SHA-256 and size per RAUC compatible). Configure with
+  `config :castmill, Castmill.OsUpdates, github_repo: ..., import_interval: ...`.
+- Organization policy (`organizations.os_update`): `manual` (default),
+  `latest` (pre-releases only if enabled) or `version`. Device override
+  (`devices.os_update`): `follow` or `version`, optionally `now`.
+- On join (and when the target changes) the device channel pushes
+  `os_update` with `{version, url, sha256, size, security, activate,
+  override}` or `{version: nil}`. The device app passes it to
+  `CastmillOSMachine.setOsUpdate`.
+- The device app reports `getOsUpdateStatus` with `os_update:report` after
+  login and whenever it changes; it is stored in `devices.os_status` and
+  pushed to open dashboards. The first report tells the backend the
+  device's hardware family (`compatible`), so the target follows it.
+- Dashboard: "Castmill OS" tab on the device page
+  (`device-os-update.tsx`); endpoints `GET/PUT
+  /dashboard/organizations/:id/os-updates` and `PUT
+  /dashboard/devices/:id/os-update` (devices: show / update).
+
 ## Things to know when changing the device app
 
 - Each output (screen) of a Castmill OS device is a separate Castmill device

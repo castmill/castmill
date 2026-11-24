@@ -1568,6 +1568,43 @@
       "removed": "Channel \"{{name}}\" removed",
       "addError": "Failed to add channel: {{error}}",
       "removeError": "Failed to remove channel: {{error}}"
+    },
+    "osUpdate": {
+      "title": "Castmill OS",
+      "thisDevice": "This device",
+      "currentVersion": "Running version",
+      "status": "Update status",
+      "targetVersion": "Target version",
+      "none": "None",
+      "hardwareFamily": "Hardware family",
+      "lastError": "Last error",
+      "reportedAt": "Last report",
+      "version": "Version to install",
+      "followOrganization": "Follow the organization",
+      "updateNow": "Update now",
+      "organization": "Organization",
+      "organizationHelp": "Applies to every Castmill OS device of the organization that follows it. Devices install updates in their maintenance window.",
+      "policy": "Update policy",
+      "policyManual": "Manual: only devices with their own version",
+      "policyLatest": "Always the latest release",
+      "policyVersion": "Stay on {{version}}",
+      "includePrereleases": "Include pre-releases",
+      "noReleases": "No Castmill OS releases yet.",
+      "prerelease": "{{version}} (pre-release)",
+      "prereleaseTag": "pre-release",
+      "securityTag": "security update",
+      "saved": "Saved",
+      "saveFailed": "Could not save: {{error}}",
+      "state": {
+        "idle": "Up to date",
+        "installing": "Downloading and installing",
+        "installed": "{{version}} installed, waiting for the maintenance window",
+        "activating": "Restarting into {{version}}",
+        "running": "{{version}} running",
+        "rolledBack": "{{version}} rolled back",
+        "failed": "Update failed",
+        "unsupported": "This device can't install updates"
+      }
     }
   },
   "validation": {

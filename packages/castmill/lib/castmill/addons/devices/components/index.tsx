@@ -492,6 +492,8 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           | 'orientation'
           | 'orientation_status'
           | 'info'
+          | 'os_status'
+          | 'os_update'
         >
       >
     ) => {

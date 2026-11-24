@@ -1553,6 +1553,43 @@
       "removed": "Kanal \"{{name}}\" entfernt",
       "addError": "Kanal konnte nicht hinzugefügt werden: {{error}}",
       "removeError": "Kanal konnte nicht entfernt werden: {{error}}"
+    },
+    "osUpdate": {
+      "title": "Castmill OS",
+      "thisDevice": "Dieses Gerät",
+      "currentVersion": "Laufende Version",
+      "status": "Update-Status",
+      "targetVersion": "Zielversion",
+      "none": "Keine",
+      "hardwareFamily": "Hardware-Familie",
+      "lastError": "Letzter Fehler",
+      "reportedAt": "Letzter Bericht",
+      "version": "Zu installierende Version",
+      "followOrganization": "Der Organisation folgen",
+      "updateNow": "Jetzt aktualisieren",
+      "organization": "Organisation",
+      "organizationHelp": "Gilt für alle Castmill-OS-Geräte der Organisation, die ihr folgen. Geräte installieren Updates in ihrem Wartungsfenster.",
+      "policy": "Update-Richtlinie",
+      "policyManual": "Manuell: nur Geräte mit eigener Version",
+      "policyLatest": "Immer die neueste Version",
+      "policyVersion": "Bei {{version}} bleiben",
+      "includePrereleases": "Vorabversionen einbeziehen",
+      "noReleases": "Noch keine Castmill-OS-Versionen.",
+      "prerelease": "{{version}} (Vorabversion)",
+      "prereleaseTag": "Vorabversion",
+      "securityTag": "Sicherheitsupdate",
+      "saved": "Gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen: {{error}}",
+      "state": {
+        "idle": "Aktuell",
+        "installing": "Wird heruntergeladen und installiert",
+        "installed": "{{version}} installiert, wartet auf das Wartungsfenster",
+        "activating": "Neustart mit {{version}}",
+        "running": "{{version}} läuft",
+        "rolledBack": "{{version}} zurückgesetzt",
+        "failed": "Update fehlgeschlagen",
+        "unsupported": "Dieses Gerät kann keine Updates installieren"
+      }
     }
   },
   "validation": {

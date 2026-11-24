@@ -44,6 +44,8 @@ const LANGUAGES = ['es', 'sv', 'de', 'fr', 'zh', 'ar', 'ko', 'ja'];
 // (cognates, proper nouns, technical terms, abbreviations)
 // Technical terms, proper nouns, and universal strings that are identical across languages
 const ALLOWED_IDENTICAL_STRINGS = new Set([
+  // Product names
+  'Castmill OS',
   'Widgets',
   'Widget',
   'JSON',

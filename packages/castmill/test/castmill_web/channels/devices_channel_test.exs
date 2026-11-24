@@ -477,4 +477,46 @@ defmodule CastmillWeb.DevicesChannelTest do
       assert byte_size(event.msg) <= 1024
     end
   end
+
+  describe "Castmill OS updates" do
+    test "a status report stores the status and pushes the device its target", %{
+      socket: socket,
+      device: device,
+      token: token,
+      organization: organization
+    } do
+      {:ok, _} =
+        Castmill.OsUpdates.import_manifest(%{
+          "version" => "0.3.0",
+          "published_at" => "2026-12-01T10:00:00Z",
+          "artifacts" => %{
+            "castmill-os-genericx86-64" => %{
+              "url" =>
+                "https://github.com/castmill/castmill-os/releases/download/v0.3.0/x86.raucb",
+              "sha256" => String.duplicate("c", 64),
+              "size" => 10
+            }
+          }
+        })
+
+      {:ok, _} = Castmill.OsUpdates.set_policy(organization.id, %{"mode" => "latest"})
+
+      {:ok, _, socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      ref =
+        push(socket, "os_update:report", %{
+          "compatible" => "castmill-os-genericx86-64",
+          "current_version" => "0.2.0",
+          "state" => "idle"
+        })
+
+      assert_reply ref, :ok
+      assert_push "os_update", %{version: "0.3.0", activate: "window", override: false}
+      assert Castmill.Devices.get_device(device.id).os_status["current_version"] == "0.2.0"
+
+      ref = push(socket, "os_update:report", %{"state" => "idle"})
+      assert_reply ref, :error, %{reason: _}
+    end
+  end
 end

@@ -1526,6 +1526,43 @@
       "removed": "Kanalen \"{{name}}\" har tagits bort",
       "addError": "Kunde inte lägga till kanalen: {{error}}",
       "removeError": "Kunde inte ta bort kanalen: {{error}}"
+    },
+    "osUpdate": {
+      "title": "Castmill OS",
+      "thisDevice": "Den här enheten",
+      "currentVersion": "Version som körs",
+      "status": "Uppdateringsstatus",
+      "targetVersion": "Målversion",
+      "none": "Ingen",
+      "hardwareFamily": "Hårdvarufamilj",
+      "lastError": "Senaste fel",
+      "reportedAt": "Senaste rapport",
+      "version": "Version att installera",
+      "followOrganization": "Följ organisationen",
+      "updateNow": "Uppdatera nu",
+      "organization": "Organisation",
+      "organizationHelp": "Gäller alla Castmill OS-enheter i organisationen som följer den. Enheterna installerar uppdateringar i sitt underhållsfönster.",
+      "policy": "Uppdateringspolicy",
+      "policyManual": "Manuell: bara enheter med egen version",
+      "policyLatest": "Alltid den senaste versionen",
+      "policyVersion": "Stanna på {{version}}",
+      "includePrereleases": "Ta med förhandsversioner",
+      "noReleases": "Inga Castmill OS-versioner ännu.",
+      "prerelease": "{{version}} (förhandsversion)",
+      "prereleaseTag": "förhandsversion",
+      "securityTag": "säkerhetsuppdatering",
+      "saved": "Sparat",
+      "saveFailed": "Kunde inte spara: {{error}}",
+      "state": {
+        "idle": "Uppdaterad",
+        "installing": "Laddar ner och installerar",
+        "installed": "{{version}} installerad, väntar på underhållsfönstret",
+        "activating": "Startar om med {{version}}",
+        "running": "{{version}} körs",
+        "rolledBack": "{{version}} återställd",
+        "failed": "Uppdateringen misslyckades",
+        "unsupported": "Den här enheten kan inte installera uppdateringar"
+      }
     }
   },
   "validation": {

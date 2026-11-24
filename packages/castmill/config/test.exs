@@ -71,3 +71,6 @@ config :castmill, :async_poll_scheduling, false
 
 # Run other background tasks inline in tests to avoid SQL sandbox disconnect noise.
 config :castmill, :async_background_tasks, false
+
+# No Castmill OS release imports from GitHub in tests.
+config :castmill, Castmill.OsUpdates, import_interval: nil

@@ -1,4 +1,4 @@
-import type { DeviceInfo, Orientation } from '@castmill/device';
+import type { DeviceInfo, Orientation, OsUpdateStatus } from '@castmill/device';
 
 type DeviceCapabilities = NonNullable<DeviceInfo['capabilities']>;
 
@@ -21,6 +21,10 @@ export interface Device {
   inserted_at: Date;
   updated_at: Date;
   autorecover_until?: string | null;
+  /** Castmill OS: this device's override of the organization's OS update policy. */
+  os_update?: OsUpdateOverride | null;
+  /** Castmill OS: the last OS update status the device reported. */
+  os_status?: (OsUpdateStatus & { received_at?: string }) | null;
   info?:
     | (Partial<DeviceInfo> & { capabilities?: Partial<DeviceCapabilities> })
     | null;
@@ -28,4 +32,29 @@ export interface Device {
   user_agent?: string;
   version?: string;
   log_level: 'info' | 'warning' | 'error' | 'debug' | 'critical' | 'trace';
+}
+
+/** A device's choice of Castmill OS version. */
+export interface OsUpdateOverride {
+  mode: 'follow' | 'version';
+  version?: string | null;
+  /** Activate right away instead of in the maintenance window. */
+  now?: boolean;
+}
+
+/** An organization's Castmill OS update policy. */
+export interface OsUpdatePolicy {
+  mode: 'manual' | 'latest' | 'version';
+  version?: string | null;
+  prereleases: boolean;
+}
+
+/** A Castmill OS release imported from GitHub. */
+export interface OsRelease {
+  version: string;
+  prerelease: boolean;
+  security: boolean;
+  published_at: string;
+  notes_url?: string | null;
+  artifacts: Record<string, { url: string; sha256: string; size: number }>;
 }

@@ -11,6 +11,7 @@ import {
   BsLightningCharge,
   BsListUl,
   BsTools,
+  BsCloudArrowDown,
 } from 'solid-icons/bs';
 import {
   DetailsSummary,
@@ -29,6 +30,7 @@ import { DevicesService } from '../services/devices.service';
 import { DeviceCache } from './device-cache';
 import { DevicePreview } from './device-preview';
 import { DeviceTelemetry } from './device-telemetry';
+import { DeviceOsUpdate } from './device-os-update';
 import { DeviceSchedule } from './device-schedule';
 import { DeviceInfo } from './device-info';
 import { DeviceHealth } from './device-health';
@@ -157,6 +159,24 @@ const DeviceView: Component<{
         <DeviceSchedule baseUrl={props.baseUrl} device={props.device} t={t} />
       ),
     },
+    // Castmill OS devices: OS updates (castmill-os ADR-0010).
+    ...(props.device.os_status || props.device.info?.appType === 'Castmill OS'
+      ? [
+          {
+            id: 'os-update',
+            title: () => t('devices.osUpdate.title'),
+            icon: BsCloudArrowDown,
+            content: () => (
+              <DeviceOsUpdate
+                baseUrl={props.baseUrl}
+                organizationId={props.organization_id}
+                device={props.device}
+                t={t}
+              />
+            ),
+          },
+        ]
+      : []),
     {
       id: 'automations',
       title: () => t('automations.device.title'),

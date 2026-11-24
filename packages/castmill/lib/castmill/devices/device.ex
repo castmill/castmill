@@ -28,6 +28,8 @@ defmodule Castmill.Devices.Device do
              :version,
              :volume,
              :schedule,
+             :os_update,
+             :os_status,
              :inserted_at,
              :updated_at
            ]}
@@ -53,6 +55,10 @@ defmodule Castmill.Devices.Device do
     field(:mode, :string, default: "normal")
     field(:schedule, :map)
     field(:autorecover_until, :utc_datetime)
+    # Castmill OS updates (Castmill.OsUpdates): the device's override of the
+    # organization policy, and the last update status the device reported.
+    field(:os_update, :map)
+    field(:os_status, :map)
 
     field(:token, :string, virtual: true)
 

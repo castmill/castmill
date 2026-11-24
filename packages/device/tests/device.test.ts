@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { EventEmitter } from 'eventemitter3';
 import {
   Device,
@@ -2529,5 +2529,70 @@ describe('Device - Channel resynchronization on (re)join', () => {
     await device['syncChannels']('d1');
 
     expect(device['channels'][0].attrs.default_playlist_id).toBe('20');
+  });
+});
+
+describe('Castmill OS updates', () => {
+  const channel = () => ({ on: vi.fn(), push: vi.fn(), join: vi.fn() });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('hands the os_update target to the OS', async () => {
+    const machine = {
+      getSetting: vi.fn().mockResolvedValue(null),
+      setOsUpdate: vi.fn().mockResolvedValue(undefined),
+    };
+    const device = new Device(machine as unknown as Machine, {} as never);
+    const ch = channel();
+    device['initListeners'](ch as any);
+    const handler = ch.on.mock.calls.find(([name]) => name === 'os_update')![1];
+
+    const target = {
+      version: '0.3.0',
+      url: 'https://example.com/b.raucb',
+      activate: 'window',
+      override: false,
+    };
+    handler(target);
+    expect(machine.setOsUpdate).toHaveBeenCalledWith(target);
+  });
+
+  it('reports the OS update status after login and when it changes', async () => {
+    vi.useFakeTimers();
+    let status: Record<string, unknown> = {
+      compatible: 'castmill-os-genericx86-64',
+      state: 'idle',
+      current_version: '0.2.0',
+    };
+    const machine = {
+      getSetting: vi.fn().mockResolvedValue(null),
+      getOsUpdateStatus: vi.fn(async () => status),
+    };
+    const device = new Device(machine as unknown as Machine, {} as never);
+    const ch = channel();
+    device['initOsUpdateReports'](ch as any);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(ch.push).toHaveBeenCalledWith('os_update:report', status);
+
+    // Unchanged: nothing new is sent.
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(ch.push).toHaveBeenCalledTimes(1);
+
+    status = { ...status, state: 'installing', progress: 20 };
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(ch.push).toHaveBeenCalledTimes(2);
+    expect(ch.push).toHaveBeenLastCalledWith('os_update:report', status);
+  });
+
+  it('sends nothing on platforms without OS updates', () => {
+    const device = new Device(
+      { getSetting: vi.fn() } as unknown as Machine,
+      {} as never
+    );
+    const ch = channel();
+    device['initOsUpdateReports'](ch as any);
+    expect(ch.push).not.toHaveBeenCalled();
   });
 });

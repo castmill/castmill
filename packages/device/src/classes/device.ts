@@ -29,6 +29,7 @@ import {
   TelemetryData,
   DeviceTelemetryData,
   CacheUsage,
+  OsUpdateTarget,
 } from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Channel, JsonChannel } from './channel';
@@ -57,6 +58,8 @@ import {
 } from '../automations';
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
+// Castmill OS: how often the OS update status is checked (sent when it changes).
+const OS_UPDATE_STATUS_INTERVAL = 1000 * 30;
 const DEFAULT_MAX_LOGS = 100;
 const MAX_RECONNECT_DELAY_MS = 60_000; // 60 seconds max delay between reconnect attempts
 const DEFAULT_FETCH_TIMEOUT_MS = 5000;
@@ -1641,6 +1644,15 @@ export class Device extends EventEmitter {
     channel.on('automation_run', (message: AutomationRunMessage) => {
       this.runAutomationNow(message);
     });
+
+    // Castmill OS: the OS version Castmill chose for this device.
+    channel.on('os_update', (target: OsUpdateTarget) => {
+      this.integration
+        .setOsUpdate?.(target)
+        .catch((error) =>
+          this.logger.error(`Unable to set the OS update: ${error}`)
+        );
+    });
   }
 
   /**
@@ -1750,6 +1762,31 @@ export class Device extends EventEmitter {
     setInterval(() => {
       channel.push('heartbeat', {});
     }, HEARTBEAT_INTERVAL);
+    this.initOsUpdateReports(channel);
+  }
+
+  /**
+   * Castmill OS: reports the OS update status right after login (it tells the
+   * backend the device's hardware family, so it sends the target version) and
+   * whenever it changes.
+   */
+  private initOsUpdateReports(channel: PhoenixChannel) {
+    if (!this.integration.getOsUpdateStatus) return;
+    let last = '';
+    const report = async () => {
+      try {
+        const status = await this.integration.getOsUpdateStatus?.();
+        if (!status) return;
+        const json = JSON.stringify(status);
+        if (json === last) return;
+        last = json;
+        channel.push('os_update:report', status);
+      } catch (error) {
+        this.logger.error(`Unable to read the OS update status: ${error}`);
+      }
+    };
+    void report();
+    setInterval(report, OS_UPDATE_STATUS_INTERVAL);
   }
 
   /*

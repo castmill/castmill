@@ -155,7 +155,10 @@ defmodule Castmill.Application do
       Castmill.Hooks.Supervisor
     ]
 
-    common ++ if(web_node?(mode), do: web_only, else: []) ++ tail
+    # Castmill OS releases from GitHub (disabled in tests).
+    os_updates = if web_node?(mode), do: Castmill.OsUpdates.Importer.children(), else: []
+
+    common ++ if(web_node?(mode), do: web_only, else: []) ++ tail ++ os_updates
   end
 
   # BullMQ connection + workers. In inline testing mode nothing is started.

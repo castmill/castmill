@@ -1531,6 +1531,43 @@
       "removed": "채널 \"{{name}}\"이(가) 제거되었습니다",
       "addError": "채널을 추가하지 못했습니다: {{error}}",
       "removeError": "채널을 제거하지 못했습니다: {{error}}"
+    },
+    "osUpdate": {
+      "title": "Castmill OS",
+      "thisDevice": "이 기기",
+      "currentVersion": "실행 중인 버전",
+      "status": "업데이트 상태",
+      "targetVersion": "목표 버전",
+      "none": "없음",
+      "hardwareFamily": "하드웨어 제품군",
+      "lastError": "마지막 오류",
+      "reportedAt": "마지막 보고",
+      "version": "설치할 버전",
+      "followOrganization": "조직 설정 따르기",
+      "updateNow": "지금 업데이트",
+      "organization": "조직",
+      "organizationHelp": "조직 설정을 따르는 모든 Castmill OS 기기에 적용됩니다. 기기는 유지 관리 시간에 업데이트를 설치합니다.",
+      "policy": "업데이트 정책",
+      "policyManual": "수동: 개별 버전이 있는 기기만",
+      "policyLatest": "항상 최신 릴리스",
+      "policyVersion": "{{version}} 유지",
+      "includePrereleases": "사전 릴리스 포함",
+      "noReleases": "아직 Castmill OS 릴리스가 없습니다.",
+      "prerelease": "{{version}} (사전 릴리스)",
+      "prereleaseTag": "사전 릴리스",
+      "securityTag": "보안 업데이트",
+      "saved": "저장됨",
+      "saveFailed": "저장할 수 없음: {{error}}",
+      "state": {
+        "idle": "최신 상태",
+        "installing": "다운로드 및 설치 중",
+        "installed": "{{version}} 설치됨, 유지 관리 시간 대기 중",
+        "activating": "{{version}}(으)로 다시 시작 중",
+        "running": "{{version}} 실행 중",
+        "rolledBack": "{{version}} 롤백됨",
+        "failed": "업데이트 실패",
+        "unsupported": "이 기기는 업데이트를 설치할 수 없습니다"
+      }
     }
   },
   "validation": {
