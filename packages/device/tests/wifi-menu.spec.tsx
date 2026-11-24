@@ -61,12 +61,17 @@ describe('Wi-Fi menu', () => {
     });
     await openWifi();
     expect(screen.getByText('Connected to Venue (70%)')).toBeTruthy();
-    expect(screen.getByText(/only be changed here while it is offline/)).toBeTruthy();
+    expect(
+      screen.getByText(/only be changed here while it is offline/)
+    ).toBeTruthy();
     expect(screen.queryByText('Scan again')).toBeNull();
   });
 
   it('joins a secured network with the typed password', async () => {
-    const { connect } = setup(offline, vi.fn(async () => {}));
+    const { connect } = setup(
+      offline,
+      vi.fn(async () => {})
+    );
     await openWifi();
     fireEvent.click(screen.getByText('Venue · 80%'));
 
@@ -102,7 +107,10 @@ describe('Wi-Fi menu', () => {
   });
 
   it('joins a hidden network by name', async () => {
-    const { connect } = setup(offline, vi.fn(async () => {}));
+    const { connect } = setup(
+      offline,
+      vi.fn(async () => {})
+    );
     await openWifi();
     fireEvent.click(screen.getByText('Other network…'));
     const name = (await screen.findByText('Network name'))
