@@ -102,6 +102,8 @@ interface TableViewProps<
     mainAction?: JSX.Element;
     actions?: JSX.Element;
     titleActions?: JSX.Element;
+    /** A short explanation of the page, under the title. */
+    description?: string | (() => string);
     requireOneActiveFilter?: boolean;
     hideSearch?: boolean;
     searchPlaceholder?: string;
@@ -420,6 +422,7 @@ export const TableView = <
             <ToolBar
               title={props.toolbar?.hideTitle ? undefined : getTitle()}
               titleActions={props.toolbar?.titleActions}
+              description={props.toolbar?.description}
               filters={filters()}
               onFilterChange={handleFilterChange}
               initialSearchText={(getSearchParams().search as string) || ''}
