@@ -83,6 +83,23 @@ const isSubmenuMenuEntry = (entry: MenuEntry): entry is SubmenuMenuEntry =>
 const isInfoMenuEntry = (entry: MenuEntry): entry is InfoMenuEntry =>
   entry.type === 'info';
 
+/**
+ * The open/closed arrow of a submenu. An SVG, not a text character: the fonts
+ * of some players (Castmill OS ships only Liberation) have no "▶", which
+ * then shows as an empty box.
+ */
+const SubmenuArrow: Component<{ expanded: boolean }> = (props) => (
+  <svg
+    class={styles.submenuArrow}
+    classList={{ [styles.expanded]: props.expanded }}
+    viewBox="0 0 10 10"
+    aria-hidden="true"
+    data-expanded={props.expanded ? 'true' : 'false'}
+  >
+    <path d="M3 1.5 L7.5 5 L3 8.5 Z" fill="currentColor" />
+  </svg>
+);
+
 // BaseMenu component props
 interface BaseMenuProps {
   header: JSX.Element;
@@ -172,7 +189,8 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
           },
           content: (
             <span class={styles.submenuHeader}>
-              {expanded ? '▼' : '▶'} {entry.name}
+              <SubmenuArrow expanded={!!expanded} />
+              {entry.name}
               <Show when={entry.badge}>
                 <span
                   class={styles.badge}
