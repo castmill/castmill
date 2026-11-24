@@ -19,15 +19,18 @@ import { store } from '../../store';
 import './notification-dialog.scss';
 
 /**
- * The name of the user who performed the action, unless the notification is
- * about that same user (e.g. "Ana joined the organization").
+ * Notification types whose actor is also their subject, already named in the
+ * text (e.g. "Ana joined the organization").
  */
+const SELF_ACTOR_TYPES = new Set(['invitation_accepted']);
+
+/** The name of the user who performed the action, if it adds anything. */
 export const notificationActorName = (
   notification: Notification
 ): string | undefined => {
   const actor = notification.actor;
   if (actor?.type !== 'user' || !actor.name) return undefined;
-  if (notification.metadata?.user_name === actor.name) return undefined;
+  if (SELF_ACTOR_TYPES.has(notification.type)) return undefined;
   return actor.name;
 };
 

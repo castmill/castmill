@@ -177,14 +177,28 @@ describe('NotificationDialog Component', () => {
       expect(notificationActorName(base)).toBeUndefined();
     });
 
-    it('skips the actor when the notification is about them', () => {
+    it('skips the actor of events about themselves, whatever the names', () => {
+      // A renamed user who accepted an invitation.
       expect(
         notificationActorName({
           ...base,
+          type: 'invitation_accepted',
+          metadata: { user_name: 'Ana' },
+          actor: { type: 'user', name: 'Ana Renamed' },
+        })
+      ).toBeUndefined();
+    });
+
+    it('names the actor when the subject only shares their name', () => {
+      // An admin removing another member called Ana.
+      expect(
+        notificationActorName({
+          ...base,
+          type: 'member_removed',
           metadata: { user_name: 'Ana' },
           actor: { type: 'user', name: 'Ana' },
         })
-      ).toBeUndefined();
+      ).toBe('Ana');
     });
   });
 
