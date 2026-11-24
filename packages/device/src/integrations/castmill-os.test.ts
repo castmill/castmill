@@ -251,3 +251,52 @@ describe('CastmillOSMachine OS updates', () => {
     ).toBeUndefined();
   });
 });
+
+describe('CastmillOSMachine Wi-Fi', () => {
+  it('reads the Wi-Fi status with the right types only', async () => {
+    const { bridge } = fakeBridge({
+      getWifiStatus: {
+        available: true,
+        online: false,
+        current: { ssid: 'Venue', signal: 71.6, secure: true, active: true },
+        networks: [
+          { ssid: 'Venue', signal: 80, secure: true, active: true },
+          { ssid: '', signal: 50 },
+          { ssid: 'x'.repeat(33), signal: 50 },
+          { ssid: 'Cafe', signal: 140, secure: false },
+          'junk',
+        ],
+        extra: 'ignored',
+      },
+    });
+    expect(await new CastmillOSMachine(bridge).getWifiStatus()).toEqual({
+      available: true,
+      online: false,
+      current: { ssid: 'Venue', signal: 72, secure: true, active: true },
+      networks: [
+        { ssid: 'Venue', signal: 80, secure: true, active: true },
+        { ssid: 'Cafe', signal: 100, secure: false, active: false },
+      ],
+      error: undefined,
+    });
+  });
+
+  it('has no Wi-Fi status on Castmill OS versions without it', async () => {
+    const call = vi.fn(async () => {
+      throw new Error('unknown method getWifiStatus');
+    });
+    const machine = new CastmillOSMachine({ version: 1, call });
+    expect(await machine.getWifiStatus()).toBeUndefined();
+  });
+
+  it('joins a network through the bridge', async () => {
+    const { bridge, call } = fakeBridge();
+    await new CastmillOSMachine(bridge).connectWifi('Venue', 'password123');
+    expect(call).toHaveBeenCalledWith(
+      'connectWifi',
+      'Venue',
+      'password123',
+      false
+    );
+  });
+});

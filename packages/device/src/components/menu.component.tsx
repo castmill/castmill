@@ -11,6 +11,7 @@ import {
 
 import { Device } from '../classes/device';
 import { BaseMenu, type MenuEntry } from './basemenu.component';
+import { createWifiMenu } from './wifi-menu';
 
 interface MenuProps {
   device: Device;
@@ -179,6 +180,7 @@ export const MenuComponent: Component<MenuProps> = (props) => {
   );
 
   const capabilities = props.device.getCapabilities();
+  const wifi = createWifiMenu(props.device);
 
   // Memoized entries that reactively update when availableUrls or selectedUrl change
   const entries = createMemo((): MenuEntry[] => {
@@ -202,6 +204,9 @@ export const MenuComponent: Component<MenuProps> = (props) => {
       ...(capabilities.updateFirmware
         ? [createAction('Update Firmware', () => props.device.updateFirmware())]
         : []),
+      // Castmill OS: Wi-Fi, for example for a device playing from its cache
+      // at a venue whose network changed.
+      ...(wifi.entry() ? [wifi.entry()!] : []),
       createSubmenu('Settings', [
         createSubmenu('Server', [
           ...createRadioButtons(
@@ -277,6 +282,7 @@ export const MenuComponent: Component<MenuProps> = (props) => {
       footer={footer}
       onShow={() => {
         refreshTimerStatus();
+        wifi.refresh();
         refetchOrganizationName();
         refetchCastmillNetworkName();
       }}

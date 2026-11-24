@@ -1,4 +1,5 @@
 import {
+  createEffect,
   createSignal,
   createMemo,
   createResource,
@@ -12,6 +13,8 @@ import {
 import styles from './basemenu.module.css';
 
 const MENU_TIMEOUT = 10 * 1000;
+// Longer while typing in a field (e.g. a Wi-Fi password).
+const MENU_INPUT_TIMEOUT = 60 * 1000;
 
 // Menu entry interfaces
 interface ActionMenuEntry {
@@ -54,12 +57,26 @@ interface InfoMenuEntry {
   content: JSX.Element;
 }
 
+/**
+ * A text field. Selecting it (keyboard or click) focuses it; Enter submits
+ * the typed value. Values are cleared when the menu hides.
+ */
+interface InputMenuEntry {
+  name: string;
+  id: string;
+  type: 'input';
+  inputType?: 'text' | 'password';
+  placeholder?: string;
+  action: (value: string) => void;
+}
+
 export type MenuEntry =
   | ActionMenuEntry
   | CheckboxMenuEntry
   | RadioButtonMenuEntry
   | SubmenuMenuEntry
-  | InfoMenuEntry;
+  | InfoMenuEntry
+  | InputMenuEntry;
 
 // internal item interface
 interface MenuRowItem {
@@ -68,6 +85,8 @@ interface MenuRowItem {
   content: JSX.Element;
   action: () => void;
   nonInteractive?: boolean;
+  /** Input rows: the field to focus when the row is selected. */
+  input?: () => HTMLInputElement | undefined;
 }
 
 // type guards
@@ -82,6 +101,8 @@ const isSubmenuMenuEntry = (entry: MenuEntry): entry is SubmenuMenuEntry =>
   entry.type === 'submenu';
 const isInfoMenuEntry = (entry: MenuEntry): entry is InfoMenuEntry =>
   entry.type === 'info';
+const isInputMenuEntry = (entry: MenuEntry): entry is InputMenuEntry =>
+  entry.type === 'input';
 
 /**
  * The open/closed arrow of a submenu. An SVG, not a text character: the fonts
@@ -125,14 +146,26 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
   const [timer, setTimer] = createSignal(0);
   // menu visibility signal
   const [visible, setVisible] = createSignal(false);
-  // the currently selected item index
-  const [selected, setSelected] = createSignal(0);
+  // The selected row, by id: rows can be added, removed or reordered while the
+  // menu is open (e.g. a Wi-Fi scan), and the selection must follow its row.
+  const [selectedId, setSelectedId] = createSignal<string>();
+  // Where the selection was, for when its row disappears.
+  let lastIndex = 0;
   // the currently active item id. Used to highlight the item when triggering action
   const [active, setActive] = createSignal();
   // checkbox states
   const [checked, setChecked] = createSignal<Record<string, boolean>>(
     getCheckboxState(props.entries)
   );
+
+  // values typed in input entries, by id (rows are rebuilt when entries change)
+  const [inputValues, setInputValues] = createSignal<Record<string, string>>(
+    {}
+  );
+  let menuRef: HTMLDivElement | undefined;
+  const typingInMenu = () =>
+    document.activeElement instanceof HTMLInputElement &&
+    !!menuRef?.contains(document.activeElement);
 
   // submenu states (expanded or not)
   const [submenuState, setSubmenuState] = createSignal<Record<string, boolean>>(
@@ -155,15 +188,17 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
     clearTimeout(timer());
 
     // set new timer
-    const t = window.setTimeout(() => {
-      setVisible(false);
-    }, MENU_TIMEOUT);
+    const t = window.setTimeout(
+      hideMenu,
+      typingInMenu() ? MENU_INPUT_TIMEOUT : MENU_TIMEOUT
+    );
 
     setTimer(t);
   };
 
   const hideMenu = () => {
     setVisible(false);
+    setInputValues({}); // don't keep typed passwords around
   };
 
   // highlight selected item when triggering action
@@ -253,6 +288,38 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
           offset,
           id: entry.id,
         });
+      } else if (isInputMenuEntry(entry)) {
+        let input: HTMLInputElement | undefined;
+        items.push({
+          action: () => {
+            const value = inputValues()[entry.id] ?? '';
+            setInputValues((v) => ({ ...v, [entry.id]: '' }));
+            entry.action(value);
+          },
+          content: (
+            <label class={styles.input}>
+              <span>{entry.name}</span>
+              <input
+                ref={input}
+                type={entry.inputType ?? 'text'}
+                placeholder={entry.placeholder}
+                value={inputValues()[entry.id] ?? ''}
+                autocomplete="off"
+                // Typing (also pasting or an on-screen keyboard, which send
+                // no keydown) keeps the menu open for the longer timeout.
+                onFocus={showMenu}
+                onInput={(e) => {
+                  const value = e.currentTarget.value;
+                  setInputValues((v) => ({ ...v, [entry.id]: value }));
+                  showMenu();
+                }}
+              />
+            </label>
+          ),
+          offset,
+          id: entry.id,
+          input: () => input,
+        });
       } else if (isInfoMenuEntry(entry)) {
         // add info item (non-interactive)
         items.push({
@@ -269,6 +336,43 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
   };
 
   const items = createMemo(() => getItems(props.entries));
+
+  // Index of the selected row; the nearest row when it disappeared.
+  const selected = createMemo(() => {
+    const list = items();
+    const i = list.findIndex((item) => item.id === selectedId());
+    lastIndex = i >= 0 ? i : Math.max(0, Math.min(lastIndex, list.length - 1));
+    return lastIndex;
+  });
+  const setSelected = (index: number | ((current: number) => number)) => {
+    const list = items();
+    if (list.length === 0) return;
+    const i = typeof index === 'function' ? index(selected()) : index;
+    lastIndex = i;
+    setSelectedId(list[i]?.id);
+  };
+
+  // Keep the selected row visible in a scrolled menu.
+  createEffect(() => {
+    if (!visible()) return;
+    selected();
+    menuRef
+      ?.querySelector('li[data-selected]')
+      ?.scrollIntoView?.({ block: 'nearest' });
+  });
+
+  // Focus the selected input row (also after its row was rebuilt); leave a
+  // field when the selection moves away from it.
+  createEffect(() => {
+    if (!visible()) return;
+    const item = items()[selected()];
+    const input = item?.input?.();
+    if (input) {
+      if (document.activeElement !== input) input.focus();
+    } else if (typingInMenu()) {
+      (document.activeElement as HTMLElement).blur();
+    }
+  });
 
   // handle enter keypress or click
   const onEnter = (entry: MenuEntry) => {
@@ -304,6 +408,11 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
 
       const currentItems = items();
 
+      if (currentItems.length === 0) {
+        if (e.keyCode === Key.Escape || e.keyCode === Key.WebosBack) hideMenu();
+        return;
+      }
+
       switch (e.keyCode) {
         case Key.Up:
           setSelected(
@@ -315,7 +424,7 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
           break;
         case Key.Enter:
           const item = currentItems[selected()];
-          if (!item.nonInteractive) {
+          if (item && !item.nonInteractive) {
             item.action();
           }
           break;
@@ -343,20 +452,23 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
 
   return (
     <Show when={visible()}>
-      <div class={styles.menu}>
-        <div role="menu">
+      <div class={styles.menu} ref={menuRef}>
+        <div role="menu" class={styles.menuBody}>
           <div class={styles.menuHead}>{props.header}</div>
           <ul>
             <For each={items()}>
               {(item, i) => (
                 <li
                   onClick={() => {
-                    item.action();
+                    // Input rows: a click selects the field, Enter submits.
+                    if (item.input) setSelected(i());
+                    else item.action();
                   }}
                   onMouseOver={() => {
                     showMenu();
                     setSelected(i());
                   }}
+                  data-selected={selected() === i() ? '' : undefined}
                   classList={{
                     [styles.menuItem]: true,
                     [styles.selected]: selected() === i(),

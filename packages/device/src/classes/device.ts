@@ -30,6 +30,7 @@ import {
   DeviceTelemetryData,
   CacheUsage,
   OsUpdateTarget,
+  WifiStatus,
 } from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Channel, JsonChannel } from './channel';
@@ -1688,6 +1689,27 @@ export class Device extends EventEmitter {
         delay
       );
     });
+  }
+
+  /**
+   * Wi-Fi of the device for the menu; undefined when the platform has no
+   * Wi-Fi support or the device has no Wi-Fi.
+   */
+  async getWifiStatus(): Promise<WifiStatus | undefined> {
+    try {
+      const status = await this.integration.getWifiStatus?.();
+      return status?.available ? status : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /** Joins a Wi-Fi network; rejects with the platform's reason. */
+  async connectWifi(ssid: string, psk: string, hidden = false): Promise<void> {
+    if (!this.integration.connectWifi) {
+      throw new Error('This player cannot change the Wi-Fi.');
+    }
+    await this.integration.connectWifi(ssid, psk, hidden);
   }
 
   /**
