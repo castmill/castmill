@@ -316,6 +316,11 @@ defmodule CastmillWeb.ResourceController do
     update: :map
   }
 
+  # What dashboard users and API clients may change on a device. Identity
+  # and state fields (token, organization, hardware id, online, version,
+  # reported info, ...) are only set by the server and the device itself.
+  @editable_device_fields ~w(name description orientation timezone loc_lat loc_long volume settings autorecover_until)
+
   @update_playlist_params_schema %{
     organization_id: [type: :string, required: true],
     id: [type: :integer, required: true],
@@ -360,7 +365,9 @@ defmodule CastmillWeb.ResourceController do
           else
             previous_orientation = device.orientation
 
-            Devices.update_device(device, params.update)
+            update = Map.take(params.update || %{}, @editable_device_fields)
+
+            Devices.update_device(device, update)
             |> case do
               {:ok, device} ->
                 if device.orientation != previous_orientation do
@@ -374,8 +381,7 @@ defmodule CastmillWeb.ResourceController do
                   })
                 end
 
-                if Map.has_key?(params.update, "autorecover_until") ||
-                     Map.has_key?(params.update, :autorecover_until) do
+                if Map.has_key?(update, "autorecover_until") do
                   Phoenix.PubSub.broadcast(
                     Castmill.PubSub,
                     "devices:#{device.id}",
