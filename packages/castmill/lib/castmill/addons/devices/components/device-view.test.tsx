@@ -39,6 +39,9 @@ vi.mock('./device-details', () => ({
 }));
 // The preview tab pulls in the built player bundle, which this suite does not need.
 vi.mock('./device-preview', () => ({ DevicePreview: () => null }));
+vi.mock('./device-os-update', () => ({
+  DeviceOsUpdate: () => <p>OS update panel</p>,
+}));
 vi.mock('../services/devices.service', () => ({
   DevicesService: { updateDevice: vi.fn() },
 }));
@@ -209,5 +212,32 @@ describe('Device view layout', () => {
     expect(
       await screen.findByText('devices.details.copied')
     ).toBeInTheDocument();
+  });
+});
+
+describe('Castmill OS tab', () => {
+  it('appears when the first report arrives and keeps the selected tab', () => {
+    const [device, setDevice] = createSignal({
+      id: 'device-1',
+      orientation: 0,
+    } as Device);
+    render(() => (
+      <DeviceView baseUrl="/api" organization_id="org-1" device={device()} />
+    ));
+    const titles = () => screen.getAllByRole('tab').map((tab) => tab.title);
+
+    expect(titles()).not.toContain('devices.osUpdate.title');
+    fireEvent.click(screen.getByRole('tab', { name: 'common.channels' }));
+
+    setDevice({
+      ...device(),
+      os_status: { compatible: 'castmill-os-genericx86-64', state: 'idle' },
+    } as Device);
+
+    expect(titles()).toContain('devices.osUpdate.title');
+    expect(
+      screen.getByRole('tab', { name: 'common.channels' })
+    ).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('Channels panel')).toBeInTheDocument();
   });
 });

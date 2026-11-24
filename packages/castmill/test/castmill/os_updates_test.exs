@@ -119,6 +119,50 @@ defmodule Castmill.OsUpdatesTest do
       # Already known: nothing new.
       assert {:ok, []} = OsUpdates.import_from_github("castmill/castmill-os", fetch)
     end
+
+    test "a GitHub pre-release stays a pre-release, and corrected releases reach devices", %{
+      org: org
+    } do
+      device = castmill_os_device(org)
+      {:ok, _} = OsUpdates.set_policy(org.id, %{"mode" => "latest", "prereleases" => true})
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device.id}")
+
+      releases = [
+        %{
+          "draft" => false,
+          "prerelease" => true,
+          "assets" => [%{"name" => "manifest.json", "browser_download_url" => "https://gh/m"}]
+        }
+      ]
+
+      serve = fn manifest ->
+        fn
+          "https://api.github.com/" <> _, _ -> {:ok, %{body: Jason.encode!(releases)}}
+          "https://gh/m", _ -> {:ok, %{body: Jason.encode!(manifest)}}
+        end
+      end
+
+      # The manifest says stable (no pre-release version), GitHub says pre-release.
+      assert {:ok, ["0.3.0"]} = OsUpdates.import_from_github("o/r", serve.(manifest("0.3.0")))
+      assert OsUpdates.get_release("0.3.0").prerelease
+      assert_receive %{event: "os_update", payload: %{version: "0.3.0", url: url}}
+      assert url =~ "x86.raucb"
+
+      # Re-import unchanged: no new targets.
+      assert {:ok, []} = OsUpdates.import_from_github("o/r", serve.(manifest("0.3.0")))
+      refute_receive %{event: "os_update"}
+
+      # A corrected bundle URL for the same version: devices get it.
+      fixed =
+        put_in(manifest("0.3.0"), ["artifacts", @x86, "url"], "https://github.com/fixed.raucb")
+
+      assert {:ok, []} = OsUpdates.import_from_github("o/r", serve.(fixed))
+      assert_receive %{event: "os_update", payload: %{url: "https://github.com/fixed.raucb"}}
+
+      # Organizations that exclude pre-releases don't get it.
+      {:ok, _} = OsUpdates.set_policy(org.id, %{"mode" => "latest"})
+      assert OsUpdates.target_for(Repo.reload(device)) == %{version: nil}
+    end
   end
 
   describe "targets" do

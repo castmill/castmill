@@ -37,6 +37,8 @@ export const DeviceOsUpdate: Component<{
   baseUrl: string;
   organizationId: string;
   device: Device;
+  /** Called with the saved override (the live channel may not deliver it). */
+  onChange?: (update: Partial<Device>) => void;
   t: T;
 }> = (props) => {
   const toast = useToast();
@@ -49,19 +51,23 @@ export const DeviceOsUpdate: Component<{
   const status = () => props.device.os_status;
   const override = (): OsUpdateOverride =>
     props.device.os_update ?? { mode: 'follow' };
+  // All releases (the organization policy covers every kind of device) and
+  // those with a bundle for this device's hardware (the device override).
+  const allReleases = (): OsRelease[] => data()?.releases ?? [];
   const releases = (): OsRelease[] => {
     const compatible = status()?.compatible;
-    return (data()?.releases ?? []).filter(
+    return allReleases().filter(
       (r) => !compatible || compatible in r.artifacts
     );
   };
-  const releaseItems = () =>
-    releases().map((r) => ({
+  const toItems = (list: OsRelease[]) =>
+    list.map((r) => ({
       value: r.version,
       name: r.prerelease
         ? props.t('devices.osUpdate.prerelease', { version: r.version })
         : r.version,
     }));
+  const releaseItems = () => toItems(releases());
 
   const stateLabel = () => {
     const s = status();
@@ -89,9 +95,14 @@ export const DeviceOsUpdate: Component<{
   };
 
   const setOverride = (next: OsUpdateOverride) =>
-    save(() =>
-      DevicesService.setDeviceOsUpdate(props.baseUrl, props.device.id, next)
-    );
+    save(async () => {
+      const { os_update } = await DevicesService.setDeviceOsUpdate(
+        props.baseUrl,
+        props.device.id,
+        next
+      );
+      props.onChange?.({ os_update });
+    });
 
   const setPolicy = (next: OsUpdatePolicy) =>
     save(async () => {
@@ -210,7 +221,7 @@ export const DeviceOsUpdate: Component<{
                 value: 'latest',
                 name: props.t('devices.osUpdate.policyLatest'),
               },
-              ...releaseItems().map((item) => ({
+              ...toItems(allReleases()).map((item) => ({
                 ...item,
                 name: props.t('devices.osUpdate.policyVersion', {
                   version: item.name,

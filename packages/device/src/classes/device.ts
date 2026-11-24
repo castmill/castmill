@@ -1772,6 +1772,8 @@ export class Device extends EventEmitter {
    */
   private initOsUpdateReports(channel: PhoenixChannel) {
     if (!this.integration.getOsUpdateStatus) return;
+    // The last status the server acknowledged: a report that fails or times
+    // out is sent again on the next check.
     let last = '';
     const report = async () => {
       try {
@@ -1779,8 +1781,9 @@ export class Device extends EventEmitter {
         if (!status) return;
         const json = JSON.stringify(status);
         if (json === last) return;
-        last = json;
-        channel.push('os_update:report', status);
+        channel.push('os_update:report', status).receive('ok', () => {
+          last = json;
+        });
       } catch (error) {
         this.logger.error(`Unable to read the OS update status: ${error}`);
       }

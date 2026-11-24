@@ -55,12 +55,15 @@ defmodule Castmill.OsUpdates do
 
   @doc """
   Stores a release from its `manifest.json` (a decoded map). Importing the
-  same version again updates it.
+  same version again updates it. `prerelease: true` marks it as a
+  pre-release even if the manifest doesn't (GitHub's pre-release flag).
   """
-  def import_manifest(%{} = manifest) do
+  def import_manifest(manifest, opts \\ [])
+
+  def import_manifest(%{} = manifest, opts) do
     attrs = %{
       version: manifest["version"],
-      prerelease: manifest["prerelease"] == true,
+      prerelease: manifest["prerelease"] == true or Keyword.get(opts, :prerelease, false),
       security: manifest["security"] == true,
       published_at: manifest["published_at"],
       notes_url: manifest["notes_url"],
@@ -77,11 +80,16 @@ defmodule Castmill.OsUpdates do
     )
   end
 
-  def import_manifest(_), do: {:error, :invalid_manifest}
+  def import_manifest(_, _opts), do: {:error, :invalid_manifest}
+
+  # Release fields that change what devices are told to install.
+  @target_fields [:prerelease, :security, :published_at, :artifacts]
 
   @doc """
   Imports the manifests of the latest GitHub releases of `repo`
-  (`owner/name`). Returns the versions that are new. `fetch` is
+  (`owner/name`). A release is a pre-release if GitHub or its manifest says
+  so. Returns the versions that are new; devices get new targets when a
+  release is new or a release they could be targeting changed. `fetch` is
   `SafeHttp.get/2` (replaced in tests).
   """
   def import_from_github(repo \\ github_repo(), fetch \\ &SafeHttp.get/2) do
@@ -89,17 +97,25 @@ defmodule Castmill.OsUpdates do
 
     with {:ok, %{body: body}} <- fetch.(url, accept: "application/vnd.github+json"),
          {:ok, releases} when is_list(releases) <- Jason.decode(body) do
-      known = MapSet.new(Repo.all(from(r in OsRelease, select: r.version)))
+      known = Map.new(Repo.all(OsRelease), &{&1.version, Map.take(&1, @target_fields)})
 
-      new =
+      results =
         releases
         |> Enum.reject(&(&1["draft"] == true))
-        |> Enum.flat_map(&manifest_url/1)
-        |> Enum.flat_map(fn manifest_url ->
+        |> Enum.flat_map(&manifest_urls/1)
+        |> Enum.flat_map(fn {manifest_url, prerelease?} ->
           with {:ok, %{body: body}} <- fetch.(manifest_url, accept: "application/json"),
                {:ok, manifest} <- Jason.decode(body),
-               {:ok, release} <- import_manifest(manifest) do
-            if MapSet.member?(known, release.version), do: [], else: [release.version]
+               {:ok, release} <- import_manifest(manifest, prerelease: prerelease?) do
+            case known[release.version] do
+              nil ->
+                [{:new, release.version}]
+
+              before ->
+                if before == Map.take(release, @target_fields),
+                  do: [],
+                  else: [{:changed, release.version}]
+            end
           else
             error ->
               Logger.warning(
@@ -110,10 +126,10 @@ defmodule Castmill.OsUpdates do
           end
         end)
 
-      if new != [] do
-        Logger.info("Imported Castmill OS releases: #{Enum.join(new, ", ")}")
-        push_all_targets()
-      end
+      new = for {:new, version} <- results, do: version
+
+      if new != [], do: Logger.info("Imported Castmill OS releases: #{Enum.join(new, ", ")}")
+      if results != [], do: push_all_targets()
 
       {:ok, new}
     else
@@ -122,11 +138,12 @@ defmodule Castmill.OsUpdates do
     end
   end
 
-  defp manifest_url(%{"assets" => assets}) when is_list(assets) do
-    for %{"name" => "manifest.json", "browser_download_url" => url} <- assets, do: url
+  defp manifest_urls(%{"assets" => assets} = release) when is_list(assets) do
+    for %{"name" => "manifest.json", "browser_download_url" => url} <- assets,
+        do: {url, release["prerelease"] == true}
   end
 
-  defp manifest_url(_), do: []
+  defp manifest_urls(_), do: []
 
   defp github_repo do
     Application.get_env(:castmill, __MODULE__, [])[:github_repo] || "castmill/castmill-os"

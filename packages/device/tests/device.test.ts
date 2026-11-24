@@ -2559,6 +2559,22 @@ describe('Castmill OS updates', () => {
     expect(machine.setOsUpdate).toHaveBeenCalledWith(target);
   });
 
+  // A channel whose pushes are answered with the given replies, in order.
+  const replyingChannel = (replies: Array<'ok' | 'error'>) => {
+    const ch = channel();
+    ch.push.mockImplementation(() => {
+      const reply = replies.shift() ?? 'ok';
+      const push = {
+        receive: vi.fn((status: string, cb: () => void) => {
+          if (status === reply) cb();
+          return push;
+        }),
+      };
+      return push;
+    });
+    return ch;
+  };
+
   it('reports the OS update status after login and when it changes', async () => {
     vi.useFakeTimers();
     let status: Record<string, unknown> = {
@@ -2571,7 +2587,7 @@ describe('Castmill OS updates', () => {
       getOsUpdateStatus: vi.fn(async () => status),
     };
     const device = new Device(machine as unknown as Machine, {} as never);
-    const ch = channel();
+    const ch = replyingChannel(['ok', 'ok']);
     device['initOsUpdateReports'](ch as any);
     await vi.advanceTimersByTimeAsync(0);
     expect(ch.push).toHaveBeenCalledWith('os_update:report', status);
@@ -2584,6 +2600,26 @@ describe('Castmill OS updates', () => {
     await vi.advanceTimersByTimeAsync(30_000);
     expect(ch.push).toHaveBeenCalledTimes(2);
     expect(ch.push).toHaveBeenLastCalledWith('os_update:report', status);
+  });
+
+  it('sends a report again when the server did not acknowledge it', async () => {
+    vi.useFakeTimers();
+    const status = { compatible: 'castmill-os-raspberrypi5', state: 'idle' };
+    const machine = {
+      getSetting: vi.fn().mockResolvedValue(null),
+      getOsUpdateStatus: vi.fn(async () => status),
+    };
+    const device = new Device(machine as unknown as Machine, {} as never);
+    const ch = replyingChannel(['error', 'ok']);
+    device['initOsUpdateReports'](ch as any);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(ch.push).toHaveBeenCalledTimes(1);
+
+    // Failed: the same status is sent again, then acknowledged.
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(ch.push).toHaveBeenCalledTimes(2);
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(ch.push).toHaveBeenCalledTimes(2);
   });
 
   it('sends nothing on platforms without OS updates', () => {

@@ -138,14 +138,16 @@ describe('DeviceOsUpdate', () => {
     );
   });
 
-  it('pins the device to a version and updates it now', async () => {
+  it('pins the device to a version, updates it now and passes the result up', async () => {
     vi.mocked(DevicesService.getOsUpdates).mockResolvedValue({
       policy: { mode: 'manual', prereleases: false },
       releases: [release('0.3.0')],
     });
+    const saved = { mode: 'version' as const, version: '0.3.0', now: true };
     vi.mocked(DevicesService.setDeviceOsUpdate).mockResolvedValue({
-      os_update: { mode: 'version', version: '0.3.0', now: false },
+      os_update: saved,
     });
+    const onChange = vi.fn();
     render(() => (
       <DeviceOsUpdate
         baseUrl="https://castmill.test"
@@ -153,6 +155,7 @@ describe('DeviceOsUpdate', () => {
         device={device({
           os_update: { mode: 'version', version: '0.3.0', now: false },
         })}
+        onChange={onChange}
         t={t}
       />
     ));
@@ -167,5 +170,42 @@ describe('DeviceOsUpdate', () => {
         { mode: 'version', version: '0.3.0', now: true }
       )
     );
+    // The saved override reaches the page without the live channel.
+    await waitFor(() =>
+      expect(onChange).toHaveBeenCalledWith({ os_update: saved })
+    );
+  });
+
+  it('offers every release for the organization policy, but only matching ones for the device', async () => {
+    const piOnly = {
+      ...release('0.3.1'),
+      artifacts: {
+        'castmill-os-raspberrypi5': {
+          url: 'https://x/pi.raucb',
+          sha256: 'a',
+          size: 1,
+        },
+      },
+    };
+    vi.mocked(DevicesService.getOsUpdates).mockResolvedValue({
+      policy: { mode: 'version', version: '0.3.1', prereleases: false },
+      releases: [piOnly, release('0.3.0')],
+    });
+    render(() => (
+      <DeviceOsUpdate
+        baseUrl=""
+        organizationId="org-1"
+        device={device()}
+        t={t}
+      />
+    ));
+
+    const options = (id: string) =>
+      Array.from(document.querySelectorAll(`#${id} option`)).map(
+        (o) => (o as HTMLOptionElement).value
+      );
+    await waitFor(() => expect(options('os-update-policy')).toContain('0.3.1'));
+    expect(options('os-update-override')).not.toContain('0.3.1');
+    expect(options('os-update-override')).toContain('0.3.0');
   });
 });
