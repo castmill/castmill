@@ -3,7 +3,7 @@ defmodule Castmill.Widgets.RssNewsWidgetTest do
   The system RSS News widget, as the migrations leave it: options in
   Castmill's flat widget schema (the dashboard couldn't render its JSON Schema
   and the playlist editor stopped adding widgets), a required feed URL and
-  the RSS integration.
+  the RSS integration, and a template in the player's format.
   """
   use Castmill.DataCase
 
@@ -27,12 +27,27 @@ defmodule Castmill.Widgets.RssNewsWidgetTest do
     assert {:ok, _} = Schema.validate_schema(schema, choices: true, visible_when: true)
 
     assert %{"type" => "url", "required" => true, "order" => 0} = schema["feed_url"]
-    assert %{"type" => "number", "min" => 1, "max" => 10, "default" => 3} = schema["max_items"]
+    # max_items limits the whole feed, page_size is how many show at once.
+    assert %{"type" => "number", "min" => 1, "max" => 100, "default" => 10} = schema["max_items"]
+    assert %{"type" => "number", "min" => 1, "max" => 10, "default" => 3} = schema["page_size"]
+    assert schema["transition_type"]["enum"] == ["fade", "slide-left", "none"]
+    refute Map.has_key?(schema, "transition_easing")
 
     for {key, field} <- schema do
       refute Map.has_key?(field, "title"), "#{key} has a title"
       assert is_integer(field["order"]), "#{key} has no order"
     end
+  end
+
+  # The player renders this fixture in packages/player/tests/rss-news.spec.ts.
+  @template_fixture Path.expand(
+                      "../../../../player/tests/fixtures/rss-news-template.json",
+                      __DIR__
+                    )
+
+  test "stores the template the player renders", %{widget: widget} do
+    assert widget.template == @template_fixture |> File.read!() |> Jason.decode!()
+    assert Castmill.Widgets.TemplateBindings.validate(widget.template) == :ok
   end
 
   test "labels every option, in every dashboard language", %{widget: widget} do

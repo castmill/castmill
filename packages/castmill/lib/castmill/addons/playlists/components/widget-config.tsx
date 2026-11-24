@@ -1476,10 +1476,24 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       }
       case 'map':
         return <div>Map type not implemented yet</div>;
-      default:
-        // An option this form can't edit must not break the whole form.
+      default: {
+        // A required option this form can't edit, with no value to fall back
+        // to, would keep Submit disabled with no explanation: fail, so the
+        // playlist editor shows its recovery message.
+        const field = schema as FieldAttributes;
+        if (
+          field?.required &&
+          typeof field.default === 'undefined' &&
+          typeof widgetOptions()[key] === 'undefined'
+        ) {
+          throw new Error(
+            `Widget option "${key}" is required but has an unsupported type: ${type}`
+          );
+        }
+        // Optional ones are skipped, so they don't break the whole form.
         console.warn(`Widget option "${key}" has an unsupported type`, type);
         return null;
+      }
     }
   }
 

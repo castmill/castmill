@@ -1,0 +1,323 @@
+{
+  "components": [
+    {
+      "component": {
+        "components": [
+          {
+            "name": "news-image",
+            "opts": {
+              "fallbackUrl": {
+                "key": "options.fallback_image.files[@target].uri"
+              },
+              "size": "cover",
+              "url": {
+                "key": "$.image"
+              }
+            },
+            "style": {
+              "border-radius": "0.25em",
+              "flex-shrink": "0",
+              "height": "100%",
+              "overflow": "hidden",
+              "width": {
+                "default": "40%",
+                "key": "options.image_width"
+              }
+            },
+            "type": "image",
+            "when": {
+              "cond": {
+                "else": {
+                  "first": [
+                    {
+                      "key": "$.image"
+                    },
+                    {
+                      "key": "options.fallback_image.files[@target].uri"
+                    }
+                  ]
+                },
+                "eq": false,
+                "key": "options.show_image",
+                "then": false
+              }
+            }
+          },
+          {
+            "components": [
+              {
+                "name": "news-title",
+                "opts": {
+                  "autofit": {},
+                  "text": {
+                    "key": "$.title"
+                  }
+                },
+                "style": {
+                  "color": {
+                    "default": "#ffffff",
+                    "key": "options.title_color"
+                  },
+                  "flex-shrink": "0",
+                  "font-size": "1.5em",
+                  "font-weight": "bold",
+                  "line-height": "1.2",
+                  "max-height": "40%",
+                  "overflow": "hidden"
+                },
+                "type": "text"
+              },
+              {
+                "name": "news-description",
+                "opts": {
+                  "autofit": {},
+                  "text": {
+                    "key": "$.description"
+                  }
+                },
+                "style": {
+                  "color": {
+                    "default": "#cccccc",
+                    "key": "options.description_color"
+                  },
+                  "flex": "1",
+                  "font-size": "1em",
+                  "line-height": "1.4",
+                  "min-height": "0",
+                  "overflow": "hidden"
+                },
+                "type": "text"
+              },
+              {
+                "name": "news-source",
+                "opts": {
+                  "autofit": {},
+                  "text": {
+                    "key": "$.source"
+                  }
+                },
+                "style": {
+                  "color": {
+                    "default": "#888888",
+                    "key": "options.source_color"
+                  },
+                  "flex-shrink": "0",
+                  "font-size": "0.8em",
+                  "font-style": "italic",
+                  "overflow": "hidden"
+                },
+                "type": "text",
+                "when": {
+                  "cond": {
+                    "else": {
+                      "key": "$.source"
+                    },
+                    "eq": false,
+                    "key": "options.show_source",
+                    "then": false
+                  }
+                }
+              }
+            ],
+            "name": "news-content",
+            "style": {
+              "display": "flex",
+              "flex": "1",
+              "flex-direction": "column",
+              "gap": "0.3em",
+              "min-width": "0",
+              "overflow": "hidden"
+            },
+            "type": "group"
+          }
+        ],
+        "name": "news-card",
+        "style": {
+          "box-sizing": "border-box",
+          "display": "flex",
+          "flex-direction": {
+            "default": "row",
+            "key": "options.card_layout"
+          },
+          "gap": "1em",
+          "height": {
+            "concat": [
+              "calc(100% / ",
+              {
+                "default": 3,
+                "key": "options.page_size"
+              },
+              ")"
+            ]
+          },
+          "overflow": "hidden",
+          "padding": "0.5em",
+          "width": "100%"
+        },
+        "type": "group"
+      },
+      "name": "news-list",
+      "opts": {
+        "activeOnly": {
+          "switch": {
+            "cases": {
+              "default": false,
+              "none": true,
+              "slide-left": true
+            },
+            "key": "options.transition_type"
+          }
+        },
+        "items": {
+          "key": "data.items"
+        },
+        "pageDuration": {
+          "default": 10,
+          "key": "options.page_duration"
+        },
+        "pageSize": {
+          "default": 3,
+          "key": "options.page_size"
+        },
+        "transition": {
+          "switch": {
+            "cases": {
+              "default": "none",
+              "slide-left": "slide-left"
+            },
+            "key": "options.transition_type"
+          }
+        },
+        "transitionDuration": {
+          "default": 0.5,
+          "key": "options.transition_duration"
+        }
+      },
+      "style": {
+        "flex": "1",
+        "min-height": "0",
+        "overflow": "hidden",
+        "position": "relative",
+        "width": "100%"
+      },
+      "type": "paginated-list"
+    },
+    {
+      "components": [
+        {
+          "name": "ticker-label",
+          "opts": {
+            "autofit": {},
+            "text": {
+              "default": "BREAKING",
+              "key": "options.ticker_label"
+            }
+          },
+          "style": {
+            "align-items": "center",
+            "background-color": {
+              "default": "#ff0000",
+              "key": "options.ticker_label_bg_color"
+            },
+            "color": {
+              "default": "#ffffff",
+              "key": "options.ticker_label_color"
+            },
+            "display": "flex",
+            "flex-shrink": "0",
+            "font-size": "1.2em",
+            "font-weight": "bold",
+            "height": "100%",
+            "padding": "0 1em",
+            "white-space": "nowrap",
+            "z-index": "1"
+          },
+          "type": "text",
+          "when": {
+            "default": "BREAKING",
+            "key": "options.ticker_label"
+          }
+        },
+        {
+          "component": {
+            "name": "ticker-item",
+            "opts": {
+              "autofit": {},
+              "text": {
+                "concat": [
+                  {
+                    "key": "$.title"
+                  },
+                  {
+                    "default": " • ",
+                    "key": "options.ticker_separator"
+                  }
+                ]
+              }
+            },
+            "style": {
+              "white-space": "pre"
+            },
+            "type": "text"
+          },
+          "name": "ticker-scroller",
+          "opts": {
+            "direction": "left",
+            "gap": "0em",
+            "items": {
+              "key": "data.items"
+            },
+            "speed": {
+              "default": 100,
+              "key": "options.ticker_speed"
+            }
+          },
+          "style": {
+            "color": {
+              "default": "#ffffff",
+              "key": "options.ticker_text_color"
+            },
+            "flex": "1",
+            "font-size": "1.2em",
+            "height": "100%",
+            "overflow": "hidden"
+          },
+          "type": "scroller"
+        }
+      ],
+      "name": "ticker-bar",
+      "style": {
+        "align-items": "center",
+        "background-color": {
+          "default": "#cc0000",
+          "key": "options.ticker_bg_color"
+        },
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-shrink": "0",
+        "height": "3em",
+        "overflow": "hidden",
+        "width": "100%"
+      },
+      "type": "group",
+      "when": {
+        "key": "options.show_ticker"
+      }
+    }
+  ],
+  "fontScale": true,
+  "name": "rss-news",
+  "style": {
+    "background-color": {
+      "default": "#1a1a2e",
+      "key": "options.bg_color"
+    },
+    "display": "flex",
+    "flex-direction": "column",
+    "font-size": "1.6em",
+    "height": "100%",
+    "overflow": "hidden",
+    "width": "100%"
+  },
+  "type": "group"
+}
