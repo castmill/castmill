@@ -153,8 +153,7 @@ export const Table = <
   createEffect(
     on(
       () => props.sortOptions,
-      (options) => options && setSortConfig(options),
-      { defer: true }
+      (options) => options && setSortConfig(options)
     )
   );
   const [selectedRows, setSelectedRows] = createSignal(new Set<IdType>());
