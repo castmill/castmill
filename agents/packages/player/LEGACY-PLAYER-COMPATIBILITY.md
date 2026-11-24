@@ -52,6 +52,15 @@ Electron. Keep startup and diagnostics strings in English; do not add locale
 files or language selection to `packages/platforms/legacy-adapter-player/`.
 Dashboard localization remains separate.
 
+QR generation must work without `TextEncoder` (missing on Chromium 38).
+Pass UTF-8 bytes as a QR byte segment on those engines; the encoder's string
+path requires `TextEncoder`. Keep the optimized string path on modern browsers
+and preserve SVG `viewBox` sizing on both.
+Both Chrome 38 app builds must include `es.typed-array.slice`: the QR encoder's
+error-correction code uses `Uint8Array.prototype.slice`, which is not covered by
+`es.array.slice`. The bootstrap regression builds and executes both real Vite
+configurations with `TextEncoder` and typed-array `slice` absent.
+
 The legacy Android adapter and native Android app use `getBrowserLocation` from
 `@castmill/device`. Geolocation is optional: use coordinates when available, but
 continue registration without them on failure or after five seconds. Keep both

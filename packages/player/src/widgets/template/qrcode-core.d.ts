@@ -6,7 +6,7 @@ declare module 'qrcode/lib/core/qrcode' {
   }
 
   export function create(
-    text: string,
+    text: string | Array<{ data: Uint8Array; mode: 'byte' }>,
     options?: { errorCorrectionLevel?: string }
   ): { version: number; modules: QRCodeBitMatrix };
 }

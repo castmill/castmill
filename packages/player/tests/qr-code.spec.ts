@@ -24,6 +24,19 @@ const referenceModules = (content: string, level: 'L' | 'M' | 'Q' | 'H') => {
 };
 
 describe('QR code component', () => {
+  const withoutTextEncoder = async (run: () => void | Promise<void>) => {
+    const saved = Object.getOwnPropertyDescriptor(globalThis, 'TextEncoder')!;
+    Object.defineProperty(globalThis, 'TextEncoder', {
+      configurable: true,
+      value: undefined,
+    });
+    try {
+      await run();
+    } finally {
+      Object.defineProperty(globalThis, 'TextEncoder', saved);
+    }
+  };
+
   it('draws exactly the modules of a standard QR code', () => {
     const content = 'https://www.ahmanmakleri.se/bostader/2457602';
     const { size, path } = generateQRModules(content, 'M');
@@ -53,6 +66,27 @@ describe('QR code component', () => {
     expect(generateQRModules(content)).to.deep.equal(
       generateQRModules(content, 'M')
     );
+  });
+
+  it('encodes URLs and UTF-8 content without TextEncoder on Chromium 38', async () => {
+    for (const content of [
+      'https://www.bjurfors.se/visabostad/2457602',
+      'Tylöprint – Åhléns 🏠',
+    ]) {
+      const { modules } = create(
+        [{ data: new TextEncoder().encode(content), mode: 'byte' }],
+        { errorCorrectionLevel: 'H' }
+      );
+
+      await withoutTextEncoder(() => {
+        const { size, path } = generateQRModules(content, 'H');
+        expect(size).to.equal(modules.size);
+        expect(pathModules(path, size)).to.deep.equal(
+          Array.from(modules.data, (bit) => !!bit)
+        );
+        expect(typeof TextEncoder).to.equal('undefined');
+      });
+    }
   });
 
   const showQRCode = async (
@@ -131,5 +165,21 @@ describe('QR code component', () => {
       expect(component).to.not.equal(null);
       expect(component!.querySelector('svg')).to.equal(null);
     });
+  });
+
+  it('renders bound broker content as an SVG when TextEncoder is unavailable', async () => {
+    await withoutTextEncoder(() =>
+      showQRCode(
+        { estateId: '2457602' },
+        { fmt: 'https://www.bjurfors.se/visabostad/{$.estateId}' },
+        (root) => {
+          const path = root.querySelector(
+            '[data-component="qr-code"] svg path'
+          );
+          expect(path).to.not.equal(null);
+          expect(path!.getAttribute('d')).to.not.equal('');
+        }
+      )
+    );
   });
 });
