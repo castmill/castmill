@@ -46,6 +46,10 @@ standalone previews retain the loop-back transition.
 Autofitted text keeps its initial synchronous fit for readiness. Coalesce later
 resize and content notifications into one animation-frame fit, using the latest
 text and container dimensions, and cancel queued work on cleanup.
+Install the template's resize observer before applying its initial base font:
+that font update dispatches a window resize and can letterbox the layer.
+Without `ResizeObserver`, observing afterward misses the initial inline-size
+change and leaves portrait widgets with landscape-sized text.
 
 The legacy adapter player displays English-only UI on Android, WebOS, and
 Electron. Keep startup and diagnostics strings in English; do not add locale

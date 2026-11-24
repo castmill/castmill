@@ -167,8 +167,10 @@ export const Template: Component<{
   // the size is usually known at mount; later sizes come from the observer.
   onMount(() => {
     if (!props.fontScale) return;
-    applyBaseFont();
+    // The font update dispatches resize, which can letterbox the layer.
+    // Observe first so legacy browsers do not miss that initial size change.
     if (rootRef) stopObserving = observeElementResize(rootRef, applyBaseFont);
+    applyBaseFont();
   });
 
   onCleanup(() => {
