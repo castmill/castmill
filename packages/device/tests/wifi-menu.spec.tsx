@@ -1,10 +1,10 @@
 import { cleanup, fireEvent, render, screen } from '@solidjs/testing-library';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { Device } from '../classes/device';
-import type { WifiStatus } from '../interfaces/machine';
-import { BaseMenu } from './basemenu.component';
-import { createWifiMenu, wifiErrorMessage } from './wifi-menu';
+import type { Device } from '../src/classes/device';
+import type { WifiStatus } from '../src/interfaces/machine';
+import { BaseMenu } from '../src/components/basemenu.component';
+import { createWifiMenu, wifiErrorMessage } from '../src/components/wifi-menu';
 
 const offline: WifiStatus = {
   available: true,
