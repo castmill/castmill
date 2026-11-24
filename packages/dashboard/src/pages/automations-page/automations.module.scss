@@ -13,13 +13,6 @@ $danger: var(--cm-error);
   text-align: start;
 }
 
-.pageDescription {
-  max-width: 52em;
-  margin: 0 0 1em;
-  color: $muted;
-  line-height: 1.5;
-}
-
 .muted,
 .hint {
   color: $muted;
@@ -45,7 +38,22 @@ $danger: var(--cm-error);
   display: flex;
   flex-direction: column;
   gap: 0.2em;
-  max-width: 36em;
+  // One line per rule summary: long ones would widen the table past its
+  // container and switch it to the compact density.
+  max-width: 24em;
+  min-width: 0;
+}
+
+.ruleSummary {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.mainAction {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .emptyState {

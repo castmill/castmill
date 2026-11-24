@@ -2180,6 +2180,7 @@
     "title": "Automatiseringar",
     "description": "Låt skärmarna reagera på händelser, till exempel genom att avbryta uppspelningen med annat innehåll vid vissa tider.",
     "new": "Ny automatisering",
+    "quotaReached": "Kvoten för automatiseringar är nådd: ta bort en automatisering eller uppgradera din plan för att lägga till fler.",
     "newDescription": "Ge automatiseringen ett namn. Du kan lägga till regler och tilldela skärmar efteråt.",
     "namePlaceholder": "t.ex. Vårerbjudande varje timme",
     "created": "Automatiseringen \"{{name}}\" skapades",

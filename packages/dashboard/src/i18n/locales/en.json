@@ -2180,6 +2180,7 @@
     "title": "Automations",
     "description": "Make displays react to events, such as interrupting playback with other content at specific times.",
     "new": "New automation",
+    "quotaReached": "Automation quota reached: delete an automation or upgrade your plan to add more.",
     "newDescription": "Give the automation a name. You can add rules and assign displays afterwards.",
     "namePlaceholder": "e.g. Hourly spring offer",
     "created": "Automation \"{{name}}\" created",

@@ -26,6 +26,8 @@ export interface Filter {
 interface ToolBarProps {
   title?: string | (() => string);
   titleActions?: JSX.Element; // Rendered on the same row as the title
+  /** A short explanation of the page, under the title. */
+  description?: string | (() => string);
   filters?: Filter[];
   onFilterChange?: (filters: Filter[]) => void;
   actions?: JSX.Element | (() => JSX.Element);
@@ -104,6 +106,10 @@ export function ToolBar(props: ToolBarProps) {
 
   const getTitle = () =>
     typeof props.title === 'function' ? props.title() : props.title;
+  const getDescription = () =>
+    typeof props.description === 'function'
+      ? props.description()
+      : props.description;
 
   // On phones the filters and secondary actions collapse behind a toggle so
   // that search and the primary action fit on one row.
@@ -127,6 +133,9 @@ export function ToolBar(props: ToolBarProps) {
           </Show>
           <Show when={props.titleActions}>{props.titleActions}</Show>
         </div>
+      </Show>
+      <Show when={getDescription()}>
+        <p class="toolbar-description">{getDescription()}</p>
       </Show>
       <div class="toolbar-row" classList={{ compact: compact() }}>
         <div class="toolbar-left">
