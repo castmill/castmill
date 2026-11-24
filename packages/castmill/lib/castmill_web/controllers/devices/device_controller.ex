@@ -319,7 +319,7 @@ defmodule CastmillWeb.DeviceController do
         {:device_response, data} ->
           conn
           |> put_status(:ok)
-          |> json(data)
+          |> json(name_cache_entries(device_id, data))
       after
         5_000 ->
           conn
@@ -334,6 +334,19 @@ defmodule CastmillWeb.DeviceController do
         |> halt()
     end
   end
+
+  # Devices only report cached URLs; add resource names for the dashboard.
+  defp name_cache_entries(device_id, %{"data" => entries} = page) when is_list(entries) do
+    case Devices.get_device(device_id) do
+      %{organization_id: organization_id} ->
+        %{page | "data" => Devices.name_cache_entries(organization_id, entries)}
+
+      _ ->
+        page
+    end
+  end
+
+  defp name_cache_entries(_device_id, page), do: page
 
   @delete_cache_schema %{
     device_id: [type: :string],

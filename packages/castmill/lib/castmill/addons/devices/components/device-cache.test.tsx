@@ -100,7 +100,7 @@ describe('DeviceCache', () => {
         t={t}
       />
     ));
-    await screen.findByText(entries[0].url);
+    await screen.findAllByText(entries[0].url);
     return entries;
   };
 
@@ -166,6 +166,47 @@ describe('DeviceCache', () => {
         entries.map((entry) => entry.url)
       );
     });
+  });
+
+  it('shows resource names with a file name fallback', async () => {
+    const { TableView: RealTableView } = await vi.importActual<
+      typeof import('@castmill/ui-common')
+    >('@castmill/ui-common');
+    vi.mocked(TableView).mockImplementationOnce(RealTableView);
+    const entries = [
+      {
+        url: 'https://cdn.example.com/org/media/summer.mp4?v=1',
+        name: 'Summer campaign',
+      },
+      { url: 'https://cdn.example.com/org/media/logo.png?v=2' },
+    ].map((entry) => ({
+      ...entry,
+      timestamp: 1720000000000,
+      size: 128,
+      accessed: 1,
+      mimeType: 'media/*',
+    }));
+    vi.mocked(DevicesService.getDeviceCache).mockResolvedValue({
+      data: entries,
+      count: entries.length,
+    });
+
+    render(() => (
+      <DeviceCache
+        baseUrl="/api"
+        device={{ id: 'device-1', online: true } as any}
+        t={t}
+      />
+    ));
+
+    expect(
+      await screen.findByRole('columnheader', { name: 'common.name' })
+    ).toBeInTheDocument();
+    expect(
+      (await screen.findAllByText('Summer campaign')).length
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText('logo.png').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(entries[0].url).length).toBeGreaterThan(0);
   });
 
   it('sorts cache entries newest first by default', () => {

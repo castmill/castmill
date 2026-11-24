@@ -1200,4 +1200,151 @@ defmodule Castmill.Devices do
 
     {on_result, off_result}
   end
+
+  @cache_playlist_url ~r{/devices/[^/?#]+/playlists/(\d+)/?(?:[?#]|$)}
+
+  @doc """
+  Adds a human readable `"name"` to the cache entries reported by a device.
+
+  Devices only know the URLs they cached, so names are resolved from the
+  organization's resources: media files get the name of their media (or the
+  file name) and device playlist data gets the playlist name. Lookups are
+  limited to the device's organization and entries without a match are
+  returned unchanged.
+  """
+  def name_cache_entries(organization_id, entries)
+      when is_binary(organization_id) and is_list(entries) do
+    urls =
+      entries
+      |> Enum.flat_map(fn
+        %{"url" => url} when is_binary(url) -> [url]
+        _ -> []
+      end)
+      |> Enum.uniq()
+
+    names =
+      Map.merge(
+        cache_media_names(organization_id, urls),
+        cache_playlist_names(organization_id, urls)
+      )
+
+    Enum.map(entries, fn
+      %{"url" => url} = entry when is_map_key(names, url) ->
+        Map.put(entry, "name", Map.fetch!(names, url))
+
+      entry ->
+        entry
+    end)
+  end
+
+  def name_cache_entries(_organization_id, entries), do: entries
+
+  # Stored and served media URIs may use different hosts, so files are matched
+  # by the object path that follows the organization id.
+  defp cache_media_names(_organization_id, []), do: %{}
+
+  defp cache_media_names(organization_id, urls) do
+    delimiter = "/#{organization_id}/"
+
+    keys =
+      Enum.flat_map(urls, fn url ->
+        case cache_media_key(url, delimiter) do
+          nil -> []
+          key -> [{url, key}]
+        end
+      end)
+
+    suffixes = keys |> Enum.map(&elem(&1, 1)) |> Enum.uniq()
+
+    {names_by_uri, names_by_key} =
+      from(file in Castmill.Files.File,
+        left_join: files_medias in Castmill.Files.FilesMedias,
+        on: files_medias.file_id == file.id,
+        left_join: media in Castmill.Resources.Media,
+        on: media.id == files_medias.media_id,
+        where: file.organization_id == ^organization_id,
+        where:
+          file.uri in ^urls or
+            fragment("split_part(?, ?, 2)", file.uri, ^delimiter) in ^suffixes,
+        order_by: [asc: files_medias.inserted_at],
+        select: {file.uri, coalesce(media.name, file.name)}
+      )
+      |> Repo.all()
+      |> Enum.reduce({%{}, %{}}, fn {uri, name}, {uris, keys} ->
+        uris = Map.put_new(uris, uri, name)
+
+        keys =
+          case cache_media_key(uri, delimiter) do
+            nil -> keys
+            key -> Map.put_new(keys, key, name)
+          end
+
+        {uris, keys}
+      end)
+
+    Enum.reduce(urls, %{}, fn url, names ->
+      case Map.fetch(names_by_uri, url) do
+        {:ok, name} ->
+          Map.put(names, url, name)
+
+        :error ->
+          case cache_media_key(url, delimiter) do
+            nil ->
+              names
+
+            key ->
+              case Map.fetch(names_by_key, key) do
+                {:ok, name} -> Map.put(names, url, name)
+                :error -> names
+              end
+          end
+      end
+    end)
+  end
+
+  defp cache_media_key(url, delimiter) do
+    path = URI.parse(url).path || ""
+
+    case String.split(path, delimiter, parts: 2) do
+      [_, suffix] when suffix != "" -> suffix
+      _ -> nil
+    end
+  end
+
+  defp cache_playlist_names(_organization_id, []), do: %{}
+
+  defp cache_playlist_names(organization_id, urls) do
+    ids =
+      Enum.flat_map(urls, fn url ->
+        case Regex.run(@cache_playlist_url, url) do
+          [_, id] ->
+            case Integer.parse(id) do
+              {id, ""} when id <= 9_223_372_036_854_775_807 -> [{url, id}]
+              _ -> []
+            end
+
+          _ ->
+            []
+        end
+      end)
+
+    playlist_ids = ids |> Enum.map(&elem(&1, 1)) |> Enum.uniq()
+
+    if playlist_ids == [] do
+      %{}
+    else
+      names_by_id =
+        from(playlist in Castmill.Resources.Playlist,
+          where: playlist.organization_id == ^organization_id,
+          where: playlist.id in ^playlist_ids,
+          select: {playlist.id, playlist.name}
+        )
+        |> Repo.all()
+        |> Map.new()
+
+      for {url, id} <- ids, Map.has_key?(names_by_id, id), into: %{} do
+        {url, Map.fetch!(names_by_id, id)}
+      end
+    end
+  end
 end
