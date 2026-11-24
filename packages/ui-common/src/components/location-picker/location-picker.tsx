@@ -54,6 +54,11 @@ interface LocationPickerProps {
   saveLabel?: string;
   cancelLabel?: string;
   closeLabel?: string;
+  /**
+   * Show the address line (and its manual editor). Set it to false when only
+   * the coordinates are kept, so nobody edits an address that isn't saved.
+   */
+  showAddress?: boolean;
 }
 
 // Leaflet types (minimal interface to avoid `any`)
@@ -73,6 +78,8 @@ interface LeafletMarker {
   addTo: (map: LeafletMap) => LeafletMarker;
   on: (event: string, handler: (e: any) => void) => LeafletMarker;
   setLatLng: (latlng: [number, number]) => LeafletMarker;
+  remove: () => LeafletMarker;
+  dragging?: { enable: () => void; disable: () => void };
 }
 
 interface LeafletStatic {
@@ -96,8 +103,11 @@ interface LeafletStatic {
  */
 export const LocationPicker: Component<LocationPickerProps> = (props) => {
   let mapContainer: HTMLDivElement | undefined;
+  let searchContainer: HTMLDivElement | undefined;
   let map: LeafletMap | undefined;
   let marker: LeafletMarker | undefined;
+  // Whether the marker is on the map: an empty value has no marker.
+  let markerShown = false;
 
   const [editingAddress, setEditingAddress] = createSignal(false);
   const [manualAddress, setManualAddress] = createSignal('');
@@ -169,8 +179,26 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
     }
   };
 
+  // Put the marker at a position, adding it back if the value was empty.
+  const showMarker = (lat: number, lng: number) => {
+    if (!map || !marker) return;
+    marker.setLatLng([lat, lng]);
+    if (!markerShown) {
+      marker.addTo(map);
+      markerShown = true;
+    }
+  };
+
+  const hideMarker = () => {
+    if (marker && markerShown) {
+      marker.remove();
+      markerShown = false;
+    }
+  };
+
   // Handle location selection from ComboBox
   const handleLocationSelect = (result: LocationSearchResult) => {
+    if (props.disabled) return;
     const lat = parseFloat(result.lat);
     const lng = parseFloat(result.lon);
 
@@ -187,10 +215,8 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
     props.onChange(location);
 
     // Update map
-    if (map && marker) {
-      map.setView([lat, lng], zoom);
-      marker.setLatLng([lat, lng]);
-    }
+    map?.setView([lat, lng], zoom);
+    showMarker(lat, lng);
   };
 
   // Reverse geocode coordinates to address
@@ -221,9 +247,7 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
     const lng = e.latlng.lng;
 
     // Update marker position
-    if (marker) {
-      marker.setLatLng([lat, lng]);
-    }
+    showMarker(lat, lng);
 
     // Reverse geocode to get address
     const result = await reverseGeocode(lat, lng);
@@ -291,7 +315,7 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
       maxZoom: 19,
     }).addTo(map);
 
-    // Add marker
+    // Add the marker (only once there is a value)
     marker = L.marker(
       props.value
         ? [props.value.lat, props.value.lng]
@@ -299,7 +323,11 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
       {
         draggable: !props.disabled,
       }
-    ).addTo(map);
+    );
+    if (props.value) {
+      marker.addTo(map);
+      markerShown = true;
+    }
 
     // Handle map clicks
     map.on('click', handleMapClick);
@@ -317,21 +345,32 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
     on(
       () => props.value,
       (value, prevValue) => {
+        if (!value) {
+          hideMarker();
+          return;
+        }
         // Only update if coordinates actually changed
         if (
-          value &&
           map &&
-          marker &&
           (!prevValue ||
+            !markerShown ||
             value.lat !== prevValue.lat ||
             value.lng !== prevValue.lng)
         ) {
           map.setView([value.lat, value.lng]);
-          marker.setLatLng([value.lat, value.lng]);
+          showMarker(value.lat, value.lng);
         }
       }
     )
   );
+
+  createEffect(() => {
+    const disabled = !!props.disabled;
+    // `inert` blocks clicks, typing and focus in the search while disabled.
+    searchContainer?.toggleAttribute('inert', disabled);
+    if (disabled) marker?.dragging?.disable();
+    else marker?.dragging?.enable();
+  });
 
   // Cleanup
   onCleanup(() => {
@@ -342,7 +381,12 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
 
   return (
     <div class="location-picker">
-      <div class="location-picker__search">
+      <div
+        class="location-picker__search"
+        classList={{ 'location-picker__search--disabled': !!props.disabled }}
+        aria-disabled={props.disabled ? 'true' : undefined}
+        ref={searchContainer}
+      >
         <ComboBox<LocationSearchResult>
           id="location-search"
           closeLabel={props.closeLabel}
@@ -363,7 +407,7 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
             {props.value?.lat.toFixed(6)}, {props.value?.lng.toFixed(6)}
           </div>
 
-          <Show when={!editingAddress()}>
+          <Show when={props.showAddress !== false && !editingAddress()}>
             <div class="location-picker__address">
               <strong>{props.addressLabel ?? 'Address'}:</strong>{' '}
               {props.value?.address ??
@@ -382,7 +426,7 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
             </div>
           </Show>
 
-          <Show when={editingAddress()}>
+          <Show when={props.showAddress !== false && editingAddress()}>
             <div class="location-picker__address-editor">
               <input
                 type="text"

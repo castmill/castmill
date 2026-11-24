@@ -40,6 +40,7 @@ import { DeviceTelemetry } from './device-telemetry';
 import { DeviceOsUpdate } from './device-os-update';
 import { DeviceSchedule } from './device-schedule';
 import { DeviceInfo } from './device-info';
+import { DeviceLocation } from './device-location';
 import { DeviceHealth } from './device-health';
 import { DeviceAutomations } from './device-automations';
 import { AddonStore } from '../../common/interfaces/addon-store';
@@ -75,6 +76,10 @@ const DeviceView: Component<{
     LAST_SEEN_REFRESH_MS
   );
   onCleanup(() => clearInterval(lastSeenTimer));
+
+  const canEdit = () =>
+    !props.store?.permissions ||
+    props.store.permissions.matrix.devices.includes('update');
 
   const updateDevice = async (device: DeviceUpdate) => {
     setLoading(true);
@@ -139,6 +144,12 @@ const DeviceView: Component<{
           <DeviceDetails
             device={props.device}
             store={props.store}
+            onSubmit={updateDevice}
+            t={t}
+          />
+          <DeviceLocation
+            device={props.device}
+            canEdit={canEdit()}
             onSubmit={updateDevice}
             t={t}
           />

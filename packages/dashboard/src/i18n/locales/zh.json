@@ -1570,6 +1570,12 @@
         "failed": "更新失败",
         "unsupported": "此设备无法安装更新"
       }
+    },
+    "location": {
+      "title": "位置",
+      "help": "此屏幕所在的位置。无法自行定位的设备（例如 Castmill OS）将使用此位置。",
+      "search": "位置",
+      "clear": "清除位置"
     }
   },
   "validation": {

@@ -1565,6 +1565,12 @@
         "failed": "Uppdateringen misslyckades",
         "unsupported": "Den här enheten kan inte installera uppdateringar"
       }
+    },
+    "location": {
+      "title": "Plats",
+      "help": "Var den här skärmen finns. Enheter som inte kan avgöra sin plats själva (som Castmill OS) använder den här platsen.",
+      "search": "Plats",
+      "clear": "Rensa plats"
     }
   },
   "validation": {

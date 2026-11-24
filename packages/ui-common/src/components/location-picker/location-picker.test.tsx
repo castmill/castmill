@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import { render, cleanup, screen, waitFor } from '@solidjs/testing-library';
+import { createSignal } from 'solid-js';
 import { LocationPicker, LocationValue } from './location-picker';
 
 // Mock the window.L (Leaflet) global
@@ -22,7 +23,9 @@ const mockLeaflet = {
   marker: vi.fn(() => ({
     addTo: vi.fn().mockReturnThis(),
     on: vi.fn().mockReturnThis(),
-    setLatLng: vi.fn(),
+    setLatLng: vi.fn().mockReturnThis(),
+    remove: vi.fn().mockReturnThis(),
+    dragging: { enable: vi.fn(), disable: vi.fn() },
   })),
 };
 
@@ -144,5 +147,61 @@ describe('LocationPicker Component', () => {
     // Check that the map container exists
     const mapContainer = document.querySelector('.location-picker__map');
     expect(mapContainer).toBeInTheDocument();
+  });
+
+  it('hides the address line when showAddress is false', () => {
+    render(() => (
+      <LocationPicker
+        onChange={vi.fn()}
+        value={{ lat: 1, lng: 2, address: 'Somewhere' }}
+        showAddress={false}
+      />
+    ));
+    expect(screen.getByText(/1\.000000/)).toBeInTheDocument();
+    expect(screen.queryByText(/Somewhere/)).toBeNull();
+    expect(screen.queryByText('Edit')).toBeNull();
+  });
+
+  it('blocks the search while disabled', () => {
+    const { container } = render(() => (
+      <LocationPicker onChange={vi.fn()} disabled />
+    ));
+    const search = container.querySelector('.location-picker__search')!;
+    expect(search.hasAttribute('inert')).toBe(true);
+    expect(search.getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('removes the marker when the value is cleared and restores it', async () => {
+    const [value, setValue] = createSignal<LocationValue | undefined>({
+      lat: 1,
+      lng: 2,
+    });
+    render(() => <LocationPicker onChange={vi.fn()} value={value()} />);
+    // Maps of earlier tests may still be loading: take this one's marker.
+    const markerAt = (lat: number, lng: number) => {
+      const i = mockLeaflet.marker.mock.calls.findIndex(
+        (c: any[]) => c[0][0] === lat && c[0][1] === lng
+      );
+      return i < 0 ? undefined : mockLeaflet.marker.mock.results[i].value;
+    };
+    await waitFor(() => expect(markerAt(1, 2)).toBeDefined());
+    const marker = markerAt(1, 2);
+    expect(marker.addTo).toHaveBeenCalledTimes(1);
+
+    setValue(undefined);
+    expect(marker.remove).toHaveBeenCalledTimes(1);
+
+    setValue({ lat: 3, lng: 4 });
+    expect(marker.setLatLng).toHaveBeenLastCalledWith([3, 4]);
+    expect(marker.addTo).toHaveBeenCalledTimes(2);
+  });
+
+  it('places no marker without a value', async () => {
+    render(() => <LocationPicker onChange={vi.fn()} />);
+    await waitFor(() => expect(mockLeaflet.marker).toHaveBeenCalled());
+    // Without a value the marker is created at the default but not shown.
+    mockLeaflet.marker.mock.results.forEach((r: any) =>
+      expect(r.value.addTo).not.toHaveBeenCalled()
+    );
   });
 });

@@ -1570,6 +1570,12 @@
         "failed": "업데이트 실패",
         "unsupported": "이 기기는 업데이트를 설치할 수 없습니다"
       }
+    },
+    "location": {
+      "title": "위치",
+      "help": "이 화면이 있는 위치입니다. 스스로 위치를 알 수 없는 기기(예: Castmill OS)는 이 위치를 사용합니다.",
+      "search": "위치",
+      "clear": "위치 지우기"
     }
   },
   "validation": {

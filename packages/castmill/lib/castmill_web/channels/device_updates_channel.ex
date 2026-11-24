@@ -12,6 +12,9 @@ defmodule CastmillWeb.DeviceUpdatesChannel do
     Logger.info("User #{user.id} is joining device_updates channel for device #{device_id}")
 
     if authorized?(user.id, device_id) do
+      # The dashboard's list or page was loaded before this join: send the
+      # current status so a change in between isn't lost.
+      send(self(), :push_status)
       send(self(), :sync_orientation)
       {:ok, assign(socket, :device_id, device_id)}
     else
@@ -37,6 +40,25 @@ defmodule CastmillWeb.DeviceUpdatesChannel do
   @impl true
   def handle_info(:sync_orientation, socket) do
     {:noreply, sync_orientation(socket)}
+  end
+
+  def handle_info(:push_status, socket) do
+    case Devices.get_device(socket.assigns.device_id) do
+      nil ->
+        {:noreply, socket}
+
+      device ->
+        # Same rule as the device list: online only with a recent heartbeat.
+        [device] = Devices.set_devices_online([device])
+
+        push(socket, "device:status", %{
+          device_id: device.id,
+          online: device.online,
+          last_online: device.last_online
+        })
+
+        {:noreply, assign(socket, :online, device.online)}
+    end
   end
 
   def handle_info(%{online: true, last_online: last_online}, socket) do

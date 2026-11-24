@@ -15,6 +15,9 @@ export interface Device {
   online: boolean;
   last_online: Date;
   location: string;
+  /** Set in the dashboard: where the device is. */
+  loc_lat?: number | null;
+  loc_long?: number | null;
   city: string;
   country: string;
   last_ip: string;
