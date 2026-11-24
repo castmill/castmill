@@ -163,6 +163,8 @@ export interface ListAutomationsParams {
   search?: string;
   page?: number;
   pageSize?: number;
+  /** Column and direction of the table's sort. */
+  sort?: { key?: string; direction: 'ascending' | 'descending' };
 }
 
 export interface DeviceAutomationVia {
@@ -238,6 +240,10 @@ export const AutomationsService = {
     if (params.search) query.set('search', params.search);
     query.set('page', String(params.page ?? 1));
     query.set('page_size', String(params.pageSize ?? 10));
+    if (params.sort?.key) {
+      query.set('key', params.sort.key);
+      query.set('direction', params.sort.direction);
+    }
     return getJson(`${automationsUrl(organizationId)}?${query.toString()}`);
   },
 

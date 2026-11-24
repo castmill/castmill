@@ -2186,6 +2186,7 @@
     "title": "Automatizaciones",
     "description": "Haz que las pantallas reaccionen a eventos, por ejemplo interrumpiendo la reproducción con otro contenido a horas concretas.",
     "new": "Nueva automatización",
+    "quotaReached": "Se alcanzó la cuota de automatizaciones: elimina una o mejora tu plan para añadir más.",
     "newDescription": "Ponle un nombre a la automatización. Después podrás añadir reglas y asignar pantallas.",
     "namePlaceholder": "p. ej. Oferta de primavera cada hora",
     "created": "Automatización \"{{name}}\" creada",

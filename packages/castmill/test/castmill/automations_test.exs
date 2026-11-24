@@ -112,6 +112,21 @@ defmodule Castmill.AutomationsTest do
                Automations.list_automations(organization.id, %{"page" => "2", "page_size" => "1"})
     end
 
+    test "sorts by an allowed column", %{organization: organization, playlist: playlist} do
+      automation_fixture(organization, playlist, %{"name" => "Alpha", "enabled" => true})
+      automation_fixture(organization, playlist, %{"name" => "Beta", "enabled" => false})
+
+      names = fn params ->
+        {automations, _} = Automations.list_automations(organization.id, params)
+        Enum.map(automations, & &1.name)
+      end
+
+      assert names.(%{"key" => "name", "direction" => "descending"}) == ["Beta", "Alpha"]
+      assert names.(%{"key" => "enabled", "direction" => "ascending"}) == ["Beta", "Alpha"]
+      # Unknown columns fall back to the name.
+      assert names.(%{"key" => "organization_id"}) == ["Alpha", "Beta"]
+    end
+
     test "gets automations only within the organization", %{
       organization: organization,
       playlist: playlist,

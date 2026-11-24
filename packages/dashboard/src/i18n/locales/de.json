@@ -2180,6 +2180,7 @@
     "title": "Automatisierungen",
     "description": "Lassen Sie Bildschirme auf Ereignisse reagieren, zum Beispiel indem die Wiedergabe zu bestimmten Zeiten durch andere Inhalte unterbrochen wird.",
     "new": "Neue Automatisierung",
+    "quotaReached": "Automatisierungskontingent erreicht: Löschen Sie eine Automatisierung oder erweitern Sie Ihren Plan, um weitere hinzuzufügen.",
     "newDescription": "Geben Sie der Automatisierung einen Namen. Regeln und Bildschirme können Sie danach hinzufügen.",
     "namePlaceholder": "z. B. Stündliches Frühlingsangebot",
     "created": "Automatisierung „{{name}}“ erstellt",

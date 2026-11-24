@@ -2197,6 +2197,7 @@
     "title": "Automatisations",
     "description": "Faites réagir les écrans à des événements, par exemple en interrompant la diffusion avec un autre contenu à des heures précises.",
     "new": "Nouvelle automatisation",
+    "quotaReached": "Quota d'automatisations atteint : supprimez-en une ou passez à un forfait supérieur pour en ajouter.",
     "newDescription": "Donnez un nom à l'automatisation. Vous pourrez ensuite ajouter des règles et attribuer des écrans.",
     "namePlaceholder": "ex. Offre de printemps toutes les heures",
     "created": "Automatisation « {{name}} » créée",

@@ -38,6 +38,8 @@ import { AutomationEditor } from './automation-editor';
 import { EnabledToggle } from './enabled-toggle';
 import { loadPlaylistNames, referencedPlaylistIds } from './playlist-names';
 import { ruleSummary } from './registry';
+import { QuotaIndicator } from '../../components/quota-indicator';
+import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 import { useSummaryContext } from './summary-context';
 
 import styles from './automations.module.scss';
@@ -72,6 +74,7 @@ const AutomationsPage: Component = () => {
   const [showCreate, setShowCreate] = createSignal(false);
   const [newName, setNewName] = createSignal('');
   const [creating, setCreating] = createSignal(false);
+  const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
 
   let tableRef: TableViewRef<number, Automation> | undefined;
   const reload = () => tableRef?.reloadData();
@@ -105,7 +108,31 @@ const AutomationsPage: Component = () => {
     )
   );
 
-  const fetchData = async ({ page, search }: FetchDataOptions) => {
+  const loadQuota = async () => {
+    const organizationId = orgId();
+    if (!organizationId) return;
+    try {
+      const next = await QuotasService.getResourceQuota(
+        organizationId,
+        'automations'
+      );
+      if (organizationId === orgId()) setQuota(next);
+    } catch (error) {
+      console.error('Failed to load the automations quota:', error);
+    }
+  };
+  createEffect(
+    on(orgId, () => {
+      setQuota(null);
+      loadQuota();
+    })
+  );
+  const isQuotaReached = () => {
+    const q = quota();
+    return !!q && q.used >= q.total;
+  };
+
+  const fetchData = async ({ page, search, sortOptions }: FetchDataOptions) => {
     const organizationId = orgId();
     if (!organizationId) return { data: [], count: 0 };
     try {
@@ -113,6 +140,7 @@ const AutomationsPage: Component = () => {
         search,
         page: page.num,
         pageSize: page.size,
+        sort: sortOptions,
       });
       loadPlaylistNames(
         organizationId,
@@ -163,6 +191,7 @@ const AutomationsPage: Component = () => {
       setShowCreate(false);
       setNewName('');
       toast.success(t('automations.created', { name }));
+      loadQuota();
       await reload();
       setEditing(automation);
     } catch (error) {
@@ -182,6 +211,7 @@ const AutomationsPage: Component = () => {
     try {
       await AutomationsService.remove(organizationId, automation.id);
       toast.success(t('automations.deleted', { name: automation.name }));
+      loadQuota();
       if (editing()?.id === automation.id) setEditing(null);
       await reload();
     } catch (error) {
@@ -207,7 +237,12 @@ const AutomationsPage: Component = () => {
       return <span class={styles.muted}>{t('automations.noRules')}</span>;
     return (
       <div class={styles.rulesCell}>
-        <span>{ruleSummary(rules[0], summaryContext())}</span>
+        <span
+          class={styles.ruleSummary}
+          title={ruleSummary(rules[0], summaryContext())}
+        >
+          {ruleSummary(rules[0], summaryContext())}
+        </span>
         <Show when={rules.length > 1}>
           <span class={styles.muted}>
             {t('automations.moreRules', { count: rules.length - 1 })}
@@ -260,7 +295,7 @@ const AutomationsPage: Component = () => {
   };
 
   const columns = (): Column<number, Automation>[] => [
-    { key: 'name', title: () => t('common.name') },
+    { key: 'name', title: () => t('common.name'), sortable: true },
     {
       key: 'rules',
       title: () => t('automations.columns.rules'),
@@ -284,6 +319,7 @@ const AutomationsPage: Component = () => {
     {
       key: 'enabled',
       title: () => t('automations.enabled'),
+      sortable: true,
       render: enabledToggle,
     },
     {
@@ -328,7 +364,6 @@ const AutomationsPage: Component = () => {
           </div>
         }
       >
-        <p class={styles.pageDescription}>{t('automations.description')}</p>
         <TableView<number, Automation>
           title={t('automations.title')}
           resource="automations"
@@ -336,15 +371,29 @@ const AutomationsPage: Component = () => {
           fetchData={fetchData}
           ref={(ref) => (tableRef = ref)}
           toolbar={{
+            description: () => t('automations.description'),
             searchPlaceholder: t('common.search'),
             mainAction: (
-              <Button
-                label={t('automations.new')}
-                icon={BsPlus}
-                color="primary"
-                disabled={!canCreate()}
-                onClick={() => setShowCreate(true)}
-              />
+              <div class={styles.mainAction}>
+                <Show when={quota()}>
+                  <QuotaIndicator
+                    used={quota()!.used}
+                    total={quota()!.total}
+                    resourceName={t('automations.title')}
+                    compact
+                  />
+                </Show>
+                <Button
+                  label={t('automations.new')}
+                  icon={BsPlus}
+                  color="primary"
+                  disabled={!canCreate() || isQuotaReached()}
+                  title={
+                    isQuotaReached() ? t('automations.quotaReached') : undefined
+                  }
+                  onClick={() => setShowCreate(true)}
+                />
+              </div>
             ),
           }}
           table={{
