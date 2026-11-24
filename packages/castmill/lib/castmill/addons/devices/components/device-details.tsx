@@ -16,6 +16,8 @@ export interface DeviceUpdate {
   description?: string;
   orientation?: Orientation;
   autorecover_until?: string | null;
+  loc_lat?: number | null;
+  loc_long?: number | null;
 }
 
 export const DeviceDetails = (props: {

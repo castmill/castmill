@@ -1598,6 +1598,12 @@
         "failed": "La actualización falló",
         "unsupported": "Este dispositivo no puede instalar actualizaciones"
       }
+    },
+    "location": {
+      "title": "Ubicación",
+      "help": "Dónde está esta pantalla. Los dispositivos que no pueden ubicarse por sí mismos (como Castmill OS) usan esta ubicación.",
+      "search": "Ubicación",
+      "clear": "Borrar ubicación"
     }
   },
   "validation": {

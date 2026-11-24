@@ -113,6 +113,21 @@ defmodule Castmill.Devices.Device do
     |> unique_constraint(:hardware_id)
   end
 
+  # Latitude and longitude are set together, within their ranges.
+  defp validate_location(changeset) do
+    changeset
+    |> validate_number(:loc_lat, greater_than_or_equal_to: -90, less_than_or_equal_to: 90)
+    |> validate_number(:loc_long, greater_than_or_equal_to: -180, less_than_or_equal_to: 180)
+    |> then(fn cs ->
+      changed? = changed?(cs, :loc_lat) or changed?(cs, :loc_long)
+      paired? = is_nil(get_field(cs, :loc_lat)) == is_nil(get_field(cs, :loc_long))
+
+      if changed? and not paired?,
+        do: add_error(cs, :loc_lat, "latitude and longitude must be set together"),
+        else: cs
+    end)
+  end
+
   def update_changeset(device, attrs) do
     device
     |> cast(attrs, [
@@ -137,6 +152,7 @@ defmodule Castmill.Devices.Device do
       :schedule,
       :autorecover_until
     ])
+    |> validate_location()
     |> validate_orientation(attrs)
     |> put_pass_hash()
   end

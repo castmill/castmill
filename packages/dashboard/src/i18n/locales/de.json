@@ -1592,6 +1592,12 @@
         "failed": "Update fehlgeschlagen",
         "unsupported": "Dieses Gerät kann keine Updates installieren"
       }
+    },
+    "location": {
+      "title": "Standort",
+      "help": "Wo sich dieser Bildschirm befindet. Geräte, die ihren Standort nicht selbst bestimmen können (wie Castmill OS), verwenden diesen Standort.",
+      "search": "Standort",
+      "clear": "Standort entfernen"
     }
   },
   "validation": {
