@@ -218,3 +218,36 @@ describe('pickHardwareInfo', () => {
     expect(pickHardwareInfo('cpu')).toEqual({});
   });
 });
+
+describe('CastmillOSMachine OS updates', () => {
+  it('passes the target to the kiosk shell and reads the status back', async () => {
+    const status = {
+      compatible: 'castmill-os-raspberrypi5',
+      state: 'installing',
+      progress: 30,
+    };
+    const { bridge, call } = fakeBridge({ getOsUpdateStatus: status });
+    const machine = new CastmillOSMachine(bridge);
+    const target = { version: '0.3.0', url: 'https://example.com/b.raucb' };
+
+    await machine.setOsUpdate(target);
+    expect(await machine.getOsUpdateStatus()).toEqual(status);
+    expect(call.mock.calls).toEqual([
+      ['setOsUpdate', target],
+      ['getOsUpdateStatus'],
+    ]);
+  });
+
+  it('has no status on Castmill OS versions without OS updates', async () => {
+    const call = vi.fn(async () => {
+      throw new Error('castmillOS: unknown method getOsUpdateStatus');
+    });
+    const machine = new CastmillOSMachine({ version: 1, call });
+    expect(await machine.getOsUpdateStatus()).toBeUndefined();
+
+    const { bridge } = fakeBridge({ getOsUpdateStatus: { state: 'idle' } });
+    expect(
+      await new CastmillOSMachine(bridge).getOsUpdateStatus()
+    ).toBeUndefined();
+  });
+});

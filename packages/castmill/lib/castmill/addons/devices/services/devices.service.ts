@@ -1,4 +1,9 @@
-import { Device } from '../interfaces/device.interface';
+import {
+  Device,
+  OsRelease,
+  OsUpdateOverride,
+  OsUpdatePolicy,
+} from '../interfaces/device.interface';
 import {
   SortOptions,
   FetchDataOptions,
@@ -541,6 +546,56 @@ export const DevicesService = {
         parse: true,
       }
     );
+  },
+
+  /** Castmill OS: the organization's OS update policy and the releases. */
+  async getOsUpdates(baseUrl: string, organizationId: string) {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/os-updates`,
+      { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+    );
+    return handleResponse<{ policy: OsUpdatePolicy; releases: OsRelease[] }>(
+      response,
+      { parse: true }
+    );
+  },
+
+  /** Castmill OS: sets the organization's OS update policy. */
+  async setOsUpdatePolicy(
+    baseUrl: string,
+    organizationId: string,
+    policy: OsUpdatePolicy
+  ) {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/os-updates`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(policy),
+      }
+    );
+    return handleResponse<{ policy: OsUpdatePolicy }>(response, {
+      parse: true,
+    });
+  },
+
+  /** Castmill OS: sets a device's OS version override. */
+  async setDeviceOsUpdate(
+    baseUrl: string,
+    deviceId: string,
+    override: OsUpdateOverride
+  ) {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/os-update`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(override),
+      }
+    );
+    return handleResponse<{ os_update: OsUpdateOverride }>(response, {
+      parse: true,
+    });
   },
 
   /**

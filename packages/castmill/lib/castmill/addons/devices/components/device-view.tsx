@@ -1,4 +1,11 @@
-import { Component, For, JSX, createSignal, onCleanup } from 'solid-js';
+import {
+  Component,
+  For,
+  JSX,
+  createMemo,
+  createSignal,
+  onCleanup,
+} from 'solid-js';
 import { Dynamic } from 'solid-js/web';
 import type { IconTypes } from 'solid-icons';
 import {
@@ -11,6 +18,7 @@ import {
   BsLightningCharge,
   BsListUl,
   BsTools,
+  BsCloudArrowDown,
 } from 'solid-icons/bs';
 import {
   DetailsSummary,
@@ -29,6 +37,7 @@ import { DevicesService } from '../services/devices.service';
 import { DeviceCache } from './device-cache';
 import { DevicePreview } from './device-preview';
 import { DeviceTelemetry } from './device-telemetry';
+import { DeviceOsUpdate } from './device-os-update';
 import { DeviceSchedule } from './device-schedule';
 import { DeviceInfo } from './device-info';
 import { DeviceHealth } from './device-health';
@@ -41,6 +50,8 @@ interface DeviceSection {
   title: () => string;
   icon: IconTypes;
   content: () => JSX.Element;
+  /** Shown only while this is true (default: always). */
+  visible?: () => boolean;
 }
 
 const LAST_SEEN_REFRESH_MS = 30_000;
@@ -57,7 +68,7 @@ const DeviceView: Component<{
 
   const toast = useToast();
   const [loading, setLoading] = createSignal(false);
-  const [activeIndex, setActiveIndex] = createSignal(0);
+  const [activeId, setActiveId] = createSignal('overview');
   const [now, setNow] = createSignal(Date.now());
   const lastSeenTimer = setInterval(
     () => setNow(Date.now()),
@@ -117,7 +128,7 @@ const DeviceView: Component<{
         : undefined,
     ].filter(Boolean) as string[];
 
-  const sections: DeviceSection[] = [
+  const allSections: DeviceSection[] = [
     {
       id: 'overview',
       title: () => t('devices.details.overview'),
@@ -155,6 +166,27 @@ const DeviceView: Component<{
       icon: BsCalendar3,
       content: () => (
         <DeviceSchedule baseUrl={props.baseUrl} device={props.device} t={t} />
+      ),
+    },
+    // Castmill OS devices: OS updates (castmill-os ADR-0010). Appears as
+    // soon as the device's first report arrives.
+    {
+      id: 'os-update',
+      title: () => t('devices.osUpdate.title'),
+      icon: BsCloudArrowDown,
+      visible: () =>
+        !!props.device.os_status ||
+        props.device.info?.appType === 'Castmill OS',
+      content: () => (
+        <DeviceOsUpdate
+          baseUrl={props.baseUrl}
+          organizationId={props.organization_id}
+          device={props.device}
+          onChange={(update) =>
+            props.onChange?.({ ...props.device, ...update })
+          }
+          t={t}
+        />
       ),
     },
     {
@@ -223,17 +255,39 @@ const DeviceView: Component<{
     },
   ];
 
+  // Same array while the visible sections don't change: live status updates
+  // must not remount the open panel (unsaved edits would be lost).
+  const sections = createMemo(
+    () =>
+      allSections.filter((section) => !section.visible || section.visible()),
+    undefined,
+    {
+      equals: (a, b) =>
+        a.length === b.length && a.every((section, i) => section === b[i]),
+    }
+  );
+  // The selected section is kept by id, so it stays selected when a section
+  // appears or disappears.
+  const activeIndex = () =>
+    Math.max(
+      0,
+      sections().findIndex((section) => section.id === activeId())
+    );
+
+  const activeSection = createMemo(() => sections()[activeIndex()]);
+
   const tabId = (index: number) => `device-${props.device.id}-tab-${index}`;
   const panelId = () => `device-${props.device.id}-panel`;
-  const tabRefs: HTMLButtonElement[] = [];
+  // By section id: tabs move when a section appears.
+  const tabRefs: Record<string, HTMLButtonElement> = {};
 
   const selectSection = (index: number, focus = false) => {
-    setActiveIndex(index);
-    revealTab(tabRefs[index], focus);
+    setActiveId(sections()[index].id);
+    revealTab(tabRefs[sections()[index].id], focus);
   };
 
   const onTabKeyDown = (event: KeyboardEvent) => {
-    const next = tabKeyTarget(event, activeIndex(), sections.length);
+    const next = tabKeyTarget(event, activeIndex(), sections().length);
     if (next !== undefined) selectSection(next, true);
   };
 
@@ -267,10 +321,10 @@ const DeviceView: Component<{
           role="tablist"
           aria-label={t('devices.details.sections')}
         >
-          <For each={sections}>
+          <For each={sections()}>
             {(section, index) => (
               <button
-                ref={(el) => (tabRefs[index()] = el)}
+                ref={(el) => (tabRefs[section.id] = el)}
                 type="button"
                 role="tab"
                 id={tabId(index())}
@@ -297,7 +351,7 @@ const DeviceView: Component<{
         id={panelId()}
         aria-labelledby={tabId(activeIndex())}
       >
-        {sections[activeIndex()].content()}
+        {activeSection().content()}
       </div>
       <LoadingOverlay show={loading()} />
     </div>

@@ -306,4 +306,51 @@ export interface Machine {
    * player still reloads.
    */
   clearCache?(): Promise<void>;
+
+  /**
+   * Castmill OS: hands the OS version Castmill chose for this device (the
+   * `os_update` channel message) to the operating system, which downloads,
+   * installs and activates it in its maintenance window.
+   */
+  setOsUpdate?(target: OsUpdateTarget): Promise<void>;
+
+  /**
+   * Castmill OS: the progress of the OS update, reported to Castmill
+   * (`os_update:report`). Undefined when the OS can't report it.
+   */
+  getOsUpdateStatus?(): Promise<OsUpdateStatus | undefined>;
+}
+
+/** The OS version Castmill wants a Castmill OS device to run. */
+export interface OsUpdateTarget {
+  /** Null: no update. */
+  version: string | null;
+  url?: string;
+  sha256?: string;
+  size?: number;
+  security?: boolean;
+  /** "window": in the maintenance window; "now": right away. */
+  activate?: 'window' | 'now';
+  /** Chosen for this device: may install an older version. */
+  override?: boolean;
+}
+
+/** OS update progress of a Castmill OS device. */
+export interface OsUpdateStatus {
+  compatible: string;
+  current_version?: string;
+  target_version?: string;
+  state:
+    | 'idle'
+    | 'installing'
+    | 'installed'
+    | 'activating'
+    | 'running'
+    | 'rolled_back'
+    | 'failed'
+    | 'unsupported';
+  version?: string;
+  progress?: number;
+  last_error?: string;
+  updated?: string;
 }

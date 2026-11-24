@@ -439,3 +439,42 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+// Castmill OS updates (device-os-update.tsx)
+.device-os-update {
+  display: grid;
+  gap: 1em;
+}
+
+.device-os-update-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1em;
+  margin-top: 1em;
+}
+
+.device-os-update-help {
+  margin: 0 0 0.5em;
+  color: var(--cm-text-secondary);
+  font-size: 0.85em;
+}
+
+.device-os-update-error {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  margin-bottom: 0.5em;
+
+  .warning {
+    margin: 0;
+    color: var(--cm-warning);
+  }
+}
+
+.device-os-update-releases {
+  margin: 1em 0 0;
+  padding-left: 1.2em;
+  color: var(--cm-text-secondary);
+  font-size: 0.85em;
+}

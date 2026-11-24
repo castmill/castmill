@@ -1,6 +1,8 @@
 import type {
   DeviceInfo,
   Machine,
+  OsUpdateStatus,
+  OsUpdateTarget,
   SettingKey,
   TelemetryData,
 } from '../interfaces/machine';
@@ -137,6 +139,22 @@ export class CastmillOSMachine implements Machine {
 
   async clearCache(): Promise<void> {
     await this.call('clearCache');
+  }
+
+  async setOsUpdate(target: OsUpdateTarget): Promise<void> {
+    await this.call('setOsUpdate', target);
+  }
+
+  /** Undefined on Castmill OS versions without OS update support (0.2 and older). */
+  async getOsUpdateStatus(): Promise<OsUpdateStatus | undefined> {
+    try {
+      const status = await this.call<OsUpdateStatus>('getOsUpdateStatus');
+      return status && typeof status.compatible === 'string'
+        ? status
+        : undefined;
+    } catch {
+      return undefined;
+    }
   }
 }
 

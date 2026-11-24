@@ -29,6 +29,7 @@ import {
   TelemetryData,
   DeviceTelemetryData,
   CacheUsage,
+  OsUpdateTarget,
 } from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Channel, JsonChannel } from './channel';
@@ -57,6 +58,13 @@ import {
 } from '../automations';
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
+// Castmill OS: how often the OS update status is checked (sent when it changes).
+const OS_UPDATE_STATUS_INTERVAL = 1000 * 30;
+// Retries of an OS target the bridge rejected: 5 s doubling up to 5 min,
+// 10 attempts (about half an hour).
+const OS_UPDATE_RETRY_DELAY = 1000 * 5;
+const OS_UPDATE_RETRY_MAX_DELAY = 1000 * 60 * 5;
+const OS_UPDATE_RETRIES = 10;
 const DEFAULT_MAX_LOGS = 100;
 const MAX_RECONNECT_DELAY_MS = 60_000; // 60 seconds max delay between reconnect attempts
 const DEFAULT_FETCH_TIMEOUT_MS = 5000;
@@ -327,6 +335,8 @@ export class Device extends EventEmitter {
   private automationsRefresh?: ReturnType<typeof setTimeout>;
   private automationsDebug?: AutomationDebugOverlay;
   private automationsDebugTimer?: ReturnType<typeof setInterval>;
+  private osUpdateTarget?: OsUpdateTarget;
+  private osUpdateRetry?: ReturnType<typeof setTimeout>;
   private automationsLoad?: Promise<void>;
   private automationsLoadQueued = false;
   private wakeProgramming?: () => void;
@@ -895,6 +905,7 @@ export class Device extends EventEmitter {
 
   async stop() {
     this.closing = true;
+    clearTimeout(this.osUpdateRetry);
     this.stopAutomations(true);
     if (this.orientationChannel && this.orientationListenerRef !== undefined) {
       this.orientationChannel.off(
@@ -1641,6 +1652,42 @@ export class Device extends EventEmitter {
     channel.on('automation_run', (message: AutomationRunMessage) => {
       this.runAutomationNow(message);
     });
+
+    // Castmill OS: the OS version Castmill chose for this device.
+    channel.on('os_update', (target: OsUpdateTarget) => {
+      this.setOsUpdate(target);
+    });
+  }
+
+  /**
+   * Hands the OS target to the bridge. The server only sends it again after
+   * a reconnect or a change, so a rejected handoff is retried with backoff
+   * (the agent may be restarting); a newer target replaces a pending retry.
+   */
+  private setOsUpdate(target: OsUpdateTarget, attempt = 0) {
+    clearTimeout(this.osUpdateRetry);
+    this.osUpdateRetry = undefined;
+    this.osUpdateTarget = target;
+    const pending = this.integration.setOsUpdate?.(target);
+    if (!pending) return;
+    pending.catch((error) => {
+      this.logger.error(`Unable to set the OS update: ${error}`);
+      if (
+        this.closing ||
+        this.osUpdateTarget !== target ||
+        attempt + 1 >= OS_UPDATE_RETRIES
+      ) {
+        return;
+      }
+      const delay = Math.min(
+        OS_UPDATE_RETRY_DELAY * 2 ** attempt,
+        OS_UPDATE_RETRY_MAX_DELAY
+      );
+      this.osUpdateRetry = setTimeout(
+        () => this.setOsUpdate(target, attempt + 1),
+        delay
+      );
+    });
   }
 
   /**
@@ -1750,6 +1797,34 @@ export class Device extends EventEmitter {
     setInterval(() => {
       channel.push('heartbeat', {});
     }, HEARTBEAT_INTERVAL);
+    this.initOsUpdateReports(channel);
+  }
+
+  /**
+   * Castmill OS: reports the OS update status right after login (it tells the
+   * backend the device's hardware family, so it sends the target version) and
+   * whenever it changes.
+   */
+  private initOsUpdateReports(channel: PhoenixChannel) {
+    if (!this.integration.getOsUpdateStatus) return;
+    // The last status the server acknowledged: a report that fails or times
+    // out is sent again on the next check.
+    let last = '';
+    const report = async () => {
+      try {
+        const status = await this.integration.getOsUpdateStatus?.();
+        if (!status) return;
+        const json = JSON.stringify(status);
+        if (json === last) return;
+        channel.push('os_update:report', status).receive('ok', () => {
+          last = json;
+        });
+      } catch (error) {
+        this.logger.error(`Unable to read the OS update status: ${error}`);
+      }
+    };
+    void report();
+    setInterval(report, OS_UPDATE_STATUS_INTERVAL);
   }
 
   /*

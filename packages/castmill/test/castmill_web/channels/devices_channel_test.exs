@@ -477,4 +477,81 @@ defmodule CastmillWeb.DevicesChannelTest do
       assert byte_size(event.msg) <= 1024
     end
   end
+
+  describe "Castmill OS updates" do
+    test "a status report stores the status and pushes the device its target", %{
+      socket: socket,
+      device: device,
+      token: token,
+      organization: organization
+    } do
+      {:ok, _} =
+        Castmill.OsUpdates.import_manifest(%{
+          "version" => "0.3.0",
+          "published_at" => "2026-12-01T10:00:00Z",
+          "artifacts" => %{
+            "castmill-os-genericx86-64" => %{
+              "url" =>
+                "https://github.com/castmill/castmill-os/releases/download/v0.3.0/x86.raucb",
+              "sha256" => String.duplicate("c", 64),
+              "size" => 10
+            }
+          }
+        })
+
+      {:ok, _} = Castmill.OsUpdates.set_policy(organization.id, %{"mode" => "latest"})
+
+      {:ok, _, socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      ref =
+        push(socket, "os_update:report", %{
+          "compatible" => "castmill-os-genericx86-64",
+          "current_version" => "0.2.0",
+          "state" => "idle"
+        })
+
+      assert_reply ref, :ok
+      assert_push "os_update", %{version: "0.3.0", activate: "window", override: false}
+      assert Castmill.Devices.get_device(device.id).os_status["current_version"] == "0.2.0"
+
+      ref = push(socket, "os_update:report", %{"state" => "idle"})
+      assert_reply ref, :error, %{reason: _}
+    end
+  end
+
+  describe "Castmill OS updates: device identity" do
+    test "a report goes to the device whose token joined, not the one in the connect params",
+         %{device: device, token: token, organization: organization} do
+      {:ok, registration} =
+        device_registration_fixture(%{hardware_id: "victim-hw", pincode: "vict1234"})
+
+      {:ok, {victim, _}} =
+        Castmill.Devices.register_device(organization.id, registration.pincode, %{name: "Victim"})
+
+      # The attacker's socket claims the victim's ID in its connect params,
+      # but joins its own topic with its own token.
+      socket =
+        CastmillWeb.DeviceSocket
+        |> socket("device_id", %{
+          device: %{device_id: victim.id, hardware_id: "test", device_ip: {127, 0, 0, 1}}
+        })
+
+      {:ok, _, socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      ref =
+        push(socket, "os_update:report", %{
+          "compatible" => "castmill-os-raspberrypi5",
+          "state" => "idle"
+        })
+
+      assert_reply ref, :ok
+
+      assert Castmill.Devices.get_device(device.id).os_status["compatible"] ==
+               "castmill-os-raspberrypi5"
+
+      assert Castmill.Devices.get_device(victim.id).os_status == nil
+    end
+  end
 end

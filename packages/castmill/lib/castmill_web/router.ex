@@ -705,6 +705,10 @@ defmodule CastmillWeb.Router do
     # Return Usage information for the organization
     get("/organizations/:organization_id/usage", OrganizationUsageController, :index)
 
+    # Castmill OS update policy (before the generic /:resources routes)
+    get("/organizations/:organization_id/os-updates", OsUpdateController, :show_policy)
+    put("/organizations/:organization_id/os-updates", OsUpdateController, :set_policy)
+
     # View and accept invitations
     get("/invitations/:token", TeamController, :show_invitation, as: :team_invitation)
     post("/invitations/:token/accept", TeamController, :accept_invitation, as: :team_invitation)
@@ -815,6 +819,7 @@ defmodule CastmillWeb.Router do
     post("/devices/:device_id/timers", DeviceController, :set_timers)
     get("/devices/:device_id/schedule", DeviceController, :get_schedule)
     put("/devices/:device_id/schedule", DeviceController, :set_schedule)
+    put("/devices/:device_id/os-update", OsUpdateController, :set_device_override)
     delete("/devices/:device_id/cache", DeviceController, :delete_cache)
 
     # Endpoint to get all channels of a device in the dashboard scope

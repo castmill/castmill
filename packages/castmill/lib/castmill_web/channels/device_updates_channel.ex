@@ -99,6 +99,17 @@ defmodule CastmillWeb.DeviceUpdatesChannel do
     {:noreply, sync_orientation(socket)}
   end
 
+  # Castmill OS updates: the device's last report and its override.
+  def handle_info(%{os_status: os_status}, socket) do
+    push(socket, "device:status", %{device_id: socket.assigns.device_id, os_status: os_status})
+    {:noreply, socket}
+  end
+
+  def handle_info(%{os_update: os_update}, socket) do
+    push(socket, "device:status", %{device_id: socket.assigns.device_id, os_update: os_update})
+    {:noreply, socket}
+  end
+
   defp sync_orientation(socket) do
     device = Devices.get_device(socket.assigns.device_id)
     report = socket.assigns[:orientation_status]
