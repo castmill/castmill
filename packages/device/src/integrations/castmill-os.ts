@@ -147,7 +147,7 @@ export class CastmillOSMachine implements Machine {
     await this.call('setOsUpdate', target);
   }
 
-  /** Undefined on Castmill OS versions without Wi-Fi in the menu (0.3 and older). */
+  /** Undefined on Castmill OS versions without Wi-Fi in the menu. */
   async getWifiStatus(): Promise<WifiStatus | undefined> {
     try {
       return pickWifiStatus(await this.call<unknown>('getWifiStatus'));
