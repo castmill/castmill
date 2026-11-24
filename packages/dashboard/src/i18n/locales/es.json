@@ -1660,7 +1660,12 @@
       "rejectError": "Error al rechazar la invitación",
       "accountCreated": "¡Cuenta creada exitosamente!",
       "accountCreationFailed": "Error al crear la cuenta",
-      "passkeysNotSupported": "Las claves de acceso no son compatibles con este navegador"
+      "passkeysNotSupported": "Las claves de acceso no son compatibles con este navegador",
+      "passkeyNotFound": "No se usó ninguna clave de acceso. Si este dispositivo no tiene una clave de acceso para tu cuenta, podemos enviarte un enlace por correo para añadir una.",
+      "lostPasskey": "¿Perdiste tu clave de acceso? Envíame un enlace para añadir una",
+      "sendingRecovery": "Enviando…",
+      "recoverySent": "Revisa tu correo y sigue el enlace para añadir una clave de acceso; después abre de nuevo esta invitación.",
+      "recoveryFailed": "No se pudo enviar el correo. Inténtalo de nuevo."
     },
     "notifications": {
       "title": "Notificaciones",

@@ -1654,7 +1654,12 @@
       "rejectError": "Fel vid avvisning av inbjudan",
       "accountCreated": "Konto skapat!",
       "accountCreationFailed": "Misslyckades att skapa konto",
-      "passkeysNotSupported": "Passkeys stöds inte i denna webbläsare"
+      "passkeysNotSupported": "Passkeys stöds inte i denna webbläsare",
+      "passkeyNotFound": "Ingen nyckel användes. Om den här enheten saknar en nyckel för ditt konto kan vi mejla dig en länk för att lägga till en.",
+      "lostPasskey": "Har du tappat bort din nyckel? Mejla mig en länk för att lägga till en",
+      "sendingRecovery": "Skickar…",
+      "recoverySent": "Kolla din e-post och följ länken för att lägga till en nyckel, och öppna sedan inbjudan igen.",
+      "recoveryFailed": "Det gick inte att skicka e-postmeddelandet. Försök igen."
     },
     "notifications": {
       "title": "Notifikationer",

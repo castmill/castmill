@@ -1654,7 +1654,12 @@
       "rejectError": "Fehler beim Ablehnen der Einladung",
       "accountCreated": "Konto erfolgreich erstellt!",
       "accountCreationFailed": "Konto konnte nicht erstellt werden",
-      "passkeysNotSupported": "Passkeys werden in diesem Browser nicht unterstützt"
+      "passkeysNotSupported": "Passkeys werden in diesem Browser nicht unterstützt",
+      "passkeyNotFound": "Es wurde kein Passkey verwendet. Wenn dieses Gerät keinen Passkey für Ihr Konto hat, können wir Ihnen einen Link zum Hinzufügen per E-Mail senden.",
+      "lostPasskey": "Passkey verloren? Link zum Hinzufügen per E-Mail senden",
+      "sendingRecovery": "Wird gesendet…",
+      "recoverySent": "Prüfen Sie Ihre E-Mails und folgen Sie dem Link, um einen Passkey hinzuzufügen. Öffnen Sie danach diese Einladung erneut.",
+      "recoveryFailed": "Die E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es erneut."
     },
     "notifications": {
       "title": "Benachrichtigungen",

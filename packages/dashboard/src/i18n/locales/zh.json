@@ -1659,7 +1659,12 @@
       "rejectError": "拒绝邀请时出错",
       "accountCreated": "帐户创建成功！",
       "accountCreationFailed": "创建帐户失败",
-      "passkeysNotSupported": "此浏览器不支持通行密钥"
+      "passkeysNotSupported": "此浏览器不支持通行密钥",
+      "passkeyNotFound": "未使用通行密钥。如果此设备上没有您账户的通行密钥，我们可以通过电子邮件向您发送添加通行密钥的链接。",
+      "lostPasskey": "丢失了通行密钥？通过电子邮件发送添加链接",
+      "sendingRecovery": "正在发送…",
+      "recoverySent": "请查收电子邮件并点击链接添加通行密钥，然后重新打开此邀请。",
+      "recoveryFailed": "无法发送电子邮件，请重试。"
     },
     "notifications": {
       "title": "通知",

@@ -1659,7 +1659,12 @@
       "rejectError": "초대 거부 중 오류가 발생했습니다",
       "accountCreated": "계정이 성공적으로 생성되었습니다!",
       "accountCreationFailed": "계정 생성에 실패했습니다",
-      "passkeysNotSupported": "이 브라우저에서는 패스키가 지원되지 않습니다"
+      "passkeysNotSupported": "이 브라우저에서는 패스키가 지원되지 않습니다",
+      "passkeyNotFound": "패스키가 사용되지 않았습니다. 이 기기에 계정의 패스키가 없다면 패스키를 추가할 수 있는 링크를 이메일로 보내드릴 수 있습니다.",
+      "lostPasskey": "패스키를 잃어버리셨나요? 추가 링크를 이메일로 받기",
+      "sendingRecovery": "보내는 중…",
+      "recoverySent": "이메일을 확인하고 링크를 따라 패스키를 추가한 다음 이 초대를 다시 여세요.",
+      "recoveryFailed": "이메일을 보낼 수 없습니다. 다시 시도해 주세요."
     },
     "notifications": {
       "title": "알림",
