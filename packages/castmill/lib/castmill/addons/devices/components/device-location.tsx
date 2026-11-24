@@ -1,4 +1,11 @@
-import { Component, Show, createEffect, createSignal, on } from 'solid-js';
+import {
+  Component,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+} from 'solid-js';
 import {
   Button,
   LocationPicker,
@@ -29,12 +36,17 @@ export const DeviceLocation: Component<{
   const [location, setLocation] = createSignal(savedLocation(props.device));
   const [saving, setSaving] = createSignal(false);
 
-  // Another device, or the saved location changed elsewhere.
+  // Another device, or the saved location changed elsewhere. Live status
+  // updates replace the device object without changing these, and must not
+  // discard an unsaved selection: the memo only notifies when the values
+  // change, not when the object does.
+  const savedKey = createMemo(
+    () => `${props.device.id}|${props.device.loc_lat}|${props.device.loc_long}`
+  );
   createEffect(
-    on(
-      () => [props.device.id, props.device.loc_lat, props.device.loc_long],
-      () => setLocation(savedLocation(props.device))
-    )
+    on(savedKey, () => setLocation(savedLocation(props.device)), {
+      defer: true,
+    })
   );
 
   const saved = () => savedLocation(props.device);
@@ -64,14 +76,10 @@ export const DeviceLocation: Component<{
           value={location()}
           onChange={setLocation}
           disabled={!props.canEdit || saving()}
+          showAddress={false}
           placeholder={props.t('common.searchLocation')}
           searchLabel={props.t('devices.location.search')}
           coordinatesLabel={props.t('common.coordinates')}
-          addressLabel={props.t('common.address')}
-          noAddressText={props.t('common.noAddressAvailable')}
-          editLabel={props.t('common.edit')}
-          saveLabel={props.t('common.save')}
-          cancelLabel={props.t('common.cancel')}
           closeLabel={props.t('common.close')}
         />
         <Show when={props.canEdit}>

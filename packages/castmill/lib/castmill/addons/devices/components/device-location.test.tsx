@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@solidjs/testing-library';
+import { createSignal } from 'solid-js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Device } from '../interfaces/device.interface';
 import { DeviceLocation } from './device-location';
@@ -88,6 +89,24 @@ describe('DeviceLocation', () => {
     fireEvent.click(screen.getByText('devices.location.clear'));
 
     expect(onSubmit).toHaveBeenCalledWith({ loc_lat: null, loc_long: null });
+  });
+
+  it('keeps an unsaved pick when a status update replaces the device', () => {
+    const [current, setCurrent] = createSignal(
+      device({ loc_lat: 40.4, loc_long: -3.7 })
+    );
+    render(() => (
+      <DeviceLocation device={current()} canEdit onSubmit={vi.fn()} t={t} />
+    ));
+
+    fireEvent.click(screen.getByText('pick'));
+    // A heartbeat: a new object with the same id and location.
+    setCurrent(device({ loc_lat: 40.4, loc_long: -3.7, online: false }));
+    expect(screen.getByTestId('picked').textContent).toBe('59.33,18.07');
+
+    // A location saved elsewhere does replace the draft.
+    setCurrent(device({ loc_lat: 1, loc_long: 2 }));
+    expect(screen.getByTestId('picked').textContent).toBe('1,2');
   });
 
   it('is read-only without the update permission', () => {
