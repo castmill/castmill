@@ -79,6 +79,13 @@ const getSignalColor = (percent: number): string => {
 };
 
 /**
+ * A percentage as shown on the cards: whole numbers, 0-100. Players report
+ * CPU usage (and some, signal or battery) with many decimals.
+ */
+export const formatPercent = (value: number): string =>
+  `${Math.round(Math.min(100, Math.max(0, value)))}%`;
+
+/**
  * ProgressBar component used for storage, memory, CPU gauges.
  */
 const ProgressBar: Component<{ percent: number; color: string }> = (props) => {
@@ -308,7 +315,7 @@ export const DeviceTelemetry: Component<{
                       class={styles.cardValue}
                       style={{ color: getCpuColor(percent()) }}
                     >
-                      {percent()}%
+                      {formatPercent(percent())}
                     </div>
                     <ProgressBar
                       percent={percent()}
@@ -385,7 +392,7 @@ export const DeviceTelemetry: Component<{
                           ),
                         }}
                       >
-                        {network().wifiSignalStrengthPercent}%
+                        {formatPercent(network().wifiSignalStrengthPercent!)}
                       </span>
                     </div>
                   </Show>
@@ -493,7 +500,7 @@ export const DeviceTelemetry: Component<{
                     </div>
                     <div class={styles.batteryContainer}>
                       <span class={styles.cardValue} style={{ color: color() }}>
-                        {battery().levelPercent}%
+                        {formatPercent(battery().levelPercent)}
                       </span>
                       <Show when={battery().isCharging}>
                         <span class={styles.chargingIcon}>
