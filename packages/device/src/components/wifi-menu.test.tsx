@@ -36,7 +36,7 @@ function setup(status: WifiStatus | undefined, connect = vi.fn()) {
 // Opens the menu and expands the Wi-Fi submenu.
 async function openWifi() {
   fireEvent.click(window);
-  fireEvent.click(await screen.findByText(/▶ Wi-Fi/));
+  fireEvent.click(await screen.findByText(/^\W*Wi-Fi$/));
 }
 
 const key = (keyCode: number) =>
