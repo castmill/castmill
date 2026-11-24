@@ -27,8 +27,11 @@ defmodule CastmillWeb.DevicesChannel do
 
         {:ok, %{orientation: device.orientation}, socket}
 
-      {:error, reason} ->
-        {:error, reason}
+      {:error, :invalid_device} ->
+        {:error, :invalid_device}
+
+      {:error, _reason} ->
+        {:error, :unauthorized}
     end
   end
 
