@@ -311,6 +311,16 @@ describe('WebOS layout playback with the decoder budget', () => {
       ],
     });
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.stubGlobal(
+      'Image',
+      class {
+        complete = true;
+        naturalWidth = 100;
+        onload = null;
+        onerror = null;
+        src = '';
+      }
+    );
     restoreMedia = installMediaSimulation();
     webosDecoderBudget.clear();
     durations.clear();
@@ -335,6 +345,7 @@ describe('WebOS layout playback with the decoder budget', () => {
     webosDecoderBudget.clear();
     restoreMedia();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     vi.useRealTimers();
   });
 
@@ -556,10 +567,10 @@ describe('WebOS layout playback with the decoder budget', () => {
     expect(stats.maxVideoTags).toBeLessThanOrEqual(maxTagsFor(4));
     expect(order(['a', 'c'])).toEqual(loops(['a', 'c'], 5).concat('a'));
     expect(order(['b', 'd'])).toEqual(loops(['b', 'd'], 5).concat('b'));
-    // The second layout starts as soon as the first one stops.
+    // The incoming layout waits for its released videos to load before playing.
     startsOf('c').forEach((at, index) =>
       expect(Math.abs(at - startsOf('a')[index] - 6000)).toBeLessThanOrEqual(
-        TICK_MS
+        LOAD_MS + TICK_MS
       )
     );
     expectFullPlayback(['a', 'b', 'c', 'd']);

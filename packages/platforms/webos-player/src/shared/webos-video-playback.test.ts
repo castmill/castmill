@@ -1143,6 +1143,29 @@ describe('WebosVideoPlayback', () => {
       [loaded, preload, player].forEach(({ playback }) => playback.dispose());
     });
 
+    it('reserves a newly loaded decoder across initial seeks until playback starts', async () => {
+      const budget = new WebosDecoderBudget(1);
+      const loaded = newController(budget);
+      await loaded.whenLoadable;
+      loaded.element.src = NATIVE;
+      loaded.element.loaded();
+      loaded.playback.seek(0);
+      await vi.advanceTimersByTimeAsync(1);
+
+      const next = newController(budget);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(next.isLoadable()).toBe(false);
+      expect(loaded.element.removeAttribute).not.toHaveBeenCalled();
+
+      loaded.playback.play(0);
+      await flush();
+      expect(loaded.element.play).toHaveBeenCalledOnce();
+      loaded.playback.pause();
+      await vi.advanceTimersByTimeAsync(1);
+      expect(next.isLoadable()).toBe(true);
+      [loaded, next].forEach(({ playback }) => playback.dispose());
+    });
+
     const blockedController = (budget: WebosDecoderBudget, src?: string) => {
       const element = new TestVideo();
       element.readyState = 0;

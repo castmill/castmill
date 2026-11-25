@@ -63,7 +63,7 @@ describe('rotated widget geometry', () => {
     vi.useRealTimers();
   });
 
-  it('keeps auto-fit text within logical dimensions at all four angles', () => {
+  it('keeps auto-fit text within logical dimensions at all four angles', async () => {
     dispose = render(
       () => (
         <Text
@@ -80,12 +80,14 @@ describe('rotated widget geometry', () => {
       angle = next;
       root.dataset.castmillOrientation = String(next);
       window.dispatchEvent(new Event('resize'));
+      await vi.advanceTimersByTimeAsync(0);
       const size = parseFloat(span.style.fontSize);
       expect(size).toBeGreaterThan(4.9);
       expect(size).toBeLessThanOrEqual(5);
     }
     width = 300;
     window.dispatchEvent(new Event('resize'));
+    await vi.advanceTimersByTimeAsync(0);
     expect(parseFloat(span.style.fontSize)).toBeLessThanOrEqual(3);
   });
 

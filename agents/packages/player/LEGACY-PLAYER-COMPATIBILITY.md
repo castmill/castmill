@@ -18,6 +18,9 @@ Layout readiness waits for the initial content in every populated zone (empty
 zones are immediately ready). Keep this signal after nested media initialization:
 the dashboard uses renderer readiness to measure durations without polling a
 magic fallback value. This does not pre-load every later item in zone playlists.
+Decoder-blocked zones must still finish seeks so their playlists can run the
+blocked-item skip mechanism. Reserve newly loaded WebOS decoders across initial
+seeks until playback starts; another preload must not steal them during handoff.
 
 Carousels gate initial readiness on the visible image loading (and decoding
 where `Image.decode` exists), then prepare only the next image. Keep at most

@@ -361,7 +361,8 @@ export class TemplateWidget extends TimelineWidget {
     return super.seek(offset).pipe(
       switchMap((result) =>
         this.readiness.pipe(
-          filter((block) => !block),
+          // Decoder-blocked zones must reach playback so their playlists can skip.
+          filter((block) => !block || block.category === 'playback'),
           take(1),
           map(() => result)
         )
