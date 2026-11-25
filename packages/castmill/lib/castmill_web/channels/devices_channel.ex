@@ -25,7 +25,7 @@ defmodule CastmillWeb.DevicesChannel do
         # Push saved schedule timers to device after a short delay
         Process.send_after(self(), :sync_schedule, 1_000)
 
-        {:ok, %{orientation: device.orientation}, socket}
+        {:ok, %{orientation: device.orientation, heartbeat_ack: true}, socket}
 
       {:error, :invalid_device} ->
         {:error, :invalid_device}
@@ -68,7 +68,7 @@ defmodule CastmillWeb.DevicesChannel do
 
     {:ok, _device} = mark_online(socket)
 
-    {:noreply, socket}
+    {:reply, :ok, socket}
   end
 
   @impl true

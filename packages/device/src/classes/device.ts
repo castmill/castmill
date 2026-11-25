@@ -40,6 +40,7 @@ import {
 } from './logger';
 import { TimerManager } from './timer-manager';
 import { OrientationManager } from './orientation';
+import { ControlConnection, reconnectDelay } from './control-connection';
 import { showDeviceToast } from './device-toast';
 import {
   AutomationDebugOverlay,
@@ -53,9 +54,7 @@ import {
   type DeviceRule,
 } from '../automations';
 
-const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
-const MAX_RECONNECT_DELAY_MS = 60_000; // 60 seconds max delay between reconnect attempts
 const DEFAULT_FETCH_TIMEOUT_MS = 5000;
 const PROGRAMMING_LOOP_INTERVAL_MS = 5000;
 /** Automations (clock occurrences) are refreshed at least daily. */
@@ -100,12 +99,7 @@ const AUTH_ERROR_UNAUTHORIZED = 'unauthorized';
 
 // Exponential backoff for socket reconnection
 // Returns delay in ms: 1s, 2s, 4s, 8s, …, capped at 60s
-const getReconnectDelay = (tries: number): number => {
-  return Math.min(
-    1000 * Math.pow(2, Math.max(tries - 1, 0)),
-    MAX_RECONNECT_DELAY_MS
-  );
-};
+const getReconnectDelay = reconnectDelay;
 
 const supportedDebugModes = ['remote', 'local', 'none'];
 
@@ -285,6 +279,8 @@ export class Device extends EventEmitter {
   private errorReporter: DeviceErrorReporter;
   private logDiv?: HTMLDivElement;
   private socket?: Socket;
+  private controlConnection?: ControlConnection;
+  private cancelLogin?: () => void;
   private timerManager: TimerManager;
   private playerContainer?: HTMLElement;
   private timerOffOverlay?: HTMLDivElement;
@@ -395,7 +391,7 @@ export class Device extends EventEmitter {
       return 'not-initialized';
     }
 
-    return this.socket.isConnected() ? 'connected' : 'disconnected';
+    return this.controlConnection?.isHealthy() ? 'connected' : 'disconnected';
   }
 
   async refreshIdentity(): Promise<DeviceIdentity> {
@@ -870,6 +866,8 @@ export class Device extends EventEmitter {
 
   async stop() {
     this.closing = true;
+    this.controlConnection?.stop();
+    this.cancelLogin?.();
     this.stopAutomations(true);
     if (this.orientationChannel && this.orientationListenerRef !== undefined) {
       this.orientationChannel.off(
@@ -1095,28 +1093,10 @@ export class Device extends EventEmitter {
       // Start login in the background so the player can begin playing cached
       // content immediately, even when the device is offline.
       this.login(credentials, hardwareId)
-        .then((phoenixChannel) => {
-          this.initListeners(phoenixChannel);
-          this.initHeartbeat(phoenixChannel);
-          this.errorReporter.attach(phoenixChannel);
+        .then(() => {
           void this.updateDeviceInfo(credentials);
         })
-        .catch(async (error) => {
-          if (
-            error === AUTH_ERROR_INVALID_DEVICE ||
-            error === AUTH_ERROR_UNAUTHORIZED
-          ) {
-            // Clean all app data and refresh the page.
-            this.closing = true;
-            await this.integration.removeCredentials();
-            await this.orientationManager.ready();
-            await this.integration.setSetting('ORIENTATION', '0');
-            window.location.reload();
-          } else {
-            this.logger.error(`Unable to login ${error}`);
-            this.errorReporter.report({ category: 'network-sync', error });
-          }
-        });
+        .catch((error) => this.handleLoginError(error));
 
       return { status: Status.Ready };
     } else {
@@ -1261,102 +1241,95 @@ export class Device extends EventEmitter {
     return pincode;
   }
   async login(credentials: Credentials, hardwareId: string) {
+    if (this.closing) throw new Error('Cannot login while device is closing');
     const { device } = credentials;
-
+    this.controlConnection?.stop();
+    this.cancelLogin?.();
     this.emitProgress(2, 5, 'Connecting to server');
 
-    const socket = (this.socket = new Socket(this.socketEndpoint, {
-      params: { device_id: device.id, hardware_id: hardwareId },
-      transport: this.opts?.transport,
-      reconnectAfterMs: getReconnectDelay,
-      rejoinAfterMs: getReconnectDelay,
-    }));
-
-    socket.connect();
-
-    // Join the channel to establish a communication channel between the server and this device.
-    const channel = socket.channel(`devices:${device.id}`, {
-      token: device.token,
-    });
-
     return new Promise<PhoenixChannel>((resolve, reject) => {
-      // Track if we've already resolved/rejected
       let settled = false;
-      let stateCheckInterval: ReturnType<typeof setInterval> | null = null;
-
-      const cleanup = () => {
-        if (stateCheckInterval) {
-          clearInterval(stateCheckInterval);
-          stateCheckInterval = null;
-        }
-      };
-
-      const safeResolve = (value: PhoenixChannel) => {
+      this.cancelLogin = () => {
         if (!settled) {
           settled = true;
-          cleanup();
-          this.emitProgress(3, 5, 'Authenticating');
-          resolve(value);
+          reject(
+            new Error(
+              'Login cancelled because device is closing or reconnecting'
+            )
+          );
         }
       };
-
-      const safeReject = (reason?: any) => {
-        if (!settled) {
-          settled = true;
-          cleanup();
-          reject(reason);
-        }
-      };
-
-      // Handle initial join attempt and rejoins after reconnection
-      channel
-        .join()
-        .receive('ok', (response: { orientation?: unknown } = {}) => {
+      this.controlConnection = new ControlConnection({
+        deviceId: device.id,
+        token: device.token,
+        createSocket: () =>
+          (this.socket = new Socket(this.socketEndpoint, {
+            params: { device_id: device.id, hardware_id: hardwareId },
+            transport: this.opts?.transport,
+            reconnectAfterMs: getReconnectDelay,
+            rejoinAfterMs: getReconnectDelay,
+          })),
+        onJoined: (channel, response, fresh) => {
           if (this.closing) return;
-          this.initOrientationListener(channel);
+          if (fresh) {
+            this.initListeners(channel);
+            if (this.debugMode === 'remote') this.setLogMode('remote');
+          }
+          this.errorReporter.attach(channel);
           if (response.orientation !== undefined) {
             void this.applyOrientation(response.orientation, channel);
           }
-          // Phoenix re-runs join hooks on every rejoin, so this also catches
-          // channel changes made while the device was disconnected.
           void this.syncChannels(device.id);
           void this.refreshAutomations(device.id, true);
-          safeResolve(channel);
-        })
-        .receive('error', (resp) => {
-          // Only reject for auth errors, not connection failures
-          if (
-            resp === AUTH_ERROR_INVALID_DEVICE ||
-            resp === AUTH_ERROR_UNAUTHORIZED
-          ) {
-            safeReject(resp);
-          } else {
-            this.logger.error(
-              `Channel join error: ${resp}, will keep trying...`
-            );
+          if (!settled) {
+            settled = true;
+            this.emitProgress(3, 5, 'Authenticating');
+            resolve(channel);
           }
-        })
-        .receive('timeout', () => {
-          this.logger.info('Channel join timeout, waiting for connection...');
-        });
-
-      // Poll channel state to detect successful reconnection and rejoin
-      // This handles the case where the initial join times out but a rejoin succeeds
-      stateCheckInterval = setInterval(() => {
-        // If the device is closing while we're still trying to log in, cancel the attempt
-        if (this.closing) {
-          this.logger.info(
-            'Device is closing while waiting for login, cancelling login attempt.'
-          );
-          safeReject(new Error('Login cancelled because device is closing'));
-          return;
-        }
-
-        if (!settled && channel.state === 'joined') {
-          safeResolve(channel);
-        }
-      }, 1000);
+        },
+        onDisconnected: () => this.errorReporter.detach(),
+        onRecovery: (durationMs, attempts, channel) => {
+          this.errorReporter.attach(channel);
+          this.errorReporter.report({
+            category: 'network-sync',
+            code: 'control_connection_recovered',
+            error: `Control connection recovered after ${durationMs} ms disconnected; ${attempts} watchdog reconnect attempts`,
+          });
+        },
+        onFatal: (reason) => {
+          if (!settled) {
+            settled = true;
+            reject(reason);
+          } else {
+            void this.handleLoginError(reason).catch((error) => {
+              this.errorReporter.report({ category: 'network-sync', error });
+            });
+          }
+        },
+        onError: (error) => {
+          this.logger.error(`Unable to connect control channel: ${error}`);
+          this.errorReporter.report({ category: 'network-sync', error });
+        },
+      });
+      this.controlConnection.start();
     });
+  }
+
+  private async handleLoginError(error: unknown) {
+    if (
+      error === AUTH_ERROR_INVALID_DEVICE ||
+      error === AUTH_ERROR_UNAUTHORIZED
+    ) {
+      this.closing = true;
+      this.controlConnection?.stop();
+      await this.integration.removeCredentials();
+      await this.orientationManager.ready();
+      await this.integration.setSetting('ORIENTATION', '0');
+      window.location.reload();
+    } else {
+      this.logger.error(`Unable to login ${error}`);
+      this.errorReporter.report({ category: 'network-sync', error });
+    }
   }
 
   private resetPlaybackQueue() {
@@ -1415,6 +1388,8 @@ export class Device extends EventEmitter {
           // Device has been deleted from the dashboard
           // Clear credentials and cached data, then reload to show registration page
           this.closing = true;
+          this.controlConnection?.stop();
+          this.cancelLogin?.();
           await this.runMaintenanceAction('deviceRemoved', async () => {
             await this.integration.removeCredentials();
             await this.orientationManager.ready();
@@ -1668,12 +1643,6 @@ export class Device extends EventEmitter {
       clearTimeout(fallback);
       reload();
     });
-  }
-
-  private initHeartbeat(channel: PhoenixChannel) {
-    setInterval(() => {
-      channel.push('heartbeat', {});
-    }, HEARTBEAT_INTERVAL);
   }
 
   /*

@@ -55,7 +55,11 @@ function createMockPhoenixChannel(joinPush = createMockPush()) {
   return {
     join: vi.fn().mockReturnValue(joinPush),
     on: vi.fn(),
-    push: vi.fn(),
+    push: vi.fn().mockImplementation(() => createMockPush()),
+    off: vi.fn(),
+    leave: vi.fn(),
+    onError: vi.fn(),
+    onClose: vi.fn(),
     state: 'closed' as string,
     _joinPush: joinPush,
   };
@@ -67,6 +71,16 @@ function createMockSocket(
   return {
     connect: vi.fn(),
     channel: vi.fn().mockReturnValue(mockChannel),
+    channels: [mockChannel],
+    disconnect: vi.fn((callback?: () => void) => callback?.()),
+    clearHeartbeats: vi.fn(),
+    off: vi.fn(),
+    onClose: vi.fn(),
+    onError: vi.fn(),
+    onMessage: vi.fn(),
+    makeRef: vi.fn().mockReturnValue('heartbeat-ref'),
+    push: vi.fn(),
+    isConnected: vi.fn().mockReturnValue(true),
   };
 }
 
@@ -393,10 +407,13 @@ describe('Device', () => {
     [true, 'connected'],
     [false, 'disconnected'],
   ] as const)(
-    'should report the current server socket state',
+    'should report acknowledged control health rather than just socket state',
     (isConnected, expectedStatus) => {
       device['socket'] = {
-        isConnected: vi.fn().mockReturnValue(isConnected),
+        isConnected: vi.fn().mockReturnValue(true),
+      } as any;
+      device['controlConnection'] = {
+        isHealthy: vi.fn().mockReturnValue(isConnected),
       } as any;
 
       expect(device.getServerConnectionStatus()).toBe(expectedStatus);
@@ -1823,7 +1840,7 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
     );
   });
 
-  it('should set up listeners and heartbeat after background login succeeds', async () => {
+  it('should post device info after background login succeeds', async () => {
     const validCredentials = JSON.stringify({
       device: { id: 'device1', token: 'token123', name: 'Device 1' },
     });
@@ -1834,8 +1851,6 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
     // Mock login to resolve with a mock channel
     vi.spyOn(device as any, 'login').mockResolvedValue(mockChannel);
 
-    const initListenersSpy = vi.spyOn(device as any, 'initListeners');
-    const initHeartbeatSpy = vi.spyOn(device as any, 'initHeartbeat');
     const updateDeviceInfoSpy = vi
       .spyOn(device as any, 'updateDeviceInfo')
       .mockResolvedValue(undefined);
@@ -1844,10 +1859,9 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
 
     // Wait for the background .then() to execute
     await vi.waitFor(() => {
-      expect(initListenersSpy).toHaveBeenCalledWith(mockChannel);
+      expect(updateDeviceInfoSpy).toHaveBeenCalled();
     });
 
-    expect(initHeartbeatSpy).toHaveBeenCalledWith(mockChannel);
     expect(updateDeviceInfoSpy).toHaveBeenCalledWith({
       device: { id: 'device1', token: 'token123', name: 'Device 1' },
     });
@@ -2080,6 +2094,7 @@ describe('Device - Login Reconnection', () => {
   });
 
   afterEach(() => {
+    device['controlConnection']?.stop();
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
@@ -2095,6 +2110,54 @@ describe('Device - Login Reconnection', () => {
     mockPhoenixChannel._joinPush._trigger('error', 'invalid_device');
 
     await expect(loginPromise).rejects.toBe('invalid_device');
+  });
+
+  it('restores listeners, reporting and assignments on a fresh socket without stopping playback', async () => {
+    const credentials = { device: { id: 'd1', token: 't1', name: 'D1' } };
+    const listeners = vi.spyOn(device as any, 'initListeners');
+    const sync = vi.spyOn(device, 'syncChannels').mockResolvedValue(undefined);
+    const automations = vi
+      .spyOn(device as any, 'refreshAutomations')
+      .mockResolvedValue(undefined);
+    const report = vi.spyOn(device['errorReporter'], 'report');
+    const player = { stop: vi.fn(), play: vi.fn() };
+    device['player'] = player as any;
+    mockPhoenixChannel.state = 'joined';
+    const initialLogin = device.login(credentials, 'hw1');
+    mockPhoenixChannel._joinPush._trigger('ok', { heartbeat_ack: true });
+    await initialLogin;
+    mockPhoenixChannel.push.mock.results[0].value._trigger('ok');
+    const socket = vi.mocked(Socket).mock.results.at(-1)!.value as ReturnType<
+      typeof createMockSocket
+    >;
+    const next = createMockPhoenixChannel();
+    socket.channel.mockImplementation(() => {
+      socket.channels = [next];
+      return next;
+    });
+    next.state = 'joined';
+
+    await vi.advanceTimersByTimeAsync(91_000);
+    next._joinPush._trigger('ok', { heartbeat_ack: true });
+    next.push.mock.results[0].value._trigger('ok');
+
+    expect(listeners).toHaveBeenCalledTimes(2);
+    expect(sync).toHaveBeenCalledTimes(2);
+    expect(automations).toHaveBeenCalledTimes(2);
+    expect(player.stop).not.toHaveBeenCalled();
+    expect(player.play).not.toHaveBeenCalled();
+    expect(device.getServerConnectionStatus()).toBe('connected');
+    expect(report).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: 'network-sync',
+        code: 'control_connection_recovered',
+        error:
+          'Control connection recovered after 91000 ms disconnected; 1 watchdog reconnect attempts',
+      })
+    );
+    expect(
+      next.on.mock.calls.filter(([event]) => event === 'command')
+    ).toHaveLength(1);
   });
 
   it('should only reject on auth errors (unauthorized)', async () => {
@@ -2131,15 +2194,16 @@ describe('Device - Login Reconnection', () => {
     expect(resolved).toBe(false);
     expect(rejected).toBe(false);
 
-    // Now simulate a successful rejoin via the polling mechanism
+    // Phoenix runs the join receive hooks again after a successful rejoin.
     mockPhoenixChannel.state = 'joined';
+    mockPhoenixChannel._joinPush._trigger('ok', { heartbeat_ack: true });
     await vi.advanceTimersByTimeAsync(1000);
 
     expect(resolved).toBe(true);
     expect(rejected).toBe(false);
   });
 
-  it('should resolve when channel state becomes joined (polling mechanism)', async () => {
+  it('should resolve when a rejoin is acknowledged after initial timeout', async () => {
     const credentials = {
       device: { id: 'd1', token: 't1', name: 'D1' },
     };
@@ -2154,15 +2218,16 @@ describe('Device - Login Reconnection', () => {
 
     // Simulate the channel successfully joining via reconnection
     mockPhoenixChannel.state = 'joined';
+    mockPhoenixChannel._joinPush._trigger('ok', { heartbeat_ack: true });
 
-    // Advance past the 1s polling interval
+    // Let asynchronous rejoin work finish.
     await vi.advanceTimersByTimeAsync(1000);
 
     const result = await loginPromise;
     expect(result).toBe(mockPhoenixChannel);
   });
 
-  it('should clean up polling interval after resolving', async () => {
+  it('should clean up the watchdog interval on stop', async () => {
     const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
 
     const credentials = {
@@ -2175,30 +2240,32 @@ describe('Device - Login Reconnection', () => {
     mockPhoenixChannel._joinPush._trigger('ok');
 
     await loginPromise;
+    await device.stop();
 
     expect(clearIntervalSpy).toHaveBeenCalled();
   });
 
-  it('should not resolve twice when both ok and polling detect joined', async () => {
+  it('keeps listeners installed once across repeated successful rejoins', async () => {
     const credentials = {
       device: { id: 'd1', token: 't1', name: 'D1' },
     };
 
     let resolveCount = 0;
+    const listeners = vi.spyOn(device as any, 'initListeners');
     const loginPromise = device.login(credentials as any, 'hw1');
     loginPromise.then(() => resolveCount++);
 
     // Trigger ok callback
     mockPhoenixChannel._joinPush._trigger('ok');
 
-    // Also set state to joined
+    // Phoenix repeats the join receive hook after reconnecting.
     mockPhoenixChannel.state = 'joined';
+    mockPhoenixChannel._joinPush._trigger('ok');
 
-    // Advance past polling interval
     await vi.advanceTimersByTimeAsync(2000);
 
-    // Should only resolve once
     expect(resolveCount).toBe(1);
+    expect(listeners).toHaveBeenCalledOnce();
   });
 });
 

@@ -56,6 +56,40 @@ Electron. Keep startup and diagnostics strings in English; do not add locale
 files or language selection to `packages/platforms/legacy-adapter-player/`.
 Dashboard localization remains separate.
 
+### Independent control-channel recovery
+
+The shared device `ControlConnection` keeps one five-second watchdog independent
+of Phoenix's reconnect timers. It sends a device heartbeat every 30 seconds and
+requires an acknowledgement; an open WebSocket alone is not healthy. After 90
+seconds without a round trip it disposes the old socket and its channels, creates
+a fresh authenticated connection, reinstalls listeners once, and resynchronizes
+assignments/automations. Cached playback is not stopped or reloaded. Failed fresh
+attempts get a 15-second connection budget plus exponential backoff (1–60 seconds).
+Reuse the Phoenix owner while replacing its native WebSocket and device channel:
+Phoenix installs anonymous page lifecycle handlers with no removal API, so
+constructing another Phoenix owner on each attempt would leak those handlers.
+Disposal also clears buffered writes and protocol heartbeat timers (even if the
+native transport never emits `close`), and guards against late pageshow reconnects.
+Online/foreground events nudge recovery; `Device.stop()` removes all watchdog
+timers and browser listeners.
+
+Servers advertise `heartbeat_ack: true` in the device join reply and acknowledge
+the existing `heartbeat` event. Old players ignore the extra reply. With older
+servers, new players explicitly fall back to correlated Phoenix protocol pongs
+while requiring an authenticated joined device channel. This compatibility mode
+proves transport health, not execution of the old one-way custom handler.
+
+On recovery the existing durable Device Events reporter records
+`control_connection_recovered` (`network-sync`) with the observed disconnect
+duration and fresh-connection attempt count (zero when Phoenix recovered itself).
+For silent failures duration starts at the last acknowledgement; it is not an
+exact measurement of when the network failed. No credentials enter the report.
+Physical tests can briefly drop only the custom heartbeat on the current
+WebSocket, keeping Phoenix pongs and cached playback running; restore the
+instrumentation afterwards. Do not modify or reinstall the Android APK.
+With old servers, also drop the immediately paired compatibility probe while
+allowing Phoenix's own protocol heartbeats to continue.
+
 ### Android legacy crash recovery events
 
 The Android adapter opts into the `Device` option `reportUnexpectedExit`. A small per-device

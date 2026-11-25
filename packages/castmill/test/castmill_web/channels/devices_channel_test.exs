@@ -57,6 +57,23 @@ defmodule CastmillWeb.DevicesChannelTest do
   end
 
   describe "handle_info/2 - channel_updated" do
+    test "advertises and acknowledges device heartbeats, restoring presence", %{
+      socket: socket,
+      device: device,
+      token: token
+    } do
+      {:ok, %{heartbeat_ack: true}, socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "device_updates:#{device.id}")
+      DevicesChannel.handle_info(:check_heartbeat, socket)
+      assert_receive %{online: false}
+
+      ref = push(socket, "heartbeat", %{})
+      assert_reply ref, :ok
+      assert_receive %{online: true}
+    end
+
     test "broadcasts the server last-online timestamp on status changes", %{
       socket: socket,
       device: device,
