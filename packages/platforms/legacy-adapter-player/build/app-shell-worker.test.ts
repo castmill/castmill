@@ -116,7 +116,7 @@ describe('createAppShellWorker', () => {
     });
 
     await installation;
-    expect(shellCache.put).toHaveBeenCalledTimes(3);
+    expect(shellCache.put).toHaveBeenCalledTimes(4);
     expect(workerGlobal.skipWaiting).toHaveBeenCalledOnce();
   });
 
@@ -154,7 +154,40 @@ describe('createAppShellWorker', () => {
     });
 
     await expect(response).resolves.toBe(cachedIndex);
-    expect(shellCache.match).toHaveBeenCalledWith('/legacy/index.html');
+    expect(shellCache.match).toHaveBeenCalledWith('/');
+  });
+
+  it('preserves the configured scope page after install for an offline root reload', async () => {
+    const { fetch, listeners } = loadWorker('https://player.example.com/');
+    const configuredIndex =
+      '<meta name="castmill-server-url" content="https://api.example.com">';
+    fetch.mockImplementation(async (request) => {
+      const url = typeof request === 'string' ? request : request.url;
+      return new Response(url === '/' ? configuredIndex : url);
+    });
+    let installation: Promise<unknown> | undefined;
+
+    listeners.install({
+      waitUntil: (promise: Promise<unknown>) => {
+        installation = promise;
+      },
+    });
+    await installation;
+
+    const fetchCallCount = fetch.mock.calls.length;
+    let response: Promise<Response> | undefined;
+    listeners.fetch({
+      request: new Request('https://player.example.com/', {
+        headers: { Accept: 'text/html' },
+      }),
+      respondWith: (promise: Promise<Response>) => {
+        response = promise;
+      },
+    });
+
+    await expect((await response!).text()).resolves.toBe(configuredIndex);
+    expect(fetch).toHaveBeenCalledTimes(fetchCallCount);
+    expect(fetch).toHaveBeenCalledWith('/', { credentials: 'same-origin' });
   });
 
   it('leaves other pages under a root scope to the network', async () => {

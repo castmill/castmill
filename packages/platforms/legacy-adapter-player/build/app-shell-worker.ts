@@ -65,6 +65,7 @@ var SCOPE_PATH =
   self.registration && self.registration.scope
     ? new URL(self.registration.scope).pathname
     : CONTROLLED_PATH;
+var SCOPE_PAGE_URL = SCOPE_PATH;
 var SHELL_URLS = ${JSON.stringify(shellUrls)};
 var SHELL_PATHS = SHELL_URLS.reduce(function (paths, url) {
   paths[new URL(url, self.location.origin).pathname] = true;
@@ -75,7 +76,7 @@ self.addEventListener('install', function (event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function (cache) {
       return Promise.all(
-        SHELL_URLS.map(function (url) {
+        SHELL_URLS.concat([SCOPE_PAGE_URL]).map(function (url) {
           return fetch(url, { credentials: 'same-origin' }).then(function (response) {
             if (!response.ok) {
               throw new Error(
@@ -139,7 +140,8 @@ self.addEventListener('fetch', function (event) {
   if (isLegacyNavigation) {
     event.respondWith(
       caches.open(CACHE_NAME).then(function (cache) {
-        return cache.match(INDEX_URL).then(function (response) {
+        var indexUrl = url.pathname === SCOPE_PATH ? SCOPE_PAGE_URL : INDEX_URL;
+        return cache.match(indexUrl).then(function (response) {
           return response || fetch(request);
         });
       })
