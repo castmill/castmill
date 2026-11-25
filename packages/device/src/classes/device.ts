@@ -26,6 +26,11 @@ import {
   TimerEntry,
   WeekDay,
   isOrientation,
+  TelemetryData,
+  DeviceTelemetryData,
+  CacheUsage,
+  OsUpdateTarget,
+  WifiStatus,
 } from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Channel, JsonChannel } from './channel';
@@ -54,6 +59,13 @@ import {
   type DeviceRule,
 } from '../automations';
 
+// Castmill OS: how often the OS update status is checked (sent when it changes).
+const OS_UPDATE_STATUS_INTERVAL = 1000 * 30;
+// Retries of an OS target the bridge rejected: 5 s doubling up to 5 min,
+// 10 attempts (about half an hour).
+const OS_UPDATE_RETRY_DELAY = 1000 * 5;
+const OS_UPDATE_RETRY_MAX_DELAY = 1000 * 60 * 5;
+const OS_UPDATE_RETRIES = 10;
 const DEFAULT_MAX_LOGS = 100;
 const DEFAULT_FETCH_TIMEOUT_MS = 5000;
 const PROGRAMMING_LOOP_INTERVAL_MS = 5000;
@@ -102,6 +114,30 @@ const AUTH_ERROR_UNAUTHORIZED = 'unauthorized';
 const getReconnectDelay = reconnectDelay;
 
 const supportedDebugModes = ['remote', 'local', 'none'];
+
+const getMonotonicNow = () =>
+  typeof performance !== 'undefined' && typeof performance.now === 'function'
+    ? performance.now()
+    : Date.now();
+
+/** Chromium's non-standard `performance.memory`, when exposed. */
+const getHeapUsage = () => {
+  const memory =
+    typeof performance !== 'undefined'
+      ? (
+          performance as Performance & {
+            memory?: { usedJSHeapSize?: number; jsHeapSizeLimit?: number };
+          }
+        ).memory
+      : undefined;
+  const usedBytes = memory?.usedJSHeapSize;
+  const limitBytes = memory?.jsHeapSizeLimit;
+  return typeof usedBytes === 'number' &&
+    typeof limitBytes === 'number' &&
+    limitBytes > 0
+    ? { usedBytes, limitBytes }
+    : undefined;
+};
 
 export enum Status {
   Registering = 'registering',
@@ -264,6 +300,8 @@ const toChannels = (rawChannels: unknown): Channel[] | undefined => {
  */
 export class Device extends EventEmitter {
   private closing = false;
+  private readonly startedAt = getMonotonicNow();
+  private connectedAt?: number;
   private maintenanceToastDelayMs = MAINTENANCE_TOAST_DELAY_MS;
   private cache: CacheBackend;
   private resourceManager?: ResourceManager;
@@ -294,6 +332,9 @@ export class Device extends EventEmitter {
   private automationsRefresh?: ReturnType<typeof setTimeout>;
   private automationsDebug?: AutomationDebugOverlay;
   private automationsDebugTimer?: ReturnType<typeof setInterval>;
+  private osUpdateTarget?: OsUpdateTarget;
+  private osUpdateRetry?: ReturnType<typeof setTimeout>;
+  private stopOsUpdateReports?: () => void;
   private automationsLoad?: Promise<void>;
   private automationsLoadQueued = false;
   private wakeProgramming?: () => void;
@@ -868,6 +909,8 @@ export class Device extends EventEmitter {
     this.closing = true;
     this.controlConnection?.stop();
     this.cancelLogin?.();
+    clearTimeout(this.osUpdateRetry);
+    this.stopOsUpdateReports?.();
     this.stopAutomations(true);
     if (this.orientationChannel && this.orientationListenerRef !== undefined) {
       this.orientationChannel.off(
@@ -1271,11 +1314,13 @@ export class Device extends EventEmitter {
           })),
         onJoined: (channel, response, fresh) => {
           if (this.closing) return;
+          this.connectedAt = getMonotonicNow();
           if (fresh) {
             this.initListeners(channel);
             if (this.debugMode === 'remote') this.setLogMode('remote');
           }
           this.errorReporter.attach(channel);
+          this.initOsUpdateReports(channel);
           if (response.orientation !== undefined) {
             void this.applyOrientation(response.orientation, channel);
           }
@@ -1287,7 +1332,10 @@ export class Device extends EventEmitter {
             resolve(channel);
           }
         },
-        onDisconnected: () => this.errorReporter.detach(),
+        onDisconnected: () => {
+          this.errorReporter.detach();
+          this.stopOsUpdateReports?.();
+        },
         onRecovery: (durationMs, attempts, channel) => {
           this.errorReporter.attach(channel);
           this.errorReporter.report({
@@ -1297,6 +1345,7 @@ export class Device extends EventEmitter {
           });
         },
         onFatal: (reason) => {
+          this.stopOsUpdateReports?.();
           if (!settled) {
             settled = true;
             reject(reason);
@@ -1409,7 +1458,7 @@ export class Device extends EventEmitter {
           channel.push('res:get', { page, ref: opts.ref });
           break;
         case 'telemetry':
-          const telemetry = (await this.integration.getTelemetry?.()) ?? {};
+          const telemetry = await this.getTelemetry();
           channel.push('res:get', { telemetry, ref: opts.ref });
           break;
         case 'timers':
@@ -1590,6 +1639,113 @@ export class Device extends EventEmitter {
     channel.on('automation_run', (message: AutomationRunMessage) => {
       this.runAutomationNow(message);
     });
+
+    // Castmill OS: the OS version Castmill chose for this device.
+    channel.on('os_update', (target: OsUpdateTarget) => {
+      this.setOsUpdate(target);
+    });
+  }
+
+  /**
+   * Hands the OS target to the bridge. The server only sends it again after
+   * a reconnect or a change, so a rejected handoff is retried with backoff
+   * (the agent may be restarting); a newer target replaces a pending retry.
+   */
+  private setOsUpdate(target: OsUpdateTarget, attempt = 0) {
+    clearTimeout(this.osUpdateRetry);
+    this.osUpdateRetry = undefined;
+    this.osUpdateTarget = target;
+    const pending = this.integration.setOsUpdate?.(target);
+    if (!pending) return;
+    pending.catch((error) => {
+      this.logger.error(`Unable to set the OS update: ${error}`);
+      if (
+        this.closing ||
+        this.osUpdateTarget !== target ||
+        attempt + 1 >= OS_UPDATE_RETRIES
+      ) {
+        return;
+      }
+      const delay = Math.min(
+        OS_UPDATE_RETRY_DELAY * 2 ** attempt,
+        OS_UPDATE_RETRY_MAX_DELAY
+      );
+      this.osUpdateRetry = setTimeout(
+        () => this.setOsUpdate(target, attempt + 1),
+        delay
+      );
+    });
+  }
+
+  /**
+   * Wi-Fi of the device for the menu; undefined when the platform has no
+   * Wi-Fi support or the device has no Wi-Fi.
+   */
+  async getWifiStatus(): Promise<WifiStatus | undefined> {
+    try {
+      const status = await this.integration.getWifiStatus?.();
+      return status?.available ? status : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /** Joins a Wi-Fi network; rejects with the platform's reason. */
+  async connectWifi(ssid: string, psk: string, hidden = false): Promise<void> {
+    if (!this.integration.connectWifi) {
+      throw new Error('This player cannot change the Wi-Fi.');
+    }
+    await this.integration.connectWifi(ssid, psk, hidden);
+  }
+
+  /**
+   * Platform telemetry plus player and cache statistics, which are available
+   * on every platform. A failing platform reading does not hide the rest.
+   */
+  async getTelemetry(): Promise<DeviceTelemetryData> {
+    let platform: TelemetryData = {};
+    try {
+      platform = (await this.integration.getTelemetry?.()) ?? {};
+    } catch (error) {
+      this.logger.error(`Unable to read platform telemetry: ${error}`);
+    }
+
+    const now = getMonotonicNow();
+    const player: NonNullable<DeviceTelemetryData['player']> = {
+      uptimeSeconds: Math.floor((now - this.startedAt) / 1000),
+    };
+    if (this.connectedAt !== undefined) {
+      player.connectedSeconds = Math.floor((now - this.connectedAt) / 1000);
+    }
+    const heap = getHeapUsage();
+    if (heap) player.heap = heap;
+
+    const telemetry: DeviceTelemetryData = { ...platform, player };
+    try {
+      telemetry.cache = await this.getCacheUsage();
+    } catch (error) {
+      this.logger.error(`Unable to read cache usage: ${error}`);
+    }
+    return telemetry;
+  }
+
+  private async getCacheUsage(): Promise<
+    NonNullable<DeviceTelemetryData['cache']>
+  > {
+    // One aggregate per type from the cache backend: consistent totals even
+    // when items are read or reordered while telemetry is collected.
+    const usage = (type: ItemType): Promise<CacheUsage> =>
+      this.cache.usage(type);
+    const [code, data, media] = await Promise.all([
+      usage(ItemType.Code),
+      usage(ItemType.Data),
+      usage(ItemType.Media),
+    ]);
+    return {
+      items: code.items + data.items + media.items,
+      bytes: code.bytes + data.bytes + media.bytes,
+      types: { code, data, media },
+    };
   }
 
   private async getCache({ page, page_size: perPage, type }: CachePage) {
@@ -1643,6 +1799,39 @@ export class Device extends EventEmitter {
       clearTimeout(fallback);
       reload();
     });
+  }
+
+  /**
+   * Castmill OS: reports the OS update status right after login (it tells the
+   * backend the device's hardware family, so it sends the target version) and
+   * whenever it changes.
+   */
+  private initOsUpdateReports(channel: PhoenixChannel) {
+    this.stopOsUpdateReports?.();
+    if (!this.integration.getOsUpdateStatus) return;
+    let active = true;
+    // The last status the server acknowledged: a report that fails or times
+    // out is sent again on the next check.
+    let last = '';
+    const report = async () => {
+      try {
+        const status = await this.integration.getOsUpdateStatus?.();
+        if (!active || this.closing || !status) return;
+        const json = JSON.stringify(status);
+        if (json === last) return;
+        channel.push('os_update:report', status).receive('ok', () => {
+          last = json;
+        });
+      } catch (error) {
+        this.logger.error(`Unable to read the OS update status: ${error}`);
+      }
+    };
+    void report();
+    const timer = setInterval(report, OS_UPDATE_STATUS_INTERVAL);
+    this.stopOsUpdateReports = () => {
+      active = false;
+      clearInterval(timer);
+    };
   }
 
   /*

@@ -22,7 +22,15 @@ defmodule CastmillWeb.DeviceController do
     v8Version
     nodeVersion
     userAgent
+    cpu
+    memory
+    gpu
+    display
   )
+  # Whether the player renders on the GPU.
+  @graphics_acceleration_values ~w(hardware software)
+  # Video formats the player decodes in hardware, e.g. ["H.264", "HEVC"].
+  @max_video_decoding_length 16
   @device_capability_keys ~w(
     restart
     quit
@@ -188,9 +196,18 @@ defmodule CastmillWeb.DeviceController do
     Enum.all?(info, fn {key, value} ->
       (key in @device_info_keys and is_binary(value) and
          byte_size(value) <= @max_device_info_value_bytes) or
+        (key == "graphicsAcceleration" and value in @graphics_acceleration_values) or
+        (key == "videoDecoding" and valid_video_decoding?(value)) or
         (key == "capabilities" and valid_device_capabilities?(value))
     end)
   end
+
+  defp valid_video_decoding?(value) when is_list(value) do
+    length(value) <= @max_video_decoding_length and
+      Enum.all?(value, &(is_binary(&1) and byte_size(&1) <= 64))
+  end
+
+  defp valid_video_decoding?(_value), do: false
 
   defp valid_device_capabilities?(capabilities) when is_map(capabilities) do
     Enum.all?(capabilities, fn {key, value} ->
@@ -302,7 +319,7 @@ defmodule CastmillWeb.DeviceController do
         {:device_response, data} ->
           conn
           |> put_status(:ok)
-          |> json(data)
+          |> json(name_cache_entries(device_id, data))
       after
         5_000 ->
           conn
@@ -317,6 +334,19 @@ defmodule CastmillWeb.DeviceController do
         |> halt()
     end
   end
+
+  # Devices only report cached URLs; add resource names for the dashboard.
+  defp name_cache_entries(device_id, %{"data" => entries} = page) when is_list(entries) do
+    case Devices.get_device(device_id) do
+      %{organization_id: organization_id} ->
+        %{page | "data" => Devices.name_cache_entries(organization_id, entries)}
+
+      _ ->
+        page
+    end
+  end
+
+  defp name_cache_entries(_device_id, page), do: page
 
   @delete_cache_schema %{
     device_id: [type: :string],

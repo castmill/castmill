@@ -102,7 +102,12 @@ defmodule CastmillWeb.UploadController do
                  }) do
               {:ok, media} ->
                 # Proceed with transcoding and job queuing
-                case queue_transcoding_job(media, destpath, mime_type) do
+                case queue_transcoding_job(
+                       media,
+                       destpath,
+                       mime_type,
+                       CastmillWeb.CurrentUser.id(conn)
+                     ) do
                   :ok ->
                     # Return successful response
                     conn
@@ -147,15 +152,16 @@ defmodule CastmillWeb.UploadController do
     end
   end
 
-  defp queue_transcoding_job(media, destpath, mime_type) do
+  # `actor_id` is the uploader, named in the "media uploaded" notification.
+  defp queue_transcoding_job(media, destpath, mime_type, actor_id) do
     cond do
       String.starts_with?(mime_type, "image/") ->
-        Castmill.Workers.ImageTranscoder.schedule(media, destpath, mime_type)
+        Castmill.Workers.ImageTranscoder.schedule(media, destpath, mime_type, actor_id)
         :ok
 
       ## Either starts with video or is an ASF file ( "application/vnd.ms-asf" )
       String.starts_with?(mime_type, "video/") or mime_type == "application/vnd.ms-asf" ->
-        Castmill.Workers.VideoTranscoder.schedule(media, destpath, mime_type)
+        Castmill.Workers.VideoTranscoder.schedule(media, destpath, mime_type, actor_id)
         :ok
 
       true ->

@@ -1101,7 +1101,8 @@
       "keepEditing": "Keep editing",
       "removeItemTitle": "Remove item?",
       "removeItemMessage": "Remove \"{{name}}\" from this playlist?"
-    }
+    },
+    "widgetConfigFailed": "This widget's settings couldn't be shown. Close this window and choose another widget."
   },
   "layouts": {
     "title": "Layouts",
@@ -1399,6 +1400,24 @@
       "currentlyPlaying": "Currently scheduled from channel",
       "note": "This shows what the device should be playing now based on channel schedules, not necessarily what is actually displayed on the device."
     },
+    "health": {
+      "title": "Device health",
+      "description": "At-a-glance summary of the player's resources, online time and cache.",
+      "refresh": "Refresh health metrics",
+      "offline": "The device is offline. Health metrics are shown when it is connected.",
+      "loadError": "Could not load health metrics from the device.",
+      "loading": "Loading health metrics…",
+      "noData": "This device did not report any health metrics.",
+      "appMemory": "App memory",
+      "cpu": "CPU",
+      "onlineFor": "Online for",
+      "playerUptime": "Player uptime",
+      "systemUptime": "System uptime",
+      "cacheSize": "Cache size",
+      "cacheItems": "{{count}} cached items",
+      "cacheUsage": "Cache usage by type",
+      "usedOf": "{{used}} of {{total}}"
+    },
     "telemetry": {
       "placeholder": "Traces, Logs, Metrics and Connectivity (WiFi quality, etc.)",
       "storage": "Storage",
@@ -1511,6 +1530,15 @@
       "playerVersion": "Player version",
       "operatingSystem": "Operating system",
       "hardware": "Hardware",
+      "cpu": "Processor",
+      "memory": "Memory",
+      "gpu": "Graphics",
+      "graphicsAcceleration": "Graphics acceleration",
+      "graphicsAccelerationHardware": "Hardware (GPU)",
+      "graphicsAccelerationSoftware": "Software only (CPU)",
+      "videoDecoding": "Hardware video decoding",
+      "videoDecodingNone": "None",
+      "display": "Display",
       "environmentVersion": "Environment version",
       "chromiumVersion": "Chromium version",
       "v8Version": "V8 version",
@@ -1541,6 +1569,51 @@
       "removed": "Channel \"{{name}}\" removed",
       "addError": "Failed to add channel: {{error}}",
       "removeError": "Failed to remove channel: {{error}}"
+    },
+    "osUpdate": {
+      "title": "Castmill OS",
+      "thisDevice": "This device",
+      "currentVersion": "Running version",
+      "status": "Update status",
+      "targetVersion": "Target version",
+      "none": "None",
+      "hardwareFamily": "Hardware family",
+      "lastError": "Last error",
+      "reportedAt": "Last report",
+      "version": "Version to install",
+      "followOrganization": "Follow the organization",
+      "updateNow": "Update now",
+      "organization": "Organization",
+      "organizationHelp": "Applies to every Castmill OS device of the organization that follows it. Devices install updates in their maintenance window.",
+      "policy": "Update policy",
+      "policyManual": "Manual: only devices with their own version",
+      "policyLatest": "Always the latest release",
+      "policyVersion": "Stay on {{version}}",
+      "includePrereleases": "Include pre-releases",
+      "noReleases": "No Castmill OS releases yet.",
+      "prerelease": "{{version}} (pre-release)",
+      "prereleaseTag": "pre-release",
+      "securityTag": "security update",
+      "saved": "Saved",
+      "saveFailed": "Could not save: {{error}}",
+      "loadFailed": "Could not load the OS releases and the organization policy.",
+      "retry": "Retry",
+      "state": {
+        "idle": "Up to date",
+        "installing": "Downloading and installing",
+        "installed": "{{version}} installed, waiting for the maintenance window",
+        "activating": "Restarting into {{version}}",
+        "running": "{{version}} running",
+        "rolledBack": "{{version}} rolled back",
+        "failed": "Update failed",
+        "unsupported": "This device can't install updates"
+      }
+    },
+    "location": {
+      "title": "Location",
+      "help": "Where this screen is. Devices that can't locate themselves (such as Castmill OS) use this location.",
+      "search": "Location",
+      "clear": "Clear location"
     }
   },
   "validation": {
@@ -1603,12 +1676,18 @@
       "rejectError": "Error rejecting invitation",
       "accountCreated": "Account created successfully!",
       "accountCreationFailed": "Failed to create account",
-      "passkeysNotSupported": "Passkeys are not supported in this browser"
+      "passkeysNotSupported": "Passkeys are not supported in this browser",
+      "passkeyNotFound": "No passkey was used. If this device has no passkey for your account, we can email you a link to add one.",
+      "lostPasskey": "Lost your passkey? Email me a link to add one",
+      "sendingRecovery": "Sending…",
+      "recoverySent": "Check your email and follow the link to add a passkey, then open this invitation again.",
+      "recoveryFailed": "Could not send the email. Please try again."
     },
     "notifications": {
       "title": "Notifications",
       "empty": "No notifications yet",
       "markAllRead": "Mark all as read",
+      "byUser": "by {{name}}",
       "types": {
         "organizationInvitation": {
           "title": "Organization Invitation",
@@ -1682,6 +1761,7 @@
     "gotoOrganization": "Go to Organization",
     "gotoTeams": "Go to Teams",
     "gotoDevices": "Go to Devices",
+    "then": "then",
     "categories": {
       "global": "Global",
       "navigation": "Navigation",
@@ -2113,6 +2193,7 @@
     "title": "Automations",
     "description": "Make displays react to events, such as interrupting playback with other content at specific times.",
     "new": "New automation",
+    "quotaReached": "Automation quota reached: delete an automation or upgrade your plan to add more.",
     "newDescription": "Give the automation a name. You can add rules and assign displays afterwards.",
     "namePlaceholder": "e.g. Hourly spring offer",
     "created": "Automation \"{{name}}\" created",

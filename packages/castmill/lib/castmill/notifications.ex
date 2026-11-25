@@ -108,35 +108,39 @@ defmodule Castmill.Notifications do
     rows = Repo.all(query)
 
     # Filter by roles in application code
-    notifications =
-      Enum.filter(rows, fn notification ->
-        # Check if user is excluded from this notification
-        excluded_user_ids = get_in(notification.metadata, ["excluded_user_ids"]) || []
-        user_is_excluded = user_id in excluded_user_ids
+    notifications = Enum.filter(rows, &visible?(&1, user_id, org_roles, team_roles))
 
-        cond do
-          # Skip if user is explicitly excluded
-          user_is_excluded ->
-            false
+    {put_actor_names(notifications), length(rows) == page_size}
+  end
 
-          # User-specific notifications always included
-          notification.user_id == user_id ->
-            true
+  @doc """
+  Fills in `actor_name` for notifications whose actor is a user, with one
+  query. Users that no longer exist leave it `nil`.
+  """
+  def put_actor_names(notifications) when is_list(notifications) do
+    user_ids =
+      for %Notification{actor_type: "user", actor_id: id} <- notifications,
+          is_binary(id),
+          match?({:ok, _}, Ecto.UUID.cast(id)),
+          uniq: true,
+          do: id
 
-          # Organization notifications - check role if roles specified
-          notification.organization_id && notification.organization_id in org_ids ->
-            role_matches?(notification.roles, Map.get(org_roles, notification.organization_id))
+    names =
+      if user_ids == [] do
+        %{}
+      else
+        from(u in User, where: u.id in ^user_ids, select: {u.id, u.name})
+        |> Repo.all()
+        |> Map.new()
+      end
 
-          # Team notifications - check role if roles specified
-          notification.team_id && notification.team_id in team_ids ->
-            role_matches?(notification.roles, Map.get(team_roles, notification.team_id))
+    Enum.map(notifications, fn
+      %Notification{actor_type: "user", actor_id: id} = notification ->
+        %{notification | actor_name: Map.get(names, id)}
 
-          true ->
-            false
-        end
-      end)
-
-    {notifications, length(rows) == page_size}
+      notification ->
+        notification
+    end)
   end
 
   @doc """
@@ -213,33 +217,76 @@ defmodule Castmill.Notifications do
 
     # Get all unread notifications and filter by roles
     Repo.all(query)
-    |> Enum.filter(fn notification ->
-      # Check if user is excluded from this notification
-      excluded_user_ids = get_in(notification.metadata, ["excluded_user_ids"]) || []
-      user_is_excluded = user_id in excluded_user_ids
+    |> Enum.count(&visible?(&1, user_id, org_roles, team_roles))
+  end
 
-      cond do
-        # Skip if user is explicitly excluded
-        user_is_excluded ->
-          false
+  @doc """
+  Whether `user_id` may see `notification` (a struct, or a map with the same
+  keys): the rules of `list_user_notifications_page/2`, for one notification,
+  for example before pushing it to the user's open dashboards.
+  """
+  def visible_to_user?(notification, user_id) do
+    org_id = Map.get(notification, :organization_id)
+    team_id = Map.get(notification, :team_id)
 
-        # User-specific notifications always included
-        notification.user_id == user_id ->
-          true
-
-        # Organization notifications - check role if roles specified
-        notification.organization_id && notification.organization_id in org_ids ->
-          role_matches?(notification.roles, Map.get(org_roles, notification.organization_id))
-
-        # Team notifications - check role if roles specified
-        notification.team_id && notification.team_id in team_ids ->
-          role_matches?(notification.roles, Map.get(team_roles, notification.team_id))
-
-        true ->
-          false
+    org_roles =
+      if org_id do
+        from(ou in Castmill.Organizations.OrganizationsUsers,
+          where: ou.user_id == ^user_id and ou.organization_id == ^org_id,
+          select: {ou.organization_id, ou.role}
+        )
+        |> Repo.all()
+        |> Map.new()
+      else
+        %{}
       end
-    end)
-    |> length()
+
+    team_roles =
+      if team_id do
+        from(tu in Castmill.Teams.TeamsUsers,
+          where: tu.user_id == ^user_id and tu.team_id == ^team_id,
+          select: {tu.team_id, tu.role}
+        )
+        |> Repo.all()
+        |> Map.new()
+      else
+        %{}
+      end
+
+    visible?(notification, user_id, org_roles, team_roles)
+  end
+
+  # Who sees a notification: the user it is addressed to (only them), else
+  # the members of its organization or team with one of its roles (any role
+  # when it has none), minus the excluded users.
+  defp visible?(notification, user_id, org_roles, team_roles) do
+    org_id = Map.get(notification, :organization_id)
+    team_id = Map.get(notification, :team_id)
+    roles = Map.get(notification, :roles) || []
+
+    cond do
+      user_id in excluded_user_ids(notification) ->
+        false
+
+      recipient = Map.get(notification, :user_id) ->
+        recipient == user_id
+
+      org_id && Map.has_key?(org_roles, org_id) ->
+        role_matches?(roles, Map.get(org_roles, org_id))
+
+      team_id && Map.has_key?(team_roles, team_id) ->
+        role_matches?(roles, Map.get(team_roles, team_id))
+
+      true ->
+        false
+    end
+  end
+
+  # Stored metadata has string keys; a notification that was just inserted
+  # (and is being broadcast) still has the atom keys it was created with.
+  defp excluded_user_ids(notification) do
+    metadata = Map.get(notification, :metadata) || %{}
+    metadata["excluded_user_ids"] || metadata[:excluded_user_ids] || []
   end
 
   @doc """
@@ -327,6 +374,9 @@ defmodule Castmill.Notifications do
   # Private function to broadcast notification via Phoenix PubSub
   defp broadcast_notification({:ok, notification} = result) do
     require Logger
+
+    # Recipients' dashboards show who did it.
+    [notification] = put_actor_names([notification])
 
     # Broadcast to user channel if user_id is present
     if notification.user_id do

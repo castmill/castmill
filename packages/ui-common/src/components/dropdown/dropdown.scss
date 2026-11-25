@@ -91,6 +91,11 @@
       color: #6a5da2;
       font-style: italic;
     }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   }
 
   .clear-button {

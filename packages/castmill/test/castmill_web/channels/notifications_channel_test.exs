@@ -19,6 +19,19 @@ defmodule CastmillWeb.NotificationsChannelTest do
     %{user: user, organization: org, network: network}
   end
 
+  # Nothing about `type` was pushed to the socket's user. Each test process
+  # receives the pushes of every socket it joined, tagged with their topic.
+  defp refute_push_to(socket, type) do
+    topic = socket.topic
+
+    refute_receive %Phoenix.Socket.Message{
+                     event: "new_notification",
+                     topic: ^topic,
+                     payload: %{notification: %{type: ^type}}
+                   },
+                   200
+  end
+
   describe "join/3" do
     test "allows authorized user to join their notification channel", %{user: user} do
       {:ok, response, _socket} =
@@ -96,7 +109,8 @@ defmodule CastmillWeb.NotificationsChannelTest do
       Phoenix.PubSub.broadcast(
         Castmill.PubSub,
         "organization:#{org.id}",
-        {:new_notification, %{id: "test", title_key: "test.org_notification"}}
+        {:new_notification,
+         %{id: "test", title_key: "test.org_notification", organization_id: org.id}}
       )
 
       # Should receive the broadcast
@@ -188,6 +202,84 @@ defmodule CastmillWeb.NotificationsChannelTest do
         },
         unread_count: 1
       }
+    end
+
+    test "pushes who performed the action", %{user: user, organization: org} do
+      {:ok, _, _socket} =
+        CastmillWeb.UserSocket
+        |> socket(user.id, %{user: user})
+        |> subscribe_and_join(
+          CastmillWeb.NotificationsChannel,
+          "notifications:#{user.id}"
+        )
+
+      Castmill.Notifications.Events.notify_member_removed("Bob", org.id, user.id)
+
+      assert_push "new_notification", %{
+        notification: %{actor: %{type: "user", name: "Test User"}}
+      }
+    end
+
+    test "pushes organization notifications only to members who may see them", %{
+      user: user,
+      organization: org,
+      network: network
+    } do
+      join = fn member ->
+        {:ok, _, socket} =
+          CastmillWeb.UserSocket
+          |> socket(member.id, %{user: member})
+          |> subscribe_and_join(CastmillWeb.NotificationsChannel, "notifications:#{member.id}")
+
+        socket
+      end
+
+      guest = user_fixture(%{name: "Guest", network_id: network.id})
+      {:ok, _} = Castmill.Organizations.add_user(org.id, guest.id, :guest)
+      user_socket = join.(user)
+      guest_socket = join.(guest)
+
+      # Role-restricted alert: the admin gets it, the guest doesn't.
+      Castmill.Notifications.Events.notify_device_offline_alert(
+        "Lobby",
+        Ecto.UUID.generate(),
+        org.id
+      )
+
+      assert_push "new_notification", %{notification: %{type: "device_offline_alert"}}
+      refute_push_to(guest_socket, "device_offline_alert")
+
+      # Excluded users don't get it.
+      Castmill.Notifications.Events.notify_invitation_accepted("Test User", user.id, org.id)
+      Castmill.Notifications.Events.notify_member_removed("Bob", org.id)
+      assert_push "new_notification", %{notification: %{type: "member_removed"}}
+
+      refute_push_to(user_socket, "invitation_accepted")
+
+      # Another user's notification isn't pushed to this one.
+      Notifications.create_user_notification(%{
+        type: "info",
+        user_id: guest.id,
+        organization_id: org.id
+      })
+
+      refute_push_to(user_socket, "info")
+    end
+
+    test "organization notifications carry the recipient's unread count", %{
+      user: user,
+      organization: org
+    } do
+      {:ok, _, _socket} =
+        CastmillWeb.UserSocket
+        |> socket(user.id, %{user: user})
+        |> subscribe_and_join(CastmillWeb.NotificationsChannel, "notifications:#{user.id}")
+
+      Notifications.create_user_notification(%{type: "info", user_id: user.id})
+      assert_push "new_notification", %{unread_count: 1}
+
+      Castmill.Notifications.Events.notify_member_removed("Bob", org.id)
+      assert_push "new_notification", %{notification: %{type: "member_removed"}, unread_count: 2}
     end
 
     test "receives organization-wide notifications", %{user: user, organization: org} do

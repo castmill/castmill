@@ -1076,7 +1076,8 @@
       "keepEditing": "Continuer la modification",
       "removeItemTitle": "Retirer l'élément ?",
       "removeItemMessage": "Retirer « {{name}} » de cette playlist ?"
-    }
+    },
+    "widgetConfigFailed": "Les paramètres de ce widget n'ont pas pu être affichés. Fermez cette fenêtre et choisissez un autre widget."
   },
   "layouts": {
     "title": "Mises en page",
@@ -1349,6 +1350,24 @@
       "currentlyPlaying": "Actuellement programmé depuis le canal",
       "note": "Ceci montre ce que l'appareil devrait jouer maintenant en fonction des horaires des canaux, pas nécessairement ce qui est réellement affiché sur l'appareil."
     },
+    "health": {
+      "title": "État de l'appareil",
+      "description": "Résumé des ressources, du temps en ligne et du cache du lecteur.",
+      "refresh": "Actualiser les métriques d'état",
+      "offline": "L'appareil est hors ligne. Les métriques s'affichent lorsqu'il est connecté.",
+      "loadError": "Impossible de charger les métriques de l'appareil.",
+      "loading": "Chargement des métriques…",
+      "noData": "Cet appareil n'a envoyé aucune métrique d'état.",
+      "appMemory": "Mémoire de l'application",
+      "cpu": "Processeur",
+      "onlineFor": "En ligne depuis",
+      "playerUptime": "Durée d'activité du lecteur",
+      "systemUptime": "Durée d'activité du système",
+      "cacheSize": "Taille du cache",
+      "cacheItems": "{{count}} éléments en cache",
+      "cacheUsage": "Utilisation du cache par type",
+      "usedOf": "{{used}} sur {{total}}"
+    },
     "telemetry": {
       "placeholder": "Traces, journaux, métriques et connectivité (qualité WiFi, etc.)",
       "storage": "Stockage",
@@ -1486,6 +1505,15 @@
       "playerVersion": "Version du lecteur",
       "operatingSystem": "Système d'exploitation",
       "hardware": "Matériel",
+      "cpu": "Processeur",
+      "memory": "Mémoire",
+      "gpu": "Graphiques",
+      "graphicsAcceleration": "Accélération graphique",
+      "graphicsAccelerationHardware": "Matérielle (GPU)",
+      "graphicsAccelerationSoftware": "Logicielle uniquement (CPU)",
+      "videoDecoding": "Décodage vidéo matériel",
+      "videoDecodingNone": "Aucun",
+      "display": "Écran",
       "environmentVersion": "Version de l'environnement",
       "chromiumVersion": "Version de Chromium",
       "v8Version": "Version de V8",
@@ -1516,6 +1544,51 @@
       "removed": "Chaîne « {{name}} » retirée",
       "addError": "Impossible d’ajouter la chaîne : {{error}}",
       "removeError": "Impossible de retirer la chaîne : {{error}}"
+    },
+    "osUpdate": {
+      "title": "Castmill OS",
+      "thisDevice": "Cet appareil",
+      "currentVersion": "Version en cours",
+      "status": "État de la mise à jour",
+      "targetVersion": "Version cible",
+      "none": "Aucune",
+      "hardwareFamily": "Famille de matériel",
+      "lastError": "Dernière erreur",
+      "reportedAt": "Dernier rapport",
+      "version": "Version à installer",
+      "followOrganization": "Suivre l'organisation",
+      "updateNow": "Mettre à jour maintenant",
+      "organization": "Organisation",
+      "organizationHelp": "S'applique à tous les appareils Castmill OS de l'organisation qui la suivent. Les appareils installent les mises à jour pendant leur fenêtre de maintenance.",
+      "policy": "Politique de mise à jour",
+      "policyManual": "Manuelle : seulement les appareils avec leur propre version",
+      "policyLatest": "Toujours la dernière version",
+      "policyVersion": "Rester en {{version}}",
+      "includePrereleases": "Inclure les préversions",
+      "noReleases": "Aucune version de Castmill OS pour le moment.",
+      "prerelease": "{{version}} (préversion)",
+      "prereleaseTag": "préversion",
+      "securityTag": "mise à jour de sécurité",
+      "saved": "Enregistré",
+      "saveFailed": "Échec de l'enregistrement : {{error}}",
+      "loadFailed": "Impossible de charger les versions du système et la politique de l'organisation.",
+      "retry": "Réessayer",
+      "state": {
+        "idle": "À jour",
+        "installing": "Téléchargement et installation",
+        "installed": "{{version}} installée, en attente de la fenêtre de maintenance",
+        "activating": "Redémarrage sur {{version}}",
+        "running": "{{version}} en service",
+        "rolledBack": "{{version}} annulée",
+        "failed": "La mise à jour a échoué",
+        "unsupported": "Cet appareil ne peut pas installer de mises à jour"
+      }
+    },
+    "location": {
+      "title": "Emplacement",
+      "help": "Où se trouve cet écran. Les appareils qui ne peuvent pas se localiser eux-mêmes (comme Castmill OS) utilisent cet emplacement.",
+      "search": "Emplacement",
+      "clear": "Effacer l'emplacement"
     }
   },
   "validation": {
@@ -1605,12 +1678,18 @@
       "rejectError": "Erreur lors du refus de l'invitation",
       "accountCreated": "Compte créé avec succès !",
       "accountCreationFailed": "Échec de la création du compte",
-      "passkeysNotSupported": "Les clés d'accès ne sont pas prises en charge dans ce navigateur"
+      "passkeysNotSupported": "Les clés d'accès ne sont pas prises en charge dans ce navigateur",
+      "passkeyNotFound": "Aucune clé d'accès n'a été utilisée. Si cet appareil n'a pas de clé d'accès pour votre compte, nous pouvons vous envoyer un lien par e-mail pour en ajouter une.",
+      "lostPasskey": "Clé d'accès perdue ? M'envoyer un lien pour en ajouter une",
+      "sendingRecovery": "Envoi…",
+      "recoverySent": "Consultez vos e-mails et suivez le lien pour ajouter une clé d'accès, puis rouvrez cette invitation.",
+      "recoveryFailed": "Impossible d'envoyer l'e-mail. Veuillez réessayer."
     },
     "notifications": {
       "title": "Notifications",
       "empty": "Pas encore de notifications",
       "markAllRead": "Tout marquer comme lu",
+      "byUser": "par {{name}}",
       "types": {
         "organizationInvitation": {
           "title": "Invitation à l'Organisation",
@@ -1699,6 +1778,7 @@
     "gotoOrganization": "Aller à l'Organisation",
     "gotoTeams": "Aller aux Équipes",
     "gotoDevices": "Aller aux Appareils",
+    "then": "puis",
     "categories": {
       "global": "Général",
       "navigation": "Navigation",
@@ -2130,6 +2210,7 @@
     "title": "Automatisations",
     "description": "Faites réagir les écrans à des événements, par exemple en interrompant la diffusion avec un autre contenu à des heures précises.",
     "new": "Nouvelle automatisation",
+    "quotaReached": "Quota d'automatisations atteint : supprimez-en une ou passez à un forfait supérieur pour en ajouter.",
     "newDescription": "Donnez un nom à l'automatisation. Vous pourrez ensuite ajouter des règles et attribuer des écrans.",
     "namePlaceholder": "ex. Offre de printemps toutes les heures",
     "created": "Automatisation « {{name}} » créée",

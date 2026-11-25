@@ -40,6 +40,8 @@ const CACHE_TYPES: readonly CacheType[] = ['data', 'code', 'media'];
 interface DeviceTableCacheItem {
   timestamp: string;
   url: string;
+  // Resource name resolved by the server (media, playlist), when known
+  name?: string;
   size: number;
   accessed: number;
   mimeType: string;
@@ -49,10 +51,13 @@ interface DeviceTableCacheItem {
 const urlFileName = (url: string) =>
   url.split(/[?#]/)[0].split('/').filter(Boolean).pop() || url;
 
-// Compact mobile card: file name, URL, type · size · time
+const cacheItemName = (item: DeviceTableCacheItem) =>
+  item.name || urlFileName(item.url);
+
+// Compact mobile card: name, URL, type · size · time
 const cacheItemCard = (item: DeviceTableCacheItem): TableCardContent => ({
   visual: <EntityCardIcon icon={mimeTypeIcon(item.mimeType)} />,
-  title: urlFileName(item.url),
+  title: cacheItemName(item),
   titleText: item.url,
   subtitle: <span title={item.url}>{item.url}</span>,
   meta: [
@@ -77,6 +82,16 @@ export const DeviceCache: Component<{
       sortable: true,
       render: (item: DeviceTableCacheItem) => (
         <DeviceTableTime value={item.timestamp} />
+      ),
+    },
+    {
+      key: 'name',
+      title: t('common.name'),
+      sortable: false,
+      render: (item: DeviceTableCacheItem) => (
+        <span class="device-cache-name" title={cacheItemName(item)}>
+          {cacheItemName(item)}
+        </span>
       ),
     },
     {

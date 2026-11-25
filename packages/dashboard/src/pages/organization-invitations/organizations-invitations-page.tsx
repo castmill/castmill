@@ -45,6 +45,10 @@ const OrganizationsInvitationPage = () => {
     createSignal<boolean>(false);
   const [accepting, setAccepting] = createSignal<boolean>(false);
   const [rejecting, setRejecting] = createSignal<boolean>(false);
+  // The browser found no usable passkey (or the user dismissed its dialog).
+  const [passkeyNotFound, setPasskeyNotFound] = createSignal<boolean>(false);
+  const [sendingRecovery, setSendingRecovery] = createSignal<boolean>(false);
+  const [recoverySent, setRecoverySent] = createSignal<boolean>(false);
 
   const encoder = new TextEncoder();
 
@@ -170,6 +174,8 @@ const OrganizationsInvitationPage = () => {
       );
     } catch (error: any) {
       console.error('Signup error:', error);
+      // Dismissed passkey dialog: let them try again without an error.
+      if (error?.name === 'NotAllowedError') return;
       toast.error(
         error.message || t('organizations.invitation.accountCreationFailed')
       );
@@ -193,6 +199,7 @@ const OrganizationsInvitationPage = () => {
     }
 
     setLoggingIn(true);
+    setPasskeyNotFound(false);
 
     try {
       const challengeResponse = await authFetch(
@@ -248,9 +255,37 @@ const OrganizationsInvitationPage = () => {
       await loginUser({ user, token: sessionToken });
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error?.message || 'Failed to authenticate');
+      // WebAuthn reports both "no passkey for this site on this device" and a
+      // dismissed dialog as NotAllowedError, with a technical message. Explain
+      // it and offer to add a passkey (credential recovery) instead.
+      if (error?.name === 'NotAllowedError') {
+        setPasskeyNotFound(true);
+      } else {
+        toast.error(error?.message || 'Failed to authenticate');
+      }
     } finally {
       setLoggingIn(false);
+    }
+  }
+
+  // Email the invited address a link to add a passkey to the account (the
+  // login page's "lost credentials" flow).
+  async function sendRecoveryEmail() {
+    if (!invitation() || sendingRecovery()) return;
+    setSendingRecovery(true);
+    try {
+      const response = await authFetch(`${baseUrl}/credentials/recover`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: invitation()!.email }),
+      });
+      if (!response.ok) throw new Error('recovery request failed');
+      setRecoverySent(true);
+    } catch (error) {
+      console.error('Recovery request failed:', error);
+      toast.error(t('organizations.invitation.recoveryFailed'));
+    } finally {
+      setSendingRecovery(false);
     }
   }
 
@@ -519,6 +554,30 @@ const OrganizationsInvitationPage = () => {
                       class="invitation-button"
                     >
                       {t('login.useCurrentDomainPasskey')}
+                    </button>
+                  </Show>
+                  <Show
+                    when={!recoverySent()}
+                    fallback={
+                      <p class="invitation-note" role="status">
+                        {t('organizations.invitation.recoverySent')}
+                      </p>
+                    }
+                  >
+                    <Show when={passkeyNotFound()}>
+                      <p class="invitation-note" role="status">
+                        {t('organizations.invitation.passkeyNotFound')}
+                      </p>
+                    </Show>
+                    <button
+                      type="button"
+                      onClick={sendRecoveryEmail}
+                      disabled={sendingRecovery()}
+                      class="invitation-link"
+                    >
+                      {sendingRecovery()
+                        ? t('organizations.invitation.sendingRecovery')
+                        : t('organizations.invitation.lostPasskey')}
                     </button>
                   </Show>
                 </Show>

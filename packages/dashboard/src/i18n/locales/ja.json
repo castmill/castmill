@@ -1065,7 +1065,8 @@
       "keepEditing": "編集を続ける",
       "removeItemTitle": "項目を削除しますか？",
       "removeItemMessage": "このプレイリストから「{{name}}」を削除しますか？"
-    }
+    },
+    "widgetConfigFailed": "このウィジェットの設定を表示できませんでした。このウィンドウを閉じて、別のウィジェットを選択してください。"
   },
   "layouts": {
     "title": "レイアウト",
@@ -1338,6 +1339,24 @@
       "currentlyPlaying": "現在チャンネルからスケジュール中",
       "note": "これは、チャンネルスケジュールに基づいてデバイスが現在再生すべき内容を示しており、デバイスに実際に表示されている内容とは限りません。"
     },
+    "health": {
+      "title": "デバイスの状態",
+      "description": "プレーヤーのリソース、オンライン時間、キャッシュの概要です。",
+      "refresh": "状態メトリクスを更新",
+      "offline": "デバイスはオフラインです。接続されると状態メトリクスが表示されます。",
+      "loadError": "デバイスから状態メトリクスを読み込めませんでした。",
+      "loading": "状態メトリクスを読み込み中…",
+      "noData": "このデバイスは状態メトリクスを報告していません。",
+      "appMemory": "アプリのメモリ",
+      "cpu": "プロセッサ",
+      "onlineFor": "オンライン時間",
+      "playerUptime": "プレーヤーの稼働時間",
+      "systemUptime": "システムの稼働時間",
+      "cacheSize": "キャッシュサイズ",
+      "cacheItems": "{{count}} 件のキャッシュ項目",
+      "cacheUsage": "種類別のキャッシュ使用量",
+      "usedOf": "{{used}} / {{total}}"
+    },
     "telemetry": {
       "placeholder": "トレース、ログ、メトリクス、および接続性(WiFi品質など)",
       "storage": "ストレージ",
@@ -1475,6 +1494,15 @@
       "playerVersion": "プレーヤーのバージョン",
       "operatingSystem": "オペレーティングシステム",
       "hardware": "ハードウェア",
+      "cpu": "プロセッサ",
+      "memory": "メモリ",
+      "gpu": "グラフィックス",
+      "graphicsAcceleration": "グラフィックスアクセラレーション",
+      "graphicsAccelerationHardware": "ハードウェア (GPU)",
+      "graphicsAccelerationSoftware": "ソフトウェアのみ (CPU)",
+      "videoDecoding": "ハードウェア動画デコード",
+      "videoDecodingNone": "なし",
+      "display": "ディスプレイ",
       "environmentVersion": "環境のバージョン",
       "chromiumVersion": "Chromium のバージョン",
       "v8Version": "V8 のバージョン",
@@ -1505,6 +1533,51 @@
       "removed": "チャンネル「{{name}}」を削除しました",
       "addError": "チャンネルを追加できませんでした: {{error}}",
       "removeError": "チャンネルを削除できませんでした: {{error}}"
+    },
+    "osUpdate": {
+      "title": "Castmill OS",
+      "thisDevice": "このデバイス",
+      "currentVersion": "実行中のバージョン",
+      "status": "更新の状態",
+      "targetVersion": "目標バージョン",
+      "none": "なし",
+      "hardwareFamily": "ハードウェアファミリー",
+      "lastError": "最後のエラー",
+      "reportedAt": "最後の報告",
+      "version": "インストールするバージョン",
+      "followOrganization": "組織の設定に従う",
+      "updateNow": "今すぐ更新",
+      "organization": "組織",
+      "organizationHelp": "組織の設定に従うすべての Castmill OS デバイスに適用されます。デバイスはメンテナンス時間帯に更新をインストールします。",
+      "policy": "更新ポリシー",
+      "policyManual": "手動: 個別のバージョンを持つデバイスのみ",
+      "policyLatest": "常に最新のリリース",
+      "policyVersion": "{{version}} のまま",
+      "includePrereleases": "プレリリースを含める",
+      "noReleases": "Castmill OS のリリースはまだありません。",
+      "prerelease": "{{version}} (プレリリース)",
+      "prereleaseTag": "プレリリース",
+      "securityTag": "セキュリティ更新",
+      "saved": "保存しました",
+      "saveFailed": "保存できませんでした: {{error}}",
+      "loadFailed": "OS のリリースと組織のポリシーを読み込めませんでした。",
+      "retry": "再試行",
+      "state": {
+        "idle": "最新",
+        "installing": "ダウンロードしてインストール中",
+        "installed": "{{version}} をインストール済み、メンテナンス時間帯を待機中",
+        "activating": "{{version}} で再起動中",
+        "running": "{{version}} を実行中",
+        "rolledBack": "{{version}} をロールバックしました",
+        "failed": "更新に失敗しました",
+        "unsupported": "このデバイスは更新をインストールできません"
+      }
+    },
+    "location": {
+      "title": "場所",
+      "help": "この画面の設置場所です。自分で位置を特定できないデバイス（Castmill OS など）はこの場所を使用します。",
+      "search": "場所",
+      "clear": "場所をクリア"
     }
   },
   "validation": {
@@ -1594,12 +1667,18 @@
       "rejectError": "招待の拒否中にエラーが発生しました",
       "accountCreated": "アカウントが正常に作成されました！",
       "accountCreationFailed": "アカウントの作成に失敗しました",
-      "passkeysNotSupported": "このブラウザではパスキーがサポートされていません"
+      "passkeysNotSupported": "このブラウザではパスキーがサポートされていません",
+      "passkeyNotFound": "パスキーが使用されませんでした。このデバイスにアカウントのパスキーがない場合は、パスキーを追加するためのリンクをメールでお送りできます。",
+      "lostPasskey": "パスキーをなくしましたか？追加用のリンクをメールで受け取る",
+      "sendingRecovery": "送信中…",
+      "recoverySent": "メールを確認し、リンクからパスキーを追加してから、この招待をもう一度開いてください。",
+      "recoveryFailed": "メールを送信できませんでした。もう一度お試しください。"
     },
     "notifications": {
       "title": "通知",
       "empty": "まだ通知はありません",
       "markAllRead": "すべて既読にする",
+      "byUser": "{{name}} さん",
       "types": {
         "organizationInvitation": {
           "title": "組織への招待",
@@ -1682,6 +1761,7 @@
     "gotoOrganization": "組織に移動",
     "gotoTeams": "チームに移動",
     "gotoDevices": "デバイスに移動",
+    "then": "次に",
     "search": "検索",
     "globalSearch": "グローバル検索",
     "pageSearch": "現在のページで検索",
@@ -2119,6 +2199,7 @@
     "title": "オートメーション",
     "description": "特定の時刻に別のコンテンツで再生を割り込ませるなど、ディスプレイがイベントに反応するようにします。",
     "new": "新しいオートメーション",
+    "quotaReached": "オートメーションの上限に達しました。追加するには、オートメーションを削除するかプランをアップグレードしてください。",
     "newDescription": "オートメーションに名前を付けてください。ルールの追加やディスプレイの割り当ては後から行えます。",
     "namePlaceholder": "例：毎時の春のセール",
     "created": "オートメーション「{{name}}」を作成しました",

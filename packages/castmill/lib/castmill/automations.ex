@@ -41,13 +41,31 @@ defmodule Castmill.Automations do
 
     automations =
       query
-      |> order_by([a], asc: a.name, asc: a.id)
+      |> order_by(^sort_order(params))
       |> limit(^page_size)
       |> offset(^((page - 1) * page_size))
       |> Repo.all()
       |> preload_assignments()
 
     {automations, count}
+  end
+
+  # Sort columns of the automations table ("key", "direction" as the other
+  # resource lists send them); by name by default. The id keeps pages stable.
+  @sort_keys %{
+    "name" => :name,
+    "enabled" => :enabled
+  }
+
+  defp sort_order(params) do
+    key = Map.get(@sort_keys, Map.get(params, "key") || Map.get(params, :key), :name)
+
+    direction =
+      if (Map.get(params, "direction") || Map.get(params, :direction)) == "descending",
+        do: :desc,
+        else: :asc
+
+    [{direction, key}, {direction, :id}]
   end
 
   defp maybe_search(query, search) when is_binary(search) and search != "" do

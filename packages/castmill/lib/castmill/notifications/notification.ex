@@ -17,6 +17,9 @@ defmodule Castmill.Notifications.Notification do
     # Actor information (who/what triggered this notification)
     field :actor_id, :string
     field :actor_type, :string, default: "user"
+    # Name of the user actor, filled in when notifications are read or sent
+    # (`Castmill.Notifications.put_actor_names/1`), so renames show up.
+    field :actor_name, :string, virtual: true
 
     belongs_to :user, Castmill.Accounts.User
     belongs_to :organization, Castmill.Organizations.Organization

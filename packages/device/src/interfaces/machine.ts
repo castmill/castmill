@@ -7,6 +7,12 @@ export interface DeviceInfo {
   chromiumVersion?: string; // The version of the chromium engine e.g. 98.0.4758.102
   v8Version?: string; // The version of the V8 engine if available e.g. 9.8.0
   nodeVersion?: string; // The version of the Node.js if available e.g. 16.13.0
+  cpu?: string; // E.g. Intel N100 (4 cores)
+  memory?: string; // Installed RAM, e.g. 8 GB
+  gpu?: string; // The GPU (GL renderer), e.g. Mesa Intel(R) Graphics (ADL-N)
+  graphicsAcceleration?: 'hardware' | 'software'; // Whether the player renders on the GPU
+  videoDecoding?: string[]; // Video formats decoded in hardware, e.g. ['H.264', 'HEVC']
+  display?: string; // The display output and mode, e.g. HDMI-A-1, 3840 × 2160, 60 Hz
   userAgent: string; // The user agent string
   capabilities?: DeviceCapabilities;
 }
@@ -126,6 +132,34 @@ export interface TelemetryData {
 
   /** System uptime in seconds */
   uptimeSeconds?: number;
+}
+
+/** Items and bytes stored in one category of the content cache. */
+export interface CacheUsage {
+  items: number;
+  bytes: number;
+}
+
+/**
+ * Telemetry sent to the dashboard: the platform readings (`TelemetryData`)
+ * plus player statistics collected by the device on every platform.
+ */
+export interface DeviceTelemetryData extends TelemetryData {
+  player?: {
+    /** Seconds since the player started. */
+    uptimeSeconds: number;
+    /** Seconds since the server connection was last (re)established. */
+    connectedSeconds?: number;
+    /** JavaScript heap usage, when the runtime exposes it (Chromium). */
+    heap?: {
+      usedBytes: number;
+      limitBytes: number;
+    };
+  };
+  /** Content cache usage per category. */
+  cache?: CacheUsage & {
+    types: Record<'code' | 'data' | 'media', CacheUsage>;
+  };
 }
 
 // The keys of the settings that the machine can store. For type safety defined
@@ -272,4 +306,84 @@ export interface Machine {
    * player still reloads.
    */
   clearCache?(): Promise<void>;
+
+  /**
+   * Castmill OS: hands the OS version Castmill chose for this device (the
+   * `os_update` channel message) to the operating system, which downloads,
+   * installs and activates it in its maintenance window.
+   */
+  setOsUpdate?(target: OsUpdateTarget): Promise<void>;
+
+  /**
+   * Castmill OS: the progress of the OS update, reported to Castmill
+   * (`os_update:report`). Undefined when the OS can't report it.
+   */
+  getOsUpdateStatus?(): Promise<OsUpdateStatus | undefined>;
+
+  /**
+   * Wi-Fi of the device, for the menu: the network it's connected to and,
+   * while it's offline, the networks in range. Undefined when the platform
+   * can't report it.
+   */
+  getWifiStatus?(): Promise<WifiStatus | undefined>;
+
+  /**
+   * Joins a Wi-Fi network (`psk` empty for open networks). Platforms may
+   * refuse while the device is online, so that whoever can reach a working
+   * screen can't change its network; the error says why.
+   */
+  connectWifi?(ssid: string, psk: string, hidden?: boolean): Promise<void>;
+}
+
+export interface WifiNetwork {
+  ssid: string;
+  /** Signal strength, 0-100. */
+  signal: number;
+  secure: boolean;
+  /** The device is connected to it. */
+  active?: boolean;
+}
+
+export interface WifiStatus {
+  /** The device has Wi-Fi. */
+  available: boolean;
+  online: boolean;
+  current?: WifiNetwork;
+  /** In range, strongest first; only listed while the device is offline. */
+  networks: WifiNetwork[];
+  error?: string;
+}
+
+/** The OS version Castmill wants a Castmill OS device to run. */
+export interface OsUpdateTarget {
+  /** Null: no update. */
+  version: string | null;
+  url?: string;
+  sha256?: string;
+  size?: number;
+  security?: boolean;
+  /** "window": in the maintenance window; "now": right away. */
+  activate?: 'window' | 'now';
+  /** Chosen for this device: may install an older version. */
+  override?: boolean;
+}
+
+/** OS update progress of a Castmill OS device. */
+export interface OsUpdateStatus {
+  compatible: string;
+  current_version?: string;
+  target_version?: string;
+  state:
+    | 'idle'
+    | 'installing'
+    | 'installed'
+    | 'activating'
+    | 'running'
+    | 'rolled_back'
+    | 'failed'
+    | 'unsupported';
+  version?: string;
+  progress?: number;
+  last_error?: string;
+  updated?: string;
 }

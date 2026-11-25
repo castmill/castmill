@@ -46,7 +46,9 @@ The native webOS player keeps channel and playlist data and widget code up to 5 
 
 ## Inspect the cache
 
-Open the device in the dashboard and select the **Cache** tab. It lists the entries the player reports in the **Data**, **Code**, and **Media** sub-tabs, with columns for **Timestamp** (when the entry was last stored or used), **URL**, **Size**, **Accessed** (how many times the player has used the entry), and **MIME Type**. The device must be online; otherwise the tab shows that cache information cannot be retrieved.
+Open the device in the dashboard and select the **Cache** tab. It lists the entries the player reports in the **Data**, **Code**, and **Media** sub-tabs, with columns for **Timestamp** (when the entry was last stored or used), **Name**, **URL**, **Size**, **Accessed** (how many times the player has used the entry), and **MIME Type**. The device must be online; otherwise the tab shows that cache information cannot be retrieved.
+
+The **Name** column shows the name of the media file or playlist an entry belongs to, so you can find a specific media file. Entries that do not belong to a resource of the device's organization show the file name from their URL.
 
 From the **Cache** tab you can:
 

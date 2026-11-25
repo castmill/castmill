@@ -44,6 +44,8 @@ const LANGUAGES = ['es', 'sv', 'de', 'fr', 'zh', 'ar', 'ko', 'ja'];
 // (cognates, proper nouns, technical terms, abbreviations)
 // Technical terms, proper nouns, and universal strings that are identical across languages
 const ALLOWED_IDENTICAL_STRINGS = new Set([
+  // Product names
+  'Castmill OS',
   'Widgets',
   'Widget',
   'JSON',
@@ -128,6 +130,9 @@ const ALLOWED_IDENTICAL_KEYS = {
   'devices.maintenance.systemGroup': ['sv', 'de'],
   'widgets.scope.system': ['sv', 'de'],
   'network.widgets.kind.system': ['sv', 'de'],
+  // Device hardware details: the same words in these languages
+  'devices.info.cpu': ['sv'],
+  'devices.info.graphicsAccelerationHardware': ['de'],
   // "Zone" is the same word in German and French
   'layouts.editor.zoneName': ['de', 'fr'],
   'layouts.editor.zonesHeading': ['fr'],

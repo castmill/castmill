@@ -22,6 +22,7 @@ import { Device } from '../interfaces/device.interface';
 import { DevicesService } from '../services/devices.service';
 import styles from './device-telemetry.module.scss';
 import { DeviceIconButton, DeviceNotice } from './device-section';
+import { formatUptime } from './format-uptime';
 
 interface TelemetryData {
   storage?: { totalBytes: number; usedBytes: number };
@@ -78,22 +79,11 @@ const getSignalColor = (percent: number): string => {
 };
 
 /**
- * Formats seconds into a human-readable uptime string.
+ * A percentage as shown on the cards: whole numbers, 0-100. Players report
+ * CPU usage (and some, signal or battery) with many decimals.
  */
-const formatUptime = (
-  seconds: number,
-  t: (key: string, params?: Record<string, any>) => string
-): string => {
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-
-  const parts: string[] = [];
-  if (days > 0) parts.push(`${days}${t('devices.telemetry.daysShort')}`);
-  if (hours > 0) parts.push(`${hours}${t('devices.telemetry.hoursShort')}`);
-  parts.push(`${minutes}${t('devices.telemetry.minutesShort')}`);
-  return parts.join(' ');
-};
+export const formatPercent = (value: number): string =>
+  `${Math.round(Math.min(100, Math.max(0, value)))}%`;
 
 /**
  * ProgressBar component used for storage, memory, CPU gauges.
@@ -325,7 +315,7 @@ export const DeviceTelemetry: Component<{
                       class={styles.cardValue}
                       style={{ color: getCpuColor(percent()) }}
                     >
-                      {percent()}%
+                      {formatPercent(percent())}
                     </div>
                     <ProgressBar
                       percent={percent()}
@@ -402,7 +392,7 @@ export const DeviceTelemetry: Component<{
                           ),
                         }}
                       >
-                        {network().wifiSignalStrengthPercent}%
+                        {formatPercent(network().wifiSignalStrengthPercent!)}
                       </span>
                     </div>
                   </Show>
@@ -510,7 +500,7 @@ export const DeviceTelemetry: Component<{
                     </div>
                     <div class={styles.batteryContainer}>
                       <span class={styles.cardValue} style={{ color: color() }}>
-                        {battery().levelPercent}%
+                        {formatPercent(battery().levelPercent)}
                       </span>
                       <Show when={battery().isCharging}>
                         <span class={styles.chargingIcon}>

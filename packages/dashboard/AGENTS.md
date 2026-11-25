@@ -67,6 +67,21 @@ in a hover/focus tooltip; omit successful application text while retaining
 pending, offline, unsupported-player, and error feedback.
 Registration and diagnostics are not part of the playback rotation subtree.
 
+## Device Health Overview
+
+The top of the device drawer's Overview tab is `DeviceHealth`
+(`addons/devices/components/device-health.tsx`). It fetches
+`GET /devices/:id/telemetry` while the device is online, refreshes every 60s
+and on demand, and discards stale responses. It renders memory, app (JS heap),
+storage and CPU gauges, online/player/system uptime, cache size, temperature
+and network tiles, plus a cache-by-type bar. The player adds `player`
+(`uptimeSeconds`, `connectedSeconds`, `heap`) and `cache` (`items`, `bytes`,
+`types`) to the platform telemetry (`DeviceTelemetryData` in
+`packages/device/src/interfaces/machine.ts`); every field is optional, so
+older players and platforms without a metric simply hide that cell. Build the
+UI only from the dependency-free ui-common metrics components; strings live
+under `devices.health` in all nine locales.
+
 ## Responsive App Shell
 
 The side panel (`components/sidepanel`) and top bar (`components/topbar`) adapt
@@ -1047,6 +1062,11 @@ navigate('/teams');
 
 **Organization dropdown:**
 
+Use a controlled `value` from the store. On organization routes, navigate
+without writing `selectedId` first: otherwise `ProtectedRoute` can restore the
+old URL's organization and trigger obsolete data loads before navigation commits.
+Only global `/settings` updates the selection directly without navigation.
+
 ```tsx
 const handleOrgChange = (value: string) => {
   const currentPath = location.pathname.replace(/^\/org\/[^\/]+/, '');
@@ -1054,29 +1074,19 @@ const handleOrgChange = (value: string) => {
 };
 ```
 
-#### 4. Addon Component Remounting
+#### 4. Organization Page Remounting
 
-**CRITICAL:** Addon components must remount when organization changes.
+**CRITICAL:** Both core pages and addon components must remount when organization
+changes, and must not initialize until the URL and store agree.
 
 **Problem:** SolidJS Router doesn't remount components when route params change. Going from `/org/abc/content/playlists` to `/org/xyz/content/playlists` keeps the same component instance.
 
-**Solution:** Use `Show` with `keyed` attribute to force remounting:
+**Solution:** Wrap organization route components with `organizationRoute` from
+`components/organization-route.tsx`. Its keyed `Show` waits for the URL's
+organization to match the loaded store, then mounts the page:
 
 ```tsx
-// In index.tsx - addon route wrapper
-const KeyedComponent = (props: any) => {
-  const params = useParams();
-  return (
-    <Show when={params.orgId} keyed>
-      {(orgId) => {
-        const Component = wrapLazyComponent(addon);
-        return <Component {...props} key={orgId} />;
-      }}
-    </Show>
-  );
-};
-
-<Route path={addon.mount_path} component={KeyedComponent} />;
+<Route path="teams" component={organizationRoute(TeamsPage)} />;
 ```
 
 This ensures:
@@ -1084,6 +1094,16 @@ This ensures:
 - Old component instance is **unmounted** when orgId changes
 - New component instance is **mounted** with fresh data
 - `onMount()` runs again, loading data for the new organization
+- Old local data, selections and dialogs are discarded, including late writes
+  from requests belonging to the disposed page
+- Query-only navigation (such as opening a detail drawer) does not remount
+
+Because the wrapper renders nothing until the URL organization is selected,
+`ProtectedRoute` redirects organization URLs the user cannot open (unknown ID,
+removed membership) once its own organization fetch finishes: to the selected
+or first organization with the same subpath, or to `/` (organization picker)
+when the user has none. It waits for that fetch because the store can be stale,
+for example right after accepting an invitation to a new organization.
 
 #### 5. Data Reloading Patterns
 
@@ -1119,7 +1139,13 @@ onMount(() => {
 });
 ```
 
-The `createEffect` pattern is still included as a fallback, but the `keyed Show` wrapper handles most cases.
+The `createEffect` pattern is still included as a fallback, but the organization
+route wrapper handles page resets. Shared `TableView` additionally uses
+latest-request-wins ordering so overlapping reloads cannot restore old rows or
+errors. Pages that keep their own copy of fetched rows (for example the drawer
+lookups in Teams and Channels) must apply the same ordering inside `fetchData`.
+Global permissions clear while loading, and only the latest request for
+the selected organization can update them, even across route remounts.
 
 ### Store Structure for Addons
 

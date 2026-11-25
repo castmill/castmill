@@ -17,6 +17,15 @@ const t = (key: string) =>
       'devices.info.v8Version': 'V8 version',
       'devices.info.nodeVersion': 'Node.js version',
       'devices.info.userAgent': 'User agent',
+      'devices.info.cpu': 'Processor',
+      'devices.info.memory': 'Memory',
+      'devices.info.gpu': 'Graphics',
+      'devices.info.graphicsAcceleration': 'Graphics acceleration',
+      'devices.info.graphicsAccelerationHardware': 'Hardware (GPU)',
+      'devices.info.graphicsAccelerationSoftware': 'Software only (CPU)',
+      'devices.info.videoDecoding': 'Hardware video decoding',
+      'devices.info.videoDecodingNone': 'None',
+      'devices.info.display': 'Display',
     }) as Record<string, string>
   )[key] || key;
 
@@ -90,5 +99,67 @@ describe('DeviceInfo', () => {
     expect(screen.getByText('0.0.1')).toBeInTheDocument();
     expect(screen.getByText('Legacy player')).toBeInTheDocument();
     expect(screen.getAllByText('N/A')).toHaveLength(7);
+  });
+
+  it('shows the hardware details reported by the player', () => {
+    render(() => (
+      <DeviceInfo
+        device={
+          {
+            ...device,
+            info: {
+              ...device.info,
+              cpu: 'Intel N100 (4 cores)',
+              memory: '8 GB',
+              gpu: 'Mesa Intel(R) Graphics (ADL-N)',
+              graphicsAcceleration: 'hardware',
+              videoDecoding: ['H.264', 'HEVC', 'VP9', 'AV1'],
+              display: 'HDMI-A-1, 3840 × 2160, 60 Hz',
+            },
+          } as Device
+        }
+        t={t}
+      />
+    ));
+
+    for (const value of [
+      'Intel N100 (4 cores)',
+      '8 GB',
+      'Mesa Intel(R) Graphics (ADL-N)',
+      'Hardware (GPU)',
+      'H.264, HEVC, VP9, AV1',
+      'HDMI-A-1, 3840 × 2160, 60 Hz',
+    ]) {
+      expect(screen.getByText(value)).toBeInTheDocument();
+    }
+    expect(
+      document.querySelector('[data-field="graphics-acceleration"]')
+    ).not.toHaveClass('warning');
+  });
+
+  it('flags software rendering and lists no hardware decoding', () => {
+    render(() => (
+      <DeviceInfo
+        device={
+          {
+            ...device,
+            info: {
+              ...device.info,
+              graphicsAcceleration: 'software',
+              videoDecoding: [],
+            },
+          } as Device
+        }
+        t={t}
+      />
+    ));
+
+    expect(screen.getByText('Software only (CPU)')).toBeInTheDocument();
+    expect(
+      document.querySelector('[data-field="graphics-acceleration"]')
+    ).toHaveClass('warning');
+    expect(screen.getByText('None')).toBeInTheDocument();
+    // Players that don't report hardware details don't show the fields.
+    expect(screen.queryByText('Processor')).not.toBeInTheDocument();
   });
 });

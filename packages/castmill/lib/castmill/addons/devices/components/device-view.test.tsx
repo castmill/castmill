@@ -16,7 +16,14 @@ vi.mock('@castmill/ui-common', async (importOriginal) => {
   };
 });
 vi.mock('./device-info', () => ({ DeviceInfo: () => null }));
-vi.mock('./channels', () => ({ Channels: () => <p>Channels panel</p> }));
+vi.mock('./device-health', () => ({ DeviceHealth: () => null }));
+const mounts = vi.hoisted(() => ({ channels: 0 }));
+vi.mock('./channels', () => ({
+  Channels: () => {
+    mounts.channels++;
+    return <p>Channels panel</p>;
+  },
+}));
 vi.mock('./maintainance', () => ({ Maintainance: () => null }));
 vi.mock('./device-telemetry', () => ({ DeviceTelemetry: () => null }));
 vi.mock('./device-events', () => ({ DeviceLogs: () => null }));
@@ -38,6 +45,9 @@ vi.mock('./device-details', () => ({
 }));
 // The preview tab pulls in the built player bundle, which this suite does not need.
 vi.mock('./device-preview', () => ({ DevicePreview: () => null }));
+vi.mock('./device-os-update', () => ({
+  DeviceOsUpdate: () => <p>OS update panel</p>,
+}));
 vi.mock('../services/devices.service', () => ({
   DevicesService: { updateDevice: vi.fn() },
 }));
@@ -208,5 +218,95 @@ describe('Device view layout', () => {
     expect(
       await screen.findByText('devices.details.copied')
     ).toBeInTheDocument();
+  });
+});
+
+describe('Castmill OS tab', () => {
+  it('appears when the first report arrives and keeps the selected tab', () => {
+    const [device, setDevice] = createSignal({
+      id: 'device-1',
+      orientation: 0,
+    } as Device);
+    render(() => (
+      <DeviceView baseUrl="/api" organization_id="org-1" device={device()} />
+    ));
+    const titles = () => screen.getAllByRole('tab').map((tab) => tab.title);
+
+    expect(titles()).not.toContain('devices.osUpdate.title');
+    fireEvent.click(screen.getByRole('tab', { name: 'common.channels' }));
+
+    setDevice({
+      ...device(),
+      os_status: { compatible: 'castmill-os-genericx86-64', state: 'idle' },
+    } as Device);
+
+    expect(titles()).toContain('devices.osUpdate.title');
+    expect(
+      screen.getByRole('tab', { name: 'common.channels' })
+    ).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('Channels panel')).toBeInTheDocument();
+  });
+
+  it('keeps the open panel mounted across live status updates', () => {
+    const [device, setDevice] = createSignal({
+      id: 'device-1',
+      orientation: 0,
+      online: true,
+    } as Device);
+    render(() => (
+      <DeviceView baseUrl="/api" organization_id="org-1" device={device()} />
+    ));
+    fireEvent.click(screen.getByRole('tab', { name: 'common.channels' }));
+    const before = mounts.channels;
+
+    // A heartbeat, the first OS report (adds a tab) and a progress report.
+    setDevice({ ...device(), online: false } as Device);
+    setDevice({
+      ...device(),
+      os_status: { compatible: 'castmill-os-genericx86-64', state: 'idle' },
+    } as Device);
+    setDevice({
+      ...device(),
+      os_status: {
+        compatible: 'castmill-os-genericx86-64',
+        state: 'installing',
+        progress: 40,
+      },
+    } as Device);
+
+    expect(mounts.channels).toBe(before);
+  });
+
+  it('moves keyboard focus to the right tab after the OS tab appears', () => {
+    const [device, setDevice] = createSignal({
+      id: 'device-1',
+      orientation: 0,
+    } as Device);
+    render(() => (
+      <DeviceView baseUrl="/api" organization_id="org-1" device={device()} />
+    ));
+    const channels = screen.getByRole('tab', { name: 'common.channels' });
+    fireEvent.click(channels);
+    setDevice({
+      ...device(),
+      os_status: { compatible: 'castmill-os-genericx86-64', state: 'idle' },
+    } as Device);
+
+    fireEvent.keyDown(channels, { key: 'ArrowRight' });
+    const schedule = screen.getByRole('tab', {
+      name: 'devices.details.schedule',
+    });
+    expect(schedule).toHaveAttribute('aria-selected', 'true');
+    expect(document.activeElement).toBe(schedule);
+
+    fireEvent.keyDown(schedule, { key: 'ArrowRight' });
+    const os = screen.getByRole('tab', { name: 'devices.osUpdate.title' });
+    expect(os).toHaveAttribute('aria-selected', 'true');
+    expect(document.activeElement).toBe(os);
+
+    fireEvent.keyDown(os, { key: 'End' });
+    const tabs = screen.getAllByRole('tab');
+    expect(document.activeElement).toBe(tabs[tabs.length - 1]);
+    expect(tabs[tabs.length - 1]).toHaveAttribute('aria-selected', 'true');
   });
 });

@@ -1,0 +1,231 @@
+// Shared tone colours: each tone sets --metric-color for its children.
+.success {
+  --metric-color: var(--cm-success);
+  --metric-color-rgb: var(--cm-success-rgb);
+}
+
+.warning {
+  --metric-color: var(--cm-warning);
+  --metric-color-rgb: var(--cm-warning-rgb);
+}
+
+.error {
+  --metric-color: var(--cm-error);
+  --metric-color-rgb: var(--cm-error-rgb);
+}
+
+.info {
+  --metric-color: var(--cm-primary);
+  --metric-color-rgb: var(--cm-primary-rgb);
+}
+
+.neutral {
+  --metric-color: var(--cm-text-secondary);
+  --metric-color-rgb: var(--cm-primary-rgb);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, var(--metric-min-width, 9.5em)), 1fr)
+  );
+  gap: 0.75em;
+  min-width: 0;
+}
+
+%cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0.9em 1em;
+  border: 1px solid var(--cm-border-color);
+  border-radius: 0.6em;
+  background: var(--metric-cell-bg, var(--cm-bg-elevated));
+  color: var(--cm-text-primary);
+}
+
+// Radial gauge
+.gauge {
+  @extend %cell;
+  align-items: center;
+  text-align: center;
+}
+
+.gaugeDial {
+  position: relative;
+  width: 6.5em;
+  max-width: 100%;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+}
+
+.gaugeTrack,
+.gaugeValue {
+  fill: none;
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+
+.gaugeTrack {
+  stroke: var(--cm-bg-sunken);
+}
+
+.gaugeValue {
+  stroke: var(--metric-color, var(--cm-primary));
+  transition: stroke-dasharray 0.4s ease;
+}
+
+.gaugeText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--metric-color, var(--cm-text-primary));
+  font-size: 1.25em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.gaugeLabel {
+  margin-top: -0.4em;
+  color: var(--cm-text-primary);
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.gaugeDetail {
+  margin-top: 0.2em;
+  color: var(--cm-text-secondary);
+  font-size: 0.75em;
+  overflow-wrap: anywhere;
+}
+
+// Stat tile
+.tile {
+  @extend %cell;
+  gap: 0.35em;
+}
+
+.tileHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  min-width: 0;
+  color: var(--cm-text-secondary);
+  font-size: 0.82em;
+  font-weight: 600;
+}
+
+.tileIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.9em;
+  height: 1.9em;
+  border-radius: 0.45em;
+  background: rgba(var(--metric-color-rgb, var(--cm-primary-rgb)), 0.15);
+  color: var(--metric-color, var(--cm-primary));
+  font-size: 1.05em;
+}
+
+.tileLabel {
+  min-width: 0;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.tileValue {
+  color: var(--metric-color, var(--cm-text-primary));
+  font-size: 1.3em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.tile.neutral .tileValue {
+  color: var(--cm-text-primary);
+}
+
+.tileDetail {
+  color: var(--cm-text-secondary);
+  font-size: 0.78em;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+// Segmented bar
+.segmented {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+  min-width: 0;
+}
+
+.segmentedTrack {
+  display: flex;
+  height: 0.6em;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--cm-bg-sunken);
+}
+
+.segment {
+  height: 100%;
+  background: var(--metric-color);
+  transition: width 0.4s ease;
+
+  & + & {
+    border-inline-start: 2px solid var(--metric-cell-bg, var(--cm-bg-elevated));
+  }
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35em 1em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8em;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    min-width: 0;
+  }
+}
+
+.legendSwatch {
+  flex-shrink: 0;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 0.2em;
+  background: var(--metric-color);
+}
+
+.legendLabel {
+  color: var(--cm-text-secondary);
+}
+
+.legendValue {
+  color: var(--cm-text-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gaugeValue,
+  .segment {
+    transition: none;
+  }
+}

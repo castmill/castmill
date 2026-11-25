@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, fireEvent } from '@solidjs/testing-library';
 import '@testing-library/jest-dom';
+import { createSignal } from 'solid-js';
 import { BaseMenu, MenuEntry } from '../src/components/basemenu.component';
 
 describe('BaseMenu component', () => {
@@ -38,6 +39,23 @@ describe('BaseMenu component', () => {
         ],
       },
     ];
+  });
+
+  it('draws submenu arrows without font glyphs', () => {
+    const { getByText } = render(() => (
+      <BaseMenu header={<div>Menu Header</div>} entries={mockEntries} />
+    ));
+    fireEvent.click(window);
+
+    // Rows are rebuilt when a submenu opens: look the header up each time.
+    const arrow = () => getByText('Submenu Item').querySelector('svg')!;
+    // Some players' fonts have no "▶" and showed an empty box.
+    expect(getByText('Submenu Item').textContent).not.toMatch(/[▶▼]/);
+    expect(arrow().getAttribute('data-expanded')).toBe('false');
+
+    fireEvent.click(getByText('Submenu Item'));
+    expect(getByText('Sub Action')).toBeInTheDocument();
+    expect(arrow().getAttribute('data-expanded')).toBe('true');
   });
 
   it('shows menu on click', () => {
@@ -239,6 +257,94 @@ describe('BaseMenu component', () => {
 
     // Assert the menu is no longer visible
     expect(queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  describe('rows that change while the menu is open', () => {
+    const key = (keyCode: number) => fireEvent.keyDown(window, { keyCode });
+    const action = (id: string, fn = vi.fn()) =>
+      ({ id, name: id, type: 'action', action: fn }) as MenuEntry;
+
+    it('keeps the selection on its row when rows are reordered', () => {
+      const a = vi.fn();
+      const b = vi.fn();
+      const [entries, setEntries] = createSignal<MenuEntry[]>([
+        action('A', a),
+        action('B', b),
+      ]);
+      render(() => <BaseMenu header={<div />} entries={entries()} />);
+      fireEvent.click(window);
+      key(40); // select B
+
+      setEntries([action('B', b), action('New'), action('A', a)]);
+      key(13);
+      expect(b).toHaveBeenCalledTimes(1);
+      expect(a).not.toHaveBeenCalled();
+    });
+
+    it('falls back to the nearest row when the selected one disappears', () => {
+      const last = vi.fn();
+      const [entries, setEntries] = createSignal<MenuEntry[]>([
+        action('A'),
+        action('B'),
+        action('C'),
+      ]);
+      render(() => <BaseMenu header={<div />} entries={entries()} />);
+      fireEvent.click(window);
+      key(40);
+      key(40); // select C
+
+      setEntries([action('A'), action('Last', last)]);
+      expect(() => key(13)).not.toThrow();
+      expect(last).toHaveBeenCalledTimes(1);
+
+      setEntries([]);
+      expect(() => {
+        key(40);
+        key(13);
+      }).not.toThrow();
+    });
+
+    it('scrolls the selected row into view', () => {
+      const scrollIntoView = vi.fn();
+      Element.prototype.scrollIntoView = scrollIntoView;
+      render(() => (
+        <BaseMenu header={<div />} entries={[action('A'), action('B')]} />
+      ));
+      fireEvent.click(window);
+      scrollIntoView.mockClear();
+      key(40);
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
+      expect(document.querySelector('li[data-selected]')).toHaveTextContent(
+        'B'
+      );
+    });
+  });
+
+  it('stays open longer once a field has focus or input', () => {
+    vi.useFakeTimers();
+    const { getByRole, queryByRole } = render(() => (
+      <BaseMenu
+        header={<div />}
+        entries={[{ id: 'name', type: 'input', name: 'Name', action: vi.fn() }]}
+      />
+    ));
+    fireEvent.click(window);
+    const input = getByRole('menu').querySelector('input')!;
+
+    // Focus alone (no key press yet) starts the longer timeout.
+    input.focus();
+    vi.advanceTimersByTime(30_000);
+    expect(queryByRole('menu')).toBeInTheDocument();
+
+    // So does input without keydown (pasting, on-screen keyboards).
+    vi.advanceTimersByTime(25_000);
+    fireEvent.input(input, { target: { value: 'pasted' } });
+    vi.advanceTimersByTime(30_000);
+    expect(queryByRole('menu')).toBeInTheDocument();
+
+    vi.advanceTimersByTime(31_000);
+    expect(queryByRole('menu')).not.toBeInTheDocument();
+    vi.useRealTimers();
   });
 
   describe('radio buttons', () => {

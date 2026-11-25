@@ -394,6 +394,30 @@ describe('TableView Component - Sorting Functionality', () => {
     });
   });
 
+  it('toggles the initial sort column on the first click', async () => {
+    render(() => (
+      <TableView
+        {...defaultProps}
+        initialSortOptions={{ key: 'name', direction: 'ascending' }}
+      />
+    ));
+
+    await waitFor(() => {
+      expect(screen.getByText('Resource A')).toBeInTheDocument();
+    });
+
+    mockFetchData.mockClear();
+    fireEvent.click(screen.getByText('Name'));
+
+    await waitFor(() => {
+      expect(mockFetchData).toHaveBeenCalled();
+    });
+    expect(mockFetchData.mock.calls[0][0].sortOptions).toEqual({
+      key: 'name',
+      direction: 'descending',
+    });
+  });
+
   it('toggles sort direction when same column is clicked twice', async () => {
     mockFetchData.mockClear();
     render(() => <TableView {...defaultProps} />);

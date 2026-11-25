@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+} from '@solidjs/testing-library';
 import type { JsonPlaylistItem, JsonWidget } from '@castmill/player';
 import { PlaylistItems } from './playlist-items';
 import { PlaylistsService } from '../services/playlists.service';
@@ -23,12 +29,16 @@ globalThis.ResizeObserver ??= class {
 } as any;
 
 vi.mock('./widget-config', () => ({
-  WidgetConfig: (props: any) => (
-    <div data-testid="widget-config">
-      <button onClick={() => props.onDirtyChange?.(true)}>make-dirty</button>
-      <button onClick={() => props.onCancel?.()}>cancel-config</button>
-    </div>
-  ),
+  WidgetConfig: (props: any) => {
+    // A widget whose settings form fails to render.
+    if (props.item.widget.slug === 'broken') throw new Error('bad schema');
+    return (
+      <div data-testid="widget-config">
+        <button onClick={() => props.onDirtyChange?.(true)}>make-dirty</button>
+        <button onClick={() => props.onCancel?.()}>cancel-config</button>
+      </div>
+    );
+  },
 }));
 
 const widget = (id: number, name: string) =>
@@ -160,6 +170,33 @@ describe('PlaylistItems', () => {
       config: { options: {} },
       expandedOptions: {},
     });
+  });
+
+  it('recovers when a widget settings form fails to render', async () => {
+    let add: ((w: JsonWidget, index?: number) => Promise<void>) | undefined;
+    const props = renderItems({
+      onAddWidgetReady: (fn: typeof add) => (add = fn),
+    });
+    const broken = {
+      ...widget(8, 'Broken'),
+      options_schema: { url: { type: 'url' } },
+    } as unknown as JsonWidget;
+
+    const adding = add!(broken);
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('playlists.widgetConfigFailed');
+
+    // Closing settles the add, so the editor can add other widgets.
+    fireEvent.click(within(alert).getByRole('button'));
+    await adding;
+    expect(props.onInsertItem).not.toHaveBeenCalled();
+
+    await add!(widget(9, 'Clock'));
+    expect(props.onInsertItem).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Clock' }),
+      3,
+      expect.anything()
+    );
   });
 
   it('reports missing credentials instead of adding the widget', async () => {

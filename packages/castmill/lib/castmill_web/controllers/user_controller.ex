@@ -79,7 +79,10 @@ defmodule CastmillWeb.UserController do
   end
 
   def delete(conn, %{"organization_id" => organization_id, "id" => id}) do
-    with {:ok, _} <- Organizations.remove_user(organization_id, id) do
+    with {:ok, _} <-
+           Organizations.remove_user(organization_id, id,
+             actor_id: CastmillWeb.CurrentUser.id(conn)
+           ) do
       send_resp(conn, :no_content, "")
     else
       {:error, :not_found} ->

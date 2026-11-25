@@ -1064,7 +1064,8 @@
       "keepEditing": "继续编辑",
       "removeItemTitle": "移除项目？",
       "removeItemMessage": "要从此播放列表中移除“{{name}}”吗？"
-    }
+    },
+    "widgetConfigFailed": "无法显示此小组件的设置。请关闭此窗口并选择其他小组件。"
   },
   "layouts": {
     "title": "布局",
@@ -1337,6 +1338,24 @@
       "currentlyPlaying": "当前从频道安排",
       "note": "这显示设备现在根据频道时间表应该播放的内容，不一定是设备上实际显示的内容。"
     },
+    "health": {
+      "title": "设备健康状况",
+      "description": "播放器资源、在线时长和缓存的概览。",
+      "refresh": "刷新健康指标",
+      "offline": "设备离线。设备连接后将显示健康指标。",
+      "loadError": "无法从设备加载健康指标。",
+      "loading": "正在加载健康指标…",
+      "noData": "此设备未报告任何健康指标。",
+      "appMemory": "应用内存",
+      "cpu": "处理器",
+      "onlineFor": "在线时长",
+      "playerUptime": "播放器运行时间",
+      "systemUptime": "系统运行时间",
+      "cacheSize": "缓存大小",
+      "cacheItems": "{{count}} 个缓存项",
+      "cacheUsage": "按类型的缓存使用情况",
+      "usedOf": "{{used}} / {{total}}"
+    },
     "telemetry": {
       "placeholder": "跟踪、日志、指标和连接性(WiFi质量等)",
       "storage": "存储",
@@ -1474,6 +1493,15 @@
       "playerVersion": "播放器版本",
       "operatingSystem": "操作系统",
       "hardware": "硬件",
+      "cpu": "处理器",
+      "memory": "内存",
+      "gpu": "图形",
+      "graphicsAcceleration": "图形加速",
+      "graphicsAccelerationHardware": "硬件 (GPU)",
+      "graphicsAccelerationSoftware": "仅软件 (CPU)",
+      "videoDecoding": "硬件视频解码",
+      "videoDecodingNone": "无",
+      "display": "显示器",
       "environmentVersion": "环境版本",
       "chromiumVersion": "Chromium 版本",
       "v8Version": "V8 版本",
@@ -1504,6 +1532,51 @@
       "removed": "已移除频道“{{name}}”",
       "addError": "添加频道失败：{{error}}",
       "removeError": "移除频道失败：{{error}}"
+    },
+    "osUpdate": {
+      "title": "Castmill OS",
+      "thisDevice": "此设备",
+      "currentVersion": "运行版本",
+      "status": "更新状态",
+      "targetVersion": "目标版本",
+      "none": "无",
+      "hardwareFamily": "硬件系列",
+      "lastError": "最后错误",
+      "reportedAt": "最后报告",
+      "version": "要安装的版本",
+      "followOrganization": "遵循组织设置",
+      "updateNow": "立即更新",
+      "organization": "组织",
+      "organizationHelp": "适用于组织中所有遵循此设置的 Castmill OS 设备。设备在维护时段内安装更新。",
+      "policy": "更新策略",
+      "policyManual": "手动：仅限有单独版本的设备",
+      "policyLatest": "始终使用最新版本",
+      "policyVersion": "保持在 {{version}}",
+      "includePrereleases": "包括预发布版本",
+      "noReleases": "暂无 Castmill OS 版本。",
+      "prerelease": "{{version}}（预发布）",
+      "prereleaseTag": "预发布",
+      "securityTag": "安全更新",
+      "saved": "已保存",
+      "saveFailed": "无法保存：{{error}}",
+      "loadFailed": "无法加载系统版本和组织策略。",
+      "retry": "重试",
+      "state": {
+        "idle": "已是最新",
+        "installing": "正在下载并安装",
+        "installed": "已安装 {{version}}，等待维护时段",
+        "activating": "正在重启到 {{version}}",
+        "running": "{{version}} 运行中",
+        "rolledBack": "{{version}} 已回滚",
+        "failed": "更新失败",
+        "unsupported": "此设备无法安装更新"
+      }
+    },
+    "location": {
+      "title": "位置",
+      "help": "此屏幕所在的位置。无法自行定位的设备（例如 Castmill OS）将使用此位置。",
+      "search": "位置",
+      "clear": "清除位置"
     }
   },
   "validation": {
@@ -1593,12 +1666,18 @@
       "rejectError": "拒绝邀请时出错",
       "accountCreated": "帐户创建成功！",
       "accountCreationFailed": "创建帐户失败",
-      "passkeysNotSupported": "此浏览器不支持通行密钥"
+      "passkeysNotSupported": "此浏览器不支持通行密钥",
+      "passkeyNotFound": "未使用通行密钥。如果此设备上没有您账户的通行密钥，我们可以通过电子邮件向您发送添加通行密钥的链接。",
+      "lostPasskey": "丢失了通行密钥？通过电子邮件发送添加链接",
+      "sendingRecovery": "正在发送…",
+      "recoverySent": "请查收电子邮件并点击链接添加通行密钥，然后重新打开此邀请。",
+      "recoveryFailed": "无法发送电子邮件，请重试。"
     },
     "notifications": {
       "title": "通知",
       "empty": "暂无通知",
       "markAllRead": "标记全部为已读",
+      "byUser": "由 {{name}}",
       "types": {
         "organizationInvitation": {
           "title": "组织邀请",
@@ -1681,6 +1760,7 @@
     "gotoOrganization": "转到组织",
     "gotoTeams": "转到团队",
     "gotoDevices": "转到设备",
+    "then": "然后",
     "search": "搜索",
     "globalSearch": "全局搜索",
     "pageSearch": "在当前页面搜索",
@@ -2118,6 +2198,7 @@
     "title": "自动化",
     "description": "让显示屏对事件做出反应，例如在特定时间用其他内容打断播放。",
     "new": "新建自动化",
+    "quotaReached": "已达到自动化配额：请删除一个自动化或升级您的套餐以添加更多。",
     "newDescription": "为自动化命名。之后可以添加规则并分配显示屏。",
     "namePlaceholder": "例如：每小时春季优惠",
     "created": "已创建自动化“{{name}}”",

@@ -7,6 +7,7 @@
   margin-bottom: 0.9em;
 }
 
+.device-cache-name,
 .device-cache-url,
 .device-cache-mime {
   display: block;
@@ -22,9 +23,9 @@
 }
 
 /*
- * Columns: select, timestamp, URL, size, accessed, MIME type, actions.
- * The URL absorbs the remaining width; selection and delete stay visible,
- * while the least important columns are dropped on narrow cards.
+ * Columns: select, timestamp, name, URL, size, accessed, MIME type, actions.
+ * The name and URL share the remaining width; selection and delete stay
+ * visible, while the least important columns are dropped on narrow cards.
  */
 .device-cache-table {
   th:nth-child(1) {
@@ -35,25 +36,25 @@
     width: 11.5em;
   }
 
-  th:nth-child(4) {
-    width: 6em;
-  }
-
   th:nth-child(5) {
     width: 6em;
   }
 
   th:nth-child(6) {
-    width: 9em;
+    width: 6em;
   }
 
   th:nth-child(7) {
+    width: 9em;
+  }
+
+  th:nth-child(8) {
     width: 4.5em;
   }
 
   @container (max-width: 48em) {
-    th:nth-child(6),
-    td:nth-child(6) {
+    th:nth-child(7),
+    td:nth-child(7) {
       display: none;
     }
   }
@@ -63,22 +64,27 @@
       width: 6em;
     }
 
-    th:nth-child(4) {
-      width: 4.5em;
+    th:nth-child(4),
+    td:nth-child(4) {
+      display: none;
     }
 
     th:nth-child(5) {
+      width: 4.5em;
+    }
+
+    th:nth-child(6) {
       width: 4em;
     }
 
-    th:nth-child(7) {
+    th:nth-child(8) {
       width: 3em;
     }
   }
 
   @container (max-width: 30em) {
-    th:nth-child(5),
-    td:nth-child(5) {
+    th:nth-child(6),
+    td:nth-child(6) {
       display: none;
     }
   }
@@ -88,11 +94,11 @@
       width: 5.5em;
     }
 
-    th:nth-child(4) {
+    th:nth-child(5) {
       width: 4em;
     }
 
-    th:nth-child(7) {
+    th:nth-child(8) {
       width: 2.5em;
     }
   }

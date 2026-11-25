@@ -70,6 +70,65 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
       assert_receive %{event: "orientation_updated", orientation: 90}
     end
 
+    test "sets and clears the device location", %{conn: conn, organization: organization} do
+      device = device_fixture(%{organization_id: organization.id})
+      path = "/api/organizations/#{organization.id}/devices/#{device.id}"
+
+      response =
+        conn
+        |> patch(path, %{"update" => %{"loc_lat" => 59.33, "loc_long" => 18.07}})
+        |> json_response(200)
+
+      assert response["loc_lat"] == 59.33 and response["loc_long"] == 18.07
+
+      conn
+      |> patch(path, %{"update" => %{"loc_lat" => nil, "loc_long" => nil}})
+      |> json_response(200)
+
+      assert %{loc_lat: nil, loc_long: nil} = Castmill.Devices.get_device(device.id)
+    end
+
+    test "rejects a location out of range or with one coordinate", %{
+      conn: conn,
+      organization: organization
+    } do
+      device = device_fixture(%{organization_id: organization.id})
+      path = "/api/organizations/#{organization.id}/devices/#{device.id}"
+
+      for update <- [
+            %{"loc_lat" => 91, "loc_long" => 0},
+            %{"loc_lat" => 0, "loc_long" => -181},
+            %{"loc_lat" => 10}
+          ] do
+        conn |> patch(path, %{"update" => update}) |> json_response(422)
+      end
+
+      assert %{loc_lat: nil, loc_long: nil} = Castmill.Devices.get_device(device.id)
+    end
+
+    test "ignores fields that only the server sets", %{conn: conn, organization: organization} do
+      device = device_fixture(%{organization_id: organization.id})
+      other = organization_fixture(%{network_id: organization.network_id, name: "Other org"})
+
+      conn
+      |> patch("/api/organizations/#{organization.id}/devices/#{device.id}", %{
+        "update" => %{
+          "name" => "Lobby screen",
+          "organization_id" => other.id,
+          "hardware_id" => "stolen",
+          "online" => true,
+          "version" => "9.9.9"
+        }
+      })
+      |> json_response(200)
+
+      saved = Castmill.Devices.get_device(device.id)
+      assert saved.name == "Lobby screen"
+      assert saved.organization_id == organization.id
+      assert saved.hardware_id == device.hardware_id
+      assert saved.version == device.version
+    end
+
     test "rejects invalid orientation without changing the saved value", %{
       conn: conn,
       organization: organization

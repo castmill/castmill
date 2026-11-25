@@ -1059,7 +1059,8 @@
       "keepEditing": "Fortsätt redigera",
       "removeItemTitle": "Ta bort objekt?",
       "removeItemMessage": "Ta bort \"{{name}}\" från den här spellistan?"
-    }
+    },
+    "widgetConfigFailed": "Widgetens inställningar kunde inte visas. Stäng fönstret och välj en annan widget."
   },
   "layouts": {
     "title": "Layouter",
@@ -1332,6 +1333,24 @@
       "currentlyPlaying": "För närvarande schemalagt från kanal",
       "note": "Detta visar vad enheten borde spela nu baserat på kanalscheman, inte nödvändigtvis vad som faktiskt visas på enheten."
     },
+    "health": {
+      "title": "Enhetens hälsa",
+      "description": "Snabb översikt över spelarens resurser, onlinetid och cache.",
+      "refresh": "Uppdatera hälsomätvärden",
+      "offline": "Enheten är offline. Hälsomätvärden visas när den är ansluten.",
+      "loadError": "Det gick inte att läsa in hälsomätvärden från enheten.",
+      "loading": "Läser in hälsomätvärden…",
+      "noData": "Enheten har inte rapporterat några hälsomätvärden.",
+      "appMemory": "Appminne",
+      "cpu": "Processor",
+      "onlineFor": "Online i",
+      "playerUptime": "Spelarens drifttid",
+      "systemUptime": "Systemets drifttid",
+      "cacheSize": "Cachestorlek",
+      "cacheItems": "{{count}} cachade objekt",
+      "cacheUsage": "Cacheanvändning per typ",
+      "usedOf": "{{used}} av {{total}}"
+    },
     "telemetry": {
       "placeholder": "Spår, loggar, mätvärden och anslutning (WiFi-kvalitet osv.)",
       "storage": "Lagring",
@@ -1469,6 +1488,15 @@
       "playerVersion": "Spelarversion",
       "operatingSystem": "Operativsystem",
       "hardware": "Maskinvara",
+      "cpu": "Processor",
+      "memory": "Minne",
+      "gpu": "Grafik",
+      "graphicsAcceleration": "Grafikacceleration",
+      "graphicsAccelerationHardware": "Hårdvara (GPU)",
+      "graphicsAccelerationSoftware": "Endast mjukvara (CPU)",
+      "videoDecoding": "Hårdvaruavkodning av video",
+      "videoDecodingNone": "Ingen",
+      "display": "Skärm",
       "environmentVersion": "Miljöversion",
       "chromiumVersion": "Chromium-version",
       "v8Version": "V8-version",
@@ -1499,6 +1527,51 @@
       "removed": "Kanalen \"{{name}}\" har tagits bort",
       "addError": "Kunde inte lägga till kanalen: {{error}}",
       "removeError": "Kunde inte ta bort kanalen: {{error}}"
+    },
+    "osUpdate": {
+      "title": "Castmill OS",
+      "thisDevice": "Den här enheten",
+      "currentVersion": "Version som körs",
+      "status": "Uppdateringsstatus",
+      "targetVersion": "Målversion",
+      "none": "Ingen",
+      "hardwareFamily": "Hårdvarufamilj",
+      "lastError": "Senaste fel",
+      "reportedAt": "Senaste rapport",
+      "version": "Version att installera",
+      "followOrganization": "Följ organisationen",
+      "updateNow": "Uppdatera nu",
+      "organization": "Organisation",
+      "organizationHelp": "Gäller alla Castmill OS-enheter i organisationen som följer den. Enheterna installerar uppdateringar i sitt underhållsfönster.",
+      "policy": "Uppdateringspolicy",
+      "policyManual": "Manuell: bara enheter med egen version",
+      "policyLatest": "Alltid den senaste versionen",
+      "policyVersion": "Stanna på {{version}}",
+      "includePrereleases": "Ta med förhandsversioner",
+      "noReleases": "Inga Castmill OS-versioner ännu.",
+      "prerelease": "{{version}} (förhandsversion)",
+      "prereleaseTag": "förhandsversion",
+      "securityTag": "säkerhetsuppdatering",
+      "saved": "Sparat",
+      "saveFailed": "Kunde inte spara: {{error}}",
+      "loadFailed": "Det gick inte att läsa in OS-versionerna och organisationens policy.",
+      "retry": "Försök igen",
+      "state": {
+        "idle": "Uppdaterad",
+        "installing": "Laddar ner och installerar",
+        "installed": "{{version}} installerad, väntar på underhållsfönstret",
+        "activating": "Startar om med {{version}}",
+        "running": "{{version}} körs",
+        "rolledBack": "{{version}} återställd",
+        "failed": "Uppdateringen misslyckades",
+        "unsupported": "Den här enheten kan inte installera uppdateringar"
+      }
+    },
+    "location": {
+      "title": "Plats",
+      "help": "Var den här skärmen finns. Enheter som inte kan avgöra sin plats själva (som Castmill OS) använder den här platsen.",
+      "search": "Plats",
+      "clear": "Rensa plats"
     }
   },
   "validation": {
@@ -1588,12 +1661,18 @@
       "rejectError": "Fel vid avvisning av inbjudan",
       "accountCreated": "Konto skapat!",
       "accountCreationFailed": "Misslyckades att skapa konto",
-      "passkeysNotSupported": "Passkeys stöds inte i denna webbläsare"
+      "passkeysNotSupported": "Passkeys stöds inte i denna webbläsare",
+      "passkeyNotFound": "Ingen nyckel användes. Om den här enheten saknar en nyckel för ditt konto kan vi mejla dig en länk för att lägga till en.",
+      "lostPasskey": "Har du tappat bort din nyckel? Mejla mig en länk för att lägga till en",
+      "sendingRecovery": "Skickar…",
+      "recoverySent": "Kolla din e-post och följ länken för att lägga till en nyckel, och öppna sedan inbjudan igen.",
+      "recoveryFailed": "Det gick inte att skicka e-postmeddelandet. Försök igen."
     },
     "notifications": {
       "title": "Notifikationer",
       "empty": "Inga notifikationer än",
       "markAllRead": "Markera alla som lästa",
+      "byUser": "av {{name}}",
       "types": {
         "organizationInvitation": {
           "title": "Organisationsinbjudan",
@@ -1676,6 +1755,7 @@
     "gotoOrganization": "Gå till Organisation",
     "gotoTeams": "Gå till Team",
     "gotoDevices": "Gå till Enheter",
+    "then": "sedan",
     "search": "Sök",
     "globalSearch": "Global sökning",
     "pageSearch": "Sök på aktuell sida",
@@ -2113,6 +2193,7 @@
     "title": "Automatiseringar",
     "description": "Låt skärmarna reagera på händelser, till exempel genom att avbryta uppspelningen med annat innehåll vid vissa tider.",
     "new": "Ny automatisering",
+    "quotaReached": "Kvoten för automatiseringar är nådd: ta bort en automatisering eller uppgradera din plan för att lägga till fler.",
     "newDescription": "Ge automatiseringen ett namn. Du kan lägga till regler och tilldela skärmar efteråt.",
     "namePlaceholder": "t.ex. Vårerbjudande varje timme",
     "created": "Automatiseringen \"{{name}}\" skapades",

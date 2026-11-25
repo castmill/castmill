@@ -35,6 +35,8 @@ export type ShortcutCategory = 'global' | 'navigation' | 'actions';
 
 export interface KeyboardShortcut {
   key: string;
+  /** Prefix key of a two-key sequence, e.g. 'G' for "G then C". */
+  sequence?: string;
   ctrl?: boolean;
   shift?: boolean;
   alt?: boolean;
@@ -97,7 +99,10 @@ export interface AddonStore {
     ) => void;
     unregisterShortcutAction: (id: string) => void;
     getShortcuts: () => Map<string, KeyboardShortcut>;
-    formatShortcut: (shortcut: KeyboardShortcut) => string;
+    formatShortcut: (
+      shortcut: KeyboardShortcut,
+      options?: { thenLabel?: string }
+    ) => string;
     isMac: () => boolean;
     isMobile: () => boolean;
   };

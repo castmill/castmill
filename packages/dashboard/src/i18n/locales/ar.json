@@ -1064,7 +1064,8 @@
       "keepEditing": "متابعة التحرير",
       "removeItemTitle": "إزالة العنصر؟",
       "removeItemMessage": "هل تريد إزالة \"{{name}}\" من قائمة التشغيل هذه؟"
-    }
+    },
+    "widgetConfigFailed": "تعذر عرض إعدادات هذه الأداة. أغلق هذه النافذة واختر أداة أخرى."
   },
   "layouts": {
     "title": "التخطيطات",
@@ -1337,6 +1338,24 @@
       "currentlyPlaying": "مجدول حاليا من القناة",
       "note": "يوضح هذا ما يجب أن يعرضه الجهاز الآن بناءً على جداول القنوات، وليس بالضرورة ما يتم عرضه فعليًا على الجهاز."
     },
+    "health": {
+      "title": "صحة الجهاز",
+      "description": "ملخص سريع لموارد المشغل ومدة الاتصال وذاكرة التخزين المؤقت.",
+      "refresh": "تحديث مقاييس الصحة",
+      "offline": "الجهاز غير متصل. تظهر مقاييس الصحة عند اتصاله.",
+      "loadError": "تعذر تحميل مقاييس الصحة من الجهاز.",
+      "loading": "جارٍ تحميل مقاييس الصحة…",
+      "noData": "لم يرسل هذا الجهاز أي مقاييس صحة.",
+      "appMemory": "ذاكرة التطبيق",
+      "cpu": "المعالج",
+      "onlineFor": "متصل منذ",
+      "playerUptime": "مدة تشغيل المشغل",
+      "systemUptime": "مدة تشغيل النظام",
+      "cacheSize": "حجم ذاكرة التخزين المؤقت",
+      "cacheItems": "{{count}} عنصرًا مخزنًا",
+      "cacheUsage": "استخدام ذاكرة التخزين المؤقت حسب النوع",
+      "usedOf": "{{used}} من {{total}}"
+    },
     "telemetry": {
       "placeholder": "التتبع والسجلات والمقاييس والاتصال (جودة WiFi وما إلى ذلك)",
       "storage": "التخزين",
@@ -1474,6 +1493,15 @@
       "playerVersion": "إصدار المشغل",
       "operatingSystem": "نظام التشغيل",
       "hardware": "الأجهزة",
+      "cpu": "المعالج",
+      "memory": "الذاكرة",
+      "gpu": "الرسومات",
+      "graphicsAcceleration": "تسريع الرسومات",
+      "graphicsAccelerationHardware": "عتادي (GPU)",
+      "graphicsAccelerationSoftware": "برمجي فقط (CPU)",
+      "videoDecoding": "فك ترميز الفيديو بالعتاد",
+      "videoDecodingNone": "لا شيء",
+      "display": "الشاشة",
       "environmentVersion": "إصدار البيئة",
       "chromiumVersion": "إصدار Chromium",
       "v8Version": "إصدار V8",
@@ -1504,6 +1532,51 @@
       "removed": "تمت إزالة القناة \"{{name}}\"",
       "addError": "تعذرت إضافة القناة: {{error}}",
       "removeError": "تعذرت إزالة القناة: {{error}}"
+    },
+    "osUpdate": {
+      "title": "Castmill OS",
+      "thisDevice": "هذا الجهاز",
+      "currentVersion": "الإصدار قيد التشغيل",
+      "status": "حالة التحديث",
+      "targetVersion": "الإصدار المستهدف",
+      "none": "لا شيء",
+      "hardwareFamily": "عائلة العتاد",
+      "lastError": "آخر خطأ",
+      "reportedAt": "آخر تقرير",
+      "version": "الإصدار المراد تثبيته",
+      "followOrganization": "اتباع إعدادات المؤسسة",
+      "updateNow": "التحديث الآن",
+      "organization": "المؤسسة",
+      "organizationHelp": "ينطبق على كل أجهزة Castmill OS في المؤسسة التي تتبع إعداداتها. تثبت الأجهزة التحديثات في نافذة الصيانة.",
+      "policy": "سياسة التحديث",
+      "policyManual": "يدوي: الأجهزة ذات الإصدار الخاص فقط",
+      "policyLatest": "دائمًا أحدث إصدار",
+      "policyVersion": "البقاء على {{version}}",
+      "includePrereleases": "تضمين الإصدارات التجريبية",
+      "noReleases": "لا توجد إصدارات Castmill OS بعد.",
+      "prerelease": "{{version}} (تجريبي)",
+      "prereleaseTag": "تجريبي",
+      "securityTag": "تحديث أمني",
+      "saved": "تم الحفظ",
+      "saveFailed": "تعذر الحفظ: {{error}}",
+      "loadFailed": "تعذّر تحميل إصدارات النظام وسياسة المؤسسة.",
+      "retry": "إعادة المحاولة",
+      "state": {
+        "idle": "محدَّث",
+        "installing": "جارٍ التنزيل والتثبيت",
+        "installed": "تم تثبيت {{version}}، بانتظار نافذة الصيانة",
+        "activating": "إعادة التشغيل إلى {{version}}",
+        "running": "{{version}} قيد التشغيل",
+        "rolledBack": "تم التراجع عن {{version}}",
+        "failed": "فشل التحديث",
+        "unsupported": "لا يمكن لهذا الجهاز تثبيت التحديثات"
+      }
+    },
+    "location": {
+      "title": "الموقع",
+      "help": "مكان هذه الشاشة. تستخدم الأجهزة التي لا تستطيع تحديد موقعها بنفسها (مثل Castmill OS) هذا الموقع.",
+      "search": "الموقع",
+      "clear": "مسح الموقع"
     }
   },
   "validation": {
@@ -1593,12 +1666,18 @@
       "rejectError": "خطأ في رفض الدعوة",
       "accountCreated": "تم إنشاء الحساب بنجاح!",
       "accountCreationFailed": "فشل إنشاء الحساب",
-      "passkeysNotSupported": "مفاتيح المرور غير مدعومة في هذا المتصفح"
+      "passkeysNotSupported": "مفاتيح المرور غير مدعومة في هذا المتصفح",
+      "passkeyNotFound": "لم يتم استخدام أي مفتاح مرور. إذا لم يكن على هذا الجهاز مفتاح مرور لحسابك، يمكننا إرسال رابط إليك عبر البريد الإلكتروني لإضافة مفتاح.",
+      "lostPasskey": "هل فقدت مفتاح المرور؟ أرسل لي رابطًا لإضافة مفتاح",
+      "sendingRecovery": "جارٍ الإرسال…",
+      "recoverySent": "تحقق من بريدك الإلكتروني واتبع الرابط لإضافة مفتاح مرور، ثم افتح هذه الدعوة مرة أخرى.",
+      "recoveryFailed": "تعذر إرسال البريد الإلكتروني. يرجى المحاولة مرة أخرى."
     },
     "notifications": {
       "title": "الإشعارات",
       "empty": "لا توجد إشعارات بعد",
       "markAllRead": "وضع علامة مقروء على الكل",
+      "byUser": "بواسطة {{name}}",
       "types": {
         "organizationInvitation": {
           "title": "دعوة المنظمة",
@@ -1681,6 +1760,7 @@
     "gotoOrganization": "الانتقال إلى المنظمة",
     "gotoTeams": "الانتقال إلى الفرق",
     "gotoDevices": "الانتقال إلى الأجهزة",
+    "then": "ثم",
     "search": "بحث",
     "globalSearch": "بحث عام",
     "pageSearch": "البحث في الصفحة الحالية",
@@ -2118,6 +2198,7 @@
     "title": "الأتمتة",
     "description": "اجعل الشاشات تستجيب للأحداث، مثل مقاطعة التشغيل بمحتوى آخر في أوقات محددة.",
     "new": "أتمتة جديدة",
+    "quotaReached": "تم الوصول إلى حد الأتمتة: احذف أتمتة أو قم بترقية خطتك لإضافة المزيد.",
     "newDescription": "أدخل اسمًا للأتمتة. يمكنك إضافة القواعد وتعيين الشاشات لاحقًا.",
     "namePlaceholder": "مثال: عرض الربيع كل ساعة",
     "created": "تم إنشاء الأتمتة \"{{name}}\"",

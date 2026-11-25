@@ -24,6 +24,14 @@
     text-overflow: ellipsis;
   }
 
+  .toolbar-description {
+    max-width: 52em;
+    margin: 0;
+    color: var(--cm-text-secondary);
+    line-height: 1.5;
+    text-align: start;
+  }
+
   .toolbar-row {
     display: flex;
     flex-direction: row;

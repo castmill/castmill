@@ -4,6 +4,9 @@ import { useKeyboardShortcuts } from '../../hooks';
 import { useI18n } from '../../i18n';
 import { store } from '../../store/store';
 
+/** Prefix key for "go to" navigation sequences, e.g. G then C. */
+export const NAVIGATION_PREFIX = 'G';
+
 interface GlobalShortcutsProps {
   onShowShortcuts: () => void;
 }
@@ -14,7 +17,10 @@ interface GlobalShortcutsProps {
  * Registers global keyboard shortcuts for core pages and addon navigation.
  *
  * NAVIGATION SHORTCUTS (registered here):
- * - Core pages: channels, organization, teams (always available)
+ * - Two-key sequences: press G, then the page key (G C = Channels).
+ *   They deliberately avoid Ctrl/⌘ + letter, which the browser and OS use
+ *   (⌘C copy, ⌘P print, ⌘L address bar, ⌘D bookmark…).
+ * - Core pages: channels (C), organization (O), teams (T) (always available)
  * - Addon pages: dynamically registered from addon metadata (keyboard_shortcut field)
  *
  * Navigation shortcuts are registered here because they need to be globally available
@@ -53,7 +59,7 @@ export const GlobalShortcuts: Component<GlobalShortcutsProps> = (props) => {
 
     registerShortcut('goto-channels', {
       key: 'C',
-      ctrl: true,
+      sequence: NAVIGATION_PREFIX,
       description: () => t('shortcuts.gotoChannels'),
       category: 'navigation',
       action: () => {
@@ -67,7 +73,7 @@ export const GlobalShortcuts: Component<GlobalShortcutsProps> = (props) => {
 
     registerShortcut('goto-organization', {
       key: 'O',
-      ctrl: true,
+      sequence: NAVIGATION_PREFIX,
       description: () => t('shortcuts.gotoOrganization'),
       category: 'navigation',
       action: () => {
@@ -80,8 +86,8 @@ export const GlobalShortcuts: Component<GlobalShortcutsProps> = (props) => {
     });
 
     registerShortcut('goto-teams', {
-      key: 'G',
-      ctrl: true,
+      key: 'T',
+      sequence: NAVIGATION_PREFIX,
       description: () => t('shortcuts.gotoTeams'),
       category: 'navigation',
       action: () => {
@@ -136,7 +142,7 @@ export const GlobalShortcuts: Component<GlobalShortcutsProps> = (props) => {
 
           registerShortcut(shortcutId, {
             key: addon.keyboard_shortcut.key,
-            ctrl: true,
+            sequence: NAVIGATION_PREFIX,
             description: () => t(addon.keyboard_shortcut!.description_key),
             category: 'navigation',
             action: () => {

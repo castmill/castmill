@@ -6,6 +6,7 @@ import {
   JSX,
   createEffect,
   createSignal,
+  ErrorBoundary,
   onCleanup,
   Show,
 } from 'solid-js';
@@ -16,6 +17,7 @@ import {
   OptionsDict,
 } from '@castmill/player';
 import {
+  Button,
   ConfirmDialog,
   Modal,
   ModalRef,
@@ -427,20 +429,38 @@ export const PlaylistItems: Component<{
           ref={(ref) => (configModal = ref)}
           contentClass="widget-config-modal"
         >
-          <WidgetConfig
-            store={props.store}
-            baseUrl={props.baseUrl}
-            item={showModal()!}
-            onSubmit={async ({ config, expandedOptions }) => {
-              closeDialog({ config, expandedOptions });
+          {/* A widget whose settings can't be shown must not break the
+              editor: the dialog stays usable and closing it settles the add. */}
+          <ErrorBoundary
+            fallback={(error) => {
+              console.error('Widget settings failed to render:', error);
+              return (
+                <div class="widget-config-error" role="alert">
+                  <p>{t('playlists.widgetConfigFailed')}</p>
+                  <Button
+                    label={t('common.close')}
+                    color="secondary"
+                    onClick={() => configModal?.close()}
+                  />
+                </div>
+              );
             }}
-            onCancel={() => {
-              if (requestCloseConfig()) configModal?.close();
-            }}
-            onDirtyChange={setConfigDirty}
-            organizationId={props.organizationId}
-            playlistId={props.playlistId}
-          />
+          >
+            <WidgetConfig
+              store={props.store}
+              baseUrl={props.baseUrl}
+              item={showModal()!}
+              onSubmit={async ({ config, expandedOptions }) => {
+                closeDialog({ config, expandedOptions });
+              }}
+              onCancel={() => {
+                if (requestCloseConfig()) configModal?.close();
+              }}
+              onDirtyChange={setConfigDirty}
+              organizationId={props.organizationId}
+              playlistId={props.playlistId}
+            />
+          </ErrorBoundary>
         </Modal>
       </Show>
       <ConfirmDialog

@@ -96,6 +96,36 @@ defmodule CastmillWeb.DeviceUpdatesChannelTest do
     end
   end
 
+  describe "status on join" do
+    test "sends the current status to the dashboard that joins", %{socket: socket, device: device} do
+      {:ok, last_online} = Castmill.Devices.mark_online(device.id, "127.0.0.1")
+      device_id = device.id
+
+      {:ok, _, _} =
+        subscribe_and_join(socket, DeviceUpdatesChannel, "device_updates:#{device_id}")
+
+      assert_push "device:status", %{
+        device_id: ^device_id,
+        online: true,
+        last_online: ^last_online
+      }
+    end
+
+    test "reports a device without a recent heartbeat as offline", %{
+      socket: socket,
+      device: device
+    } do
+      stale = DateTime.add(DateTime.utc_now(), -300, :second) |> DateTime.truncate(:second)
+      {:ok, _} = Castmill.Devices.update_device(device, %{online: true, last_online: stale})
+      device_id = device.id
+
+      {:ok, _, _} =
+        subscribe_and_join(socket, DeviceUpdatesChannel, "device_updates:#{device_id}")
+
+      assert_push "device:status", %{device_id: ^device_id, online: false}
+    end
+  end
+
   describe "handle_info/2" do
     test "broadcasts that the device is online", %{socket: socket, device: device} do
       last_online = DateTime.utc_now()
@@ -153,6 +183,10 @@ defmodule CastmillWeb.DeviceUpdatesChannelTest do
       {:ok, _} = Castmill.Devices.mark_online(device.id, "127.0.0.1")
       {:ok, joined} = DeviceUpdatesChannel.join("device_updates:#{device.id}", %{}, socket)
 
+      # As on a real join: the current status first, then the orientation.
+      assert_receive :push_status
+      assert {:noreply, joined} = DeviceUpdatesChannel.handle_info(:push_status, joined)
+      assert joined.assigns.online
       assert_receive :sync_orientation
       assert {:noreply, _} = DeviceUpdatesChannel.handle_info(:sync_orientation, joined)
       assert_receive %{event: "orientation_updated", orientation: 90}

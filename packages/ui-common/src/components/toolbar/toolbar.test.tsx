@@ -32,6 +32,18 @@ describe('ToolBar Component', () => {
     expect(screen.getByText('Test Toolbar')).toBeInTheDocument();
   });
 
+  it('renders the description under the title', () => {
+    render(() => (
+      <ToolBar title="Automations" description="Make displays react." />
+    ));
+    expect(screen.getByText('Make displays react.').tagName).toBe('P');
+  });
+
+  it('renders no description element without one', () => {
+    const { container } = render(() => <ToolBar title="Devices" />);
+    expect(container.querySelector('.toolbar-description')).toBeNull();
+  });
+
   it('renders the search input correctly when onSearch is provided', () => {
     render(() => <ToolBar onSearch={() => {}} />);
     const searchInputs = screen.getAllByPlaceholderText('Search...');

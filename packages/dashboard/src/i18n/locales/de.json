@@ -1086,7 +1086,8 @@
       "keepEditing": "Weiter bearbeiten",
       "removeItemTitle": "Element entfernen?",
       "removeItemMessage": "\"{{name}}\" aus dieser Playlist entfernen?"
-    }
+    },
+    "widgetConfigFailed": "Die Einstellungen dieses Widgets konnten nicht angezeigt werden. Schließen Sie dieses Fenster und wählen Sie ein anderes Widget."
   },
   "layouts": {
     "title": "Layoutvorlagen",
@@ -1359,6 +1360,24 @@
       "currentlyPlaying": "Derzeit vom Kanal geplant",
       "note": "Dies zeigt, was das Gerät jetzt basierend auf Kanalzeitplänen abspielen sollte, nicht unbedingt, was tatsächlich auf dem Gerät angezeigt wird."
     },
+    "health": {
+      "title": "Gerätezustand",
+      "description": "Überblick über Ressourcen, Online-Zeit und Cache des Players.",
+      "refresh": "Zustandsmetriken aktualisieren",
+      "offline": "Das Gerät ist offline. Zustandsmetriken werden angezeigt, wenn es verbunden ist.",
+      "loadError": "Zustandsmetriken konnten nicht vom Gerät geladen werden.",
+      "loading": "Zustandsmetriken werden geladen…",
+      "noData": "Dieses Gerät hat keine Zustandsmetriken gemeldet.",
+      "appMemory": "App-Speicher",
+      "cpu": "Prozessor",
+      "onlineFor": "Online seit",
+      "playerUptime": "Player-Laufzeit",
+      "systemUptime": "Systemlaufzeit",
+      "cacheSize": "Cache-Größe",
+      "cacheItems": "{{count}} Cache-Einträge",
+      "cacheUsage": "Cache-Nutzung nach Typ",
+      "usedOf": "{{used}} von {{total}}"
+    },
     "telemetry": {
       "placeholder": "Traces, Logs, Metriken und Konnektivität (WiFi-Qualität, etc.)",
       "storage": "Speicher",
@@ -1496,6 +1515,15 @@
       "playerVersion": "Player-Version",
       "operatingSystem": "Betriebssystem",
       "hardware": "Hardware-Ausstattung",
+      "cpu": "Prozessor",
+      "memory": "Arbeitsspeicher",
+      "gpu": "Grafik",
+      "graphicsAcceleration": "Grafikbeschleunigung",
+      "graphicsAccelerationHardware": "Hardware (GPU)",
+      "graphicsAccelerationSoftware": "Nur Software (CPU)",
+      "videoDecoding": "Hardware-Videodekodierung",
+      "videoDecodingNone": "Keine",
+      "display": "Bildschirm",
       "environmentVersion": "Umgebungsversion",
       "chromiumVersion": "Chromium-Version",
       "v8Version": "V8-Version",
@@ -1526,6 +1554,51 @@
       "removed": "Kanal \"{{name}}\" entfernt",
       "addError": "Kanal konnte nicht hinzugefügt werden: {{error}}",
       "removeError": "Kanal konnte nicht entfernt werden: {{error}}"
+    },
+    "osUpdate": {
+      "title": "Castmill OS",
+      "thisDevice": "Dieses Gerät",
+      "currentVersion": "Laufende Version",
+      "status": "Update-Status",
+      "targetVersion": "Zielversion",
+      "none": "Keine",
+      "hardwareFamily": "Hardware-Familie",
+      "lastError": "Letzter Fehler",
+      "reportedAt": "Letzter Bericht",
+      "version": "Zu installierende Version",
+      "followOrganization": "Der Organisation folgen",
+      "updateNow": "Jetzt aktualisieren",
+      "organization": "Organisation",
+      "organizationHelp": "Gilt für alle Castmill-OS-Geräte der Organisation, die ihr folgen. Geräte installieren Updates in ihrem Wartungsfenster.",
+      "policy": "Update-Richtlinie",
+      "policyManual": "Manuell: nur Geräte mit eigener Version",
+      "policyLatest": "Immer die neueste Version",
+      "policyVersion": "Bei {{version}} bleiben",
+      "includePrereleases": "Vorabversionen einbeziehen",
+      "noReleases": "Noch keine Castmill-OS-Versionen.",
+      "prerelease": "{{version}} (Vorabversion)",
+      "prereleaseTag": "Vorabversion",
+      "securityTag": "Sicherheitsupdate",
+      "saved": "Gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen: {{error}}",
+      "loadFailed": "Die OS-Versionen und die Richtlinie der Organisation konnten nicht geladen werden.",
+      "retry": "Erneut versuchen",
+      "state": {
+        "idle": "Aktuell",
+        "installing": "Wird heruntergeladen und installiert",
+        "installed": "{{version}} installiert, wartet auf das Wartungsfenster",
+        "activating": "Neustart mit {{version}}",
+        "running": "{{version}} läuft",
+        "rolledBack": "{{version}} zurückgesetzt",
+        "failed": "Update fehlgeschlagen",
+        "unsupported": "Dieses Gerät kann keine Updates installieren"
+      }
+    },
+    "location": {
+      "title": "Standort",
+      "help": "Wo sich dieser Bildschirm befindet. Geräte, die ihren Standort nicht selbst bestimmen können (wie Castmill OS), verwenden diesen Standort.",
+      "search": "Standort",
+      "clear": "Standort entfernen"
     }
   },
   "validation": {
@@ -1588,12 +1661,18 @@
       "rejectError": "Fehler beim Ablehnen der Einladung",
       "accountCreated": "Konto erfolgreich erstellt!",
       "accountCreationFailed": "Konto konnte nicht erstellt werden",
-      "passkeysNotSupported": "Passkeys werden in diesem Browser nicht unterstützt"
+      "passkeysNotSupported": "Passkeys werden in diesem Browser nicht unterstützt",
+      "passkeyNotFound": "Es wurde kein Passkey verwendet. Wenn dieses Gerät keinen Passkey für Ihr Konto hat, können wir Ihnen einen Link zum Hinzufügen per E-Mail senden.",
+      "lostPasskey": "Passkey verloren? Link zum Hinzufügen per E-Mail senden",
+      "sendingRecovery": "Wird gesendet…",
+      "recoverySent": "Prüfen Sie Ihre E-Mails und folgen Sie dem Link, um einen Passkey hinzuzufügen. Öffnen Sie danach diese Einladung erneut.",
+      "recoveryFailed": "Die E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es erneut."
     },
     "notifications": {
       "title": "Benachrichtigungen",
       "empty": "Noch keine Benachrichtigungen",
       "markAllRead": "Alle als gelesen markieren",
+      "byUser": "von {{name}}",
       "types": {
         "organizationInvitation": {
           "title": "Organisationseinladung",
@@ -1676,6 +1755,7 @@
     "gotoOrganization": "Zur Organisation",
     "gotoTeams": "Zu Teams",
     "gotoDevices": "Zu Geräten",
+    "then": "dann",
     "search": "Suchen",
     "globalSearch": "Globale Suche",
     "pageSearch": "Auf aktueller Seite suchen",
@@ -2113,6 +2193,7 @@
     "title": "Automatisierungen",
     "description": "Lassen Sie Bildschirme auf Ereignisse reagieren, zum Beispiel indem die Wiedergabe zu bestimmten Zeiten durch andere Inhalte unterbrochen wird.",
     "new": "Neue Automatisierung",
+    "quotaReached": "Automatisierungskontingent erreicht: Löschen Sie eine Automatisierung oder erweitern Sie Ihren Plan, um weitere hinzuzufügen.",
     "newDescription": "Geben Sie der Automatisierung einen Namen. Regeln und Bildschirme können Sie danach hinzufügen.",
     "namePlaceholder": "z. B. Stündliches Frühlingsangebot",
     "created": "Automatisierung „{{name}}“ erstellt",

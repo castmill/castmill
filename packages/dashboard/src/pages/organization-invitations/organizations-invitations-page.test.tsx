@@ -411,6 +411,87 @@ describe('OrganizationsInvitationPage', () => {
     });
   });
 
+  describe('Passkey recovery', () => {
+    const setup = async () => {
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
+      vi.mocked(OrganizationsService.previewInvitation).mockResolvedValue(
+        mockExistingUserInvitation
+      );
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() =>
+          Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ passkey_rp_id: 'localhost' }),
+          } as Response)
+        )
+      );
+      return (await import('../../components/auth')).authFetch;
+    };
+
+    it('explains a missing passkey instead of the WebAuthn error', async () => {
+      const authFetch = await setup();
+      const notAllowed = new DOMException(
+        'The operation either timed out or was not allowed.',
+        'NotAllowedError'
+      );
+      vi.stubGlobal('navigator', {
+        credentials: { get: vi.fn().mockRejectedValue(notAllowed) },
+      });
+      vi.mocked(authFetch).mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({ challenge: 'abc', challenge_token: 'tok' }),
+      } as Response);
+
+      renderComponent();
+      fireEvent.click(await screen.findByText('Login with Passkey'));
+
+      expect(
+        await screen.findByText(/No passkey was used/)
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/timed out or was not allowed/)).toBeNull();
+    });
+
+    it('emails a link to add a passkey to the invited account', async () => {
+      const authFetch = await setup();
+      vi.mocked(authFetch).mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ status: 'ok' }),
+      } as Response);
+
+      renderComponent();
+      fireEvent.click(await screen.findByText(/Lost your passkey/));
+
+      await waitFor(() =>
+        expect(authFetch).toHaveBeenCalledWith(
+          'http://localhost:4000/credentials/recover',
+          expect.objectContaining({
+            method: 'POST',
+            body: JSON.stringify({ email: 'existing@example.com' }),
+          })
+        )
+      );
+      expect(
+        await screen.findByText(/Check your email and follow the link/)
+      ).toBeInTheDocument();
+    });
+
+    it('reports a failed recovery request', async () => {
+      const authFetch = await setup();
+      vi.mocked(authFetch).mockResolvedValueOnce({ ok: false } as Response);
+
+      renderComponent();
+      fireEvent.click(await screen.findByText(/Lost your passkey/));
+
+      expect(
+        await screen.findByText('Could not send the email. Please try again.')
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Lost your passkey/)).toBeInTheDocument();
+    });
+  });
+
   describe('Authenticated User Flow', () => {
     it('shows accept button for authenticated user', async () => {
       const { checkAuth, getUser } = await import('../../components/auth');

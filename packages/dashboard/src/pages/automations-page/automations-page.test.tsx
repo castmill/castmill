@@ -9,6 +9,7 @@ import {
 } from '@solidjs/testing-library';
 import { I18nProvider } from '../../i18n';
 import { AutomationsService } from '../../services/automations.service';
+import { QuotasService } from '../../services/quotas.service';
 import { setStore } from '../../store/store';
 import AutomationsPage from './automations-page';
 import { automationFixture } from './test-fixtures';
@@ -43,6 +44,9 @@ vi.mock('../../services/channels.service', () => ({
   },
 }));
 vi.mock('../../components/auth', () => ({ authFetch: vi.fn() }));
+vi.mock('../../services/quotas.service', () => ({
+  QuotasService: { getResourceQuota: vi.fn() },
+}));
 vi.mock('@solidjs/router', () => ({
   useSearchParams: () => [{}, vi.fn()],
   A: (props: { href: string; children: unknown }) => (
@@ -109,6 +113,10 @@ describe('AutomationsPage', () => {
       count: 0,
       data: [],
     });
+    vi.mocked(QuotasService.getResourceQuota).mockResolvedValue({
+      used: 1,
+      total: 5,
+    });
   });
 
   afterEach(() => {
@@ -130,6 +138,76 @@ describe('AutomationsPage', () => {
       within(row).getByTitle('1 devices and 1 channels')
     ).toHaveTextContent('2');
     expect(row).toHaveTextContent('2030');
+  });
+
+  it('shows the description and the automations quota', async () => {
+    renderPage();
+    await findRow();
+    expect(
+      screen.getByText(/Make displays react to events/)
+    ).toBeInTheDocument();
+    expect(QuotasService.getResourceQuota).toHaveBeenCalledWith(
+      'org-1',
+      'automations'
+    );
+    expect(await screen.findByText(/1\/5/)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /New automation/ })
+    ).not.toBeDisabled();
+  });
+
+  it('disables create when the quota is reached', async () => {
+    vi.mocked(QuotasService.getResourceQuota).mockResolvedValue({
+      used: 5,
+      total: 5,
+    });
+    renderPage();
+    await findRow();
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: /New automation/ })
+      ).toBeDisabled()
+    );
+  });
+
+  it('sorts by name ascending first, then by the clicked column', async () => {
+    renderPage();
+    await findRow();
+    expect(AutomationsService.list).toHaveBeenCalledWith(
+      'org-1',
+      expect.objectContaining({
+        sort: { key: 'name', direction: 'ascending' },
+      })
+    );
+    fireEvent.click(screen.getByRole('columnheader', { name: /Enabled/ }));
+    await waitFor(() =>
+      expect(AutomationsService.list).toHaveBeenLastCalledWith(
+        'org-1',
+        expect.objectContaining({
+          sort: { key: 'enabled', direction: 'ascending' },
+        })
+      )
+    );
+  });
+
+  it('ignores a quota response older than the latest request', async () => {
+    let resolveFirst!: (q: { used: number; total: number }) => void;
+    vi.mocked(QuotasService.getResourceQuota)
+      .mockReturnValueOnce(new Promise((resolve) => (resolveFirst = resolve)))
+      .mockResolvedValue({ used: 5, total: 5 });
+    vi.mocked(AutomationsService.remove).mockResolvedValue(undefined);
+    renderPage();
+    const row = await findRow();
+    fireEvent.click(within(row).getByLabelText('Delete Spring campaign'));
+    fireEvent.click(await screen.findByText('Confirm'));
+    expect(await screen.findByText(/5\/5/)).toBeInTheDocument();
+    // The first request answers last: it must not replace 5/5.
+    resolveFirst({ used: 4, total: 5 });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(screen.queryByText(/4\/5/)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /New automation/ })
+    ).toBeDisabled();
   });
 
   it('shows placeholders for automations without rules or firings', async () => {

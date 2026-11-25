@@ -102,9 +102,39 @@
 
 .device-overview {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  align-items: start;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1em;
+}
+
+.device-overview > .device-health {
+  grid-column: 1 / -1;
+}
+
+.device-overview > .device-location {
+  grid-column: 1 / -1;
+}
+
+.device-location-help {
+  margin: 0 0 0.75em;
+  color: var(--cm-text-secondary);
+  font-size: 0.85em;
+}
+
+.device-location-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5em;
+  margin-top: 0.75em;
+}
+
+.device-overview > .device-settings > [data-section-card] {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+
+  .device-settings-fields {
+    flex: 1 0 auto;
+  }
 }
 
 .device-panel-stack {
@@ -382,6 +412,10 @@
     color: var(--cm-text-tertiary);
   }
 
+  &.warning dd {
+    color: var(--cm-warning);
+  }
+
   dt {
     margin-bottom: 0.2em;
     color: var(--cm-primary);
@@ -415,11 +449,49 @@
       white-space: nowrap;
     }
   }
-
 }
 
 @media (max-width: 24em) {
   .device-info-list {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+// Castmill OS updates (device-os-update.tsx)
+.device-os-update {
+  display: grid;
+  gap: 1em;
+}
+
+.device-os-update-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1em;
+  margin-top: 1em;
+}
+
+.device-os-update-help {
+  margin: 0 0 0.5em;
+  color: var(--cm-text-secondary);
+  font-size: 0.85em;
+}
+
+.device-os-update-error {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  margin-bottom: 0.5em;
+
+  .warning {
+    margin: 0;
+    color: var(--cm-warning);
+  }
+}
+
+.device-os-update-releases {
+  margin: 1em 0 0;
+  padding-left: 1.2em;
+  color: var(--cm-text-secondary);
+  font-size: 0.85em;
 }
