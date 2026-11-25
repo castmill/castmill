@@ -159,7 +159,9 @@ The dashboard has no command to quit the player or shut the device down. On play
 
 ### Recover lost settings
 
-If a player loses its stored credentials, it can recover them automatically, but only when it connects from the same IP address as before. **Recover lost settings** lets it reconnect from a different IP address as well. Choose **Enable for one hour**, **Enable forever** or **Disable**.
+If a player loses its stored credentials, **Recover lost settings** lets it reconnect even from a different IP address. New devices default to **Enable forever**. Existing devices keep their current setting. Choose **Enable for one hour**, **Enable forever** or **Disable**.
+
+When recovery is disabled or has expired, the player can still recover from its last known IP address. Otherwise it shows **Automatic recovery is blocked**, with instructions to enable recovery in the dashboard and a link to the [troubleshooting guide](../players/troubleshooting.md#the-screen-shows-automatic-recovery-is-blocked).
 
 ## Removing a device
 

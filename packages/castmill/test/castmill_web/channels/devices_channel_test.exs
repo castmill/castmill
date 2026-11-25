@@ -30,7 +30,50 @@ defmodule CastmillWeb.DevicesChannelTest do
     %{socket: socket, device: device, token: token, organization: organization}
   end
 
+  describe "join/3 - authentication" do
+    test "returns unauthorized for a stale token so the player can recover", %{
+      socket: socket,
+      device: device
+    } do
+      assert {:error, :unauthorized} =
+               subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{
+                 "token" => "stale-token"
+               })
+    end
+
+    test "returns unauthorized for a malformed token", %{socket: socket, device: device} do
+      assert {:error, :unauthorized} =
+               subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{
+                 "token" => nil
+               })
+    end
+
+    test "preserves invalid_device for a removed device", %{socket: socket, token: token} do
+      assert {:error, :invalid_device} =
+               subscribe_and_join(socket, DevicesChannel, "devices:#{Ecto.UUID.generate()}", %{
+                 "token" => token
+               })
+    end
+  end
+
   describe "handle_info/2 - channel_updated" do
+    test "advertises and acknowledges device heartbeats, restoring presence", %{
+      socket: socket,
+      device: device,
+      token: token
+    } do
+      {:ok, %{heartbeat_ack: true}, socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "device_updates:#{device.id}")
+      DevicesChannel.handle_info(:check_heartbeat, socket)
+      assert_receive %{online: false}
+
+      ref = push(socket, "heartbeat", %{})
+      assert_reply ref, :ok
+      assert_receive %{online: true}
+    end
+
     test "broadcasts the server last-online timestamp on status changes", %{
       socket: socket,
       device: device,

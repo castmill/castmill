@@ -31,10 +31,13 @@ defmodule CastmillWeb.DevicesChannel do
         # Castmill OS devices: the OS version they should run
         Process.send_after(self(), :sync_os_update, 2_000)
 
-        {:ok, %{orientation: device.orientation}, socket}
+        {:ok, %{orientation: device.orientation, heartbeat_ack: true}, socket}
 
-      {:error, reason} ->
-        {:error, reason}
+      {:error, :invalid_device} ->
+        {:error, :invalid_device}
+
+      {:error, _reason} ->
+        {:error, :unauthorized}
     end
   end
 
@@ -71,7 +74,7 @@ defmodule CastmillWeb.DevicesChannel do
 
     {:ok, _device} = mark_online(socket)
 
-    {:noreply, socket}
+    {:reply, :ok, socket}
   end
 
   @impl true

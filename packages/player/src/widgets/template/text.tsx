@@ -233,7 +233,14 @@ interface TextProps extends BaseComponentProps {
   opts: TextComponentOptions;
 }
 
-export const Text: Component<TextProps> = (props) => {
+export const Text: Component<TextProps> = (input) => {
+  // JSX option getters otherwise re-resolve every binding on every access.
+  const options = createMemo(() => input.opts);
+  const props = mergeProps(input, {
+    get opts() {
+      return options();
+    },
+  });
   let textRef: HTMLDivElement | undefined;
   const [textElement, setTextElement] = createSignal<HTMLDivElement>();
   let timelineItem: TimelineItem | undefined;
@@ -287,6 +294,7 @@ export const Text: Component<TextProps> = (props) => {
   });
 
   const resetScrollTimeline = () => {
+    const wasScrolling = scrollTimeline !== undefined;
     if (timelineItem) {
       props.timeline.remove(timelineItem);
       timelineItem = undefined;
@@ -298,7 +306,7 @@ export const Text: Component<TextProps> = (props) => {
     }
 
     const element = textRef;
-    if (!element) {
+    if (!element || !wasScrolling) {
       return;
     }
 
@@ -420,15 +428,16 @@ export const Text: Component<TextProps> = (props) => {
       };
 
       fitText();
-      animationFrame = requestAnimationFrame(() => {
-        fitText();
-      });
-      stopObservingResize = observeTextContainerResize(textRef, () => {
-        fitText();
-      });
-      contentObserver = observeTextContentChanges(textRef, () => {
-        fitText();
-      });
+      const requestFit = () => {
+        if (animationFrame !== undefined) return;
+        animationFrame = requestAnimationFrame(() => {
+          animationFrame = undefined;
+          fitText();
+        });
+      };
+      requestFit();
+      stopObservingResize = observeTextContainerResize(textRef, requestFit);
+      contentObserver = observeTextContentChanges(textRef, requestFit);
     }
 
     props.onReady();

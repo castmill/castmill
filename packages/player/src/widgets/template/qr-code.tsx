@@ -118,7 +118,17 @@ export function generateQRModules(
     ERROR_CORRECTION_LEVELS.indexOf(errorCorrectionLevel) !== -1
       ? errorCorrectionLevel
       : 'M';
-  const { modules } = createQRCode(content, {
+  let input: Parameters<typeof createQRCode>[0] = content;
+  if (typeof TextEncoder === 'undefined') {
+    // Byte segments bypass qrcode's TextEncoder dependency on Chromium 38.
+    const encoded = unescape(encodeURIComponent(content));
+    const bytes = new Uint8Array(encoded.length);
+    for (let i = 0; i < encoded.length; i++) {
+      bytes[i] = encoded.charCodeAt(i);
+    }
+    input = [{ data: bytes, mode: 'byte' }];
+  }
+  const { modules } = createQRCode(input, {
     errorCorrectionLevel: level,
   });
   const size = modules.size;

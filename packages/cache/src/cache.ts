@@ -374,7 +374,7 @@ export class Cache extends Dexie {
               // TODO: we probably need a counter here to avoid infinite loops
               if (result.errMsg) {
                 const requiredSpace = parseInt(result.errMsg);
-                await this.freeSpace(requiredSpace);
+                await this.freeSpace(requiredSpace, result.evictableUrls);
                 return this.storeFile(url, type, mimeType, opts);
               } else {
                 throw new Error('Not enough space, and no error message');
@@ -399,11 +399,29 @@ export class Cache extends Dexie {
    *
    * @param size The required extra size needed to make room for the new key.
    */
-  private async freeSpace(size: number) {
+  private async freeSpace(size: number, evictableUrls?: string[]) {
     const count = await this.items.count();
 
     if (size <= 0) {
       return;
+    }
+
+    if (evictableUrls !== undefined) {
+      const urls = new Set(evictableUrls);
+      const candidates = await this.items
+        .orderBy('timestamp')
+        .filter((item) => urls.has(item.url))
+        .toArray();
+      if (candidates.reduce((bytes, item) => bytes + item.size, 0) < size) {
+        throw new Error('Not enough eligible space to free');
+      }
+      let freedSpace = 0;
+      for (const item of candidates) {
+        await this.del(item.url);
+        freedSpace += item.size;
+        if (freedSpace >= size) return;
+      }
+      throw new Error('Could not free enough eligible space');
     }
 
     // TODO: it is possible to keep a totalSize counter and

@@ -708,7 +708,7 @@ export class WebosVideoPlayback implements VideoPlaybackController {
 
   private schedule(offset: number, play: boolean, reload = false): void {
     if (this.disposed) return;
-    this.awaitingFirstRequest = false;
+    if (play) this.awaitingFirstRequest = false;
     if (!reload) this.stallRecovered = false;
     if (play) {
       this.playRequestedAt = Date.now();

@@ -30,6 +30,8 @@ defmodule Castmill.DevicesTest do
                })
 
       assert Devices.list_devices(%{organization_id: organization.id}) == [device]
+      assert Devices.get_device(device.id).autorecover_until == ~U[9999-12-31 23:59:59Z]
+      assert {:ok, _} = Devices.recover_device(device.hardware_id, "128.2.3.1")
     end
 
     for availability <- [:available, :restricted, :hidden, :missing] do
@@ -242,7 +244,8 @@ defmodule Castmill.DevicesTest do
 
       assert {:ok, {device, _token}} =
                Devices.register_device(organization.id, devices_registration.pincode, %{
-                 name: "some device"
+                 name: "some device",
+                 autorecover_until: nil
                })
 
       assert {:ok, _} = Devices.recover_device(device.hardware_id, device.last_ip)
@@ -284,7 +287,8 @@ defmodule Castmill.DevicesTest do
 
       assert {:ok, {device, _token}} =
                Devices.register_device(organization.id, devices_registration.pincode, %{
-                 name: "some device"
+                 name: "some device",
+                 autorecover_until: nil
                })
 
       assert {:error, :recovery_blocked} = Devices.recover_device(device.hardware_id, "128.2.3.1")

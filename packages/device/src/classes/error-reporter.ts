@@ -1,4 +1,5 @@
 import { Channel } from 'phoenix';
+import { DeviceSessionMonitor } from './session-monitor';
 
 export const ERROR_REPORT_LIMITS = {
   maxReports: 50,
@@ -353,6 +354,7 @@ export class DeviceErrorReporter {
   private runtimeCaptureEnabled = false;
   private initialized = false;
   private storageKey?: string;
+  private sessionMonitor?: DeviceSessionMonitor;
   private readonly onWindowError = (event: ErrorEvent) => {
     this.reportGlobalError(
       event.error || event.message || 'Uncaught runtime error'
@@ -392,7 +394,10 @@ export class DeviceErrorReporter {
     void this.persist();
   };
 
-  constructor(private storage?: ErrorReportStorage) {}
+  constructor(
+    private storage?: ErrorReportStorage,
+    private options: { trackSession?: boolean } = {}
+  ) {}
 
   enableRuntimeCapture(): void {
     if (this.runtimeCaptureEnabled || typeof window === 'undefined') {
@@ -413,6 +418,8 @@ export class DeviceErrorReporter {
     }
 
     if (this.storageKey && this.storageKey !== storageKey) {
+      this.sessionMonitor?.stop();
+      this.sessionMonitor = undefined;
       this.reports.clear();
       this.droppedCount = 0;
       this.droppedReportId = undefined;
@@ -506,6 +513,32 @@ export class DeviceErrorReporter {
       this.droppedCount = 0;
       this.droppedReportId = undefined;
     }
+    if (this.options.trackSession) {
+      const storage = this.getStorage();
+      if (storage) {
+        this.sessionMonitor = new DeviceSessionMonitor(
+          storage,
+          deviceId,
+          (input) => {
+            this.report(input);
+            // Persist recovery evidence before replacing the interrupted marker.
+            void this.persist();
+          }
+        );
+      } else {
+        console.warn(
+          '[DeviceErrorReporter] Persistent storage unavailable for crash recovery tracking'
+        );
+      }
+    }
+  }
+
+  expectExit(): void {
+    this.sessionMonitor?.expectExit();
+  }
+
+  resumeSession(): void {
+    this.sessionMonitor?.resume();
   }
 
   attach(channel: Channel): void {
@@ -602,6 +635,8 @@ export class DeviceErrorReporter {
   }
 
   async close(): Promise<void> {
+    this.sessionMonitor?.stop();
+    this.sessionMonitor = undefined;
     if (this.persistTimer) {
       clearTimeout(this.persistTimer);
       this.persistTimer = undefined;

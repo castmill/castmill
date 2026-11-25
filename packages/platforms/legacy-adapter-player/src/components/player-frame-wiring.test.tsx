@@ -98,7 +98,9 @@ describe('PlayerFrame playback controller selection', () => {
             createVideoPlaybackController: createWebosVideoPlayback,
             cacheBackend: expect.any(MemoryCache),
           }
-        : undefined
+        : userAgent === 'Android 5.1'
+          ? { reportUnexpectedExit: true }
+          : undefined
     );
   });
 

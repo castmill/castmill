@@ -22,7 +22,7 @@ import { Layer } from './layer';
 import { DebugOverlay } from './debug';
 import { Transition } from './transitions/transition';
 import { combineLatest, Observable, of } from 'rxjs';
-import { finalize, switchMap, tap, map } from 'rxjs/operators';
+import { switchMap, tap, map } from 'rxjs/operators';
 import { getLogicalSize } from './utils/logical-size';
 
 /**
@@ -197,7 +197,7 @@ export class Renderer {
     this.el.appendChild(layer.el);
 
     return layer.show(offset).pipe(
-      finalize(() => {
+      tap(() => {
         if (this.pendingLayer !== layer && this.currentLayer !== layer) {
           return;
         }
@@ -271,6 +271,7 @@ export class Renderer {
   ) {
     layer.el.style.zIndex = '0';
     const prevLayer = this.currentLayer;
+    if (prevLayer !== layer) layer.el.style.visibility = 'hidden';
     if (prevLayer) {
       prevLayer.el.style.zIndex = '1000';
     }
@@ -282,6 +283,7 @@ export class Renderer {
         this.el.appendChild(layer.el);
         return layer.show(offset).pipe(
           switchMap(() => {
+            layer.el.style.visibility = 'visible';
             return combineLatest([
               layer.play(timer$),
               this.performTransition(layer, offset, this.currentLayer),

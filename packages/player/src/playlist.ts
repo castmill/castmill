@@ -157,9 +157,10 @@ export class Playlist extends EventEmitter {
     playlist.id = json.id;
     playlist.globals = globals;
     const items = json.items || [];
+    const itemGlobals = { ...globals, loopPlaylistItem: items.length === 1 };
 
     for (let i = 0; i < items.length; i++) {
-      const layer = Layer.fromJSON(items[i], resourceManager, globals);
+      const layer = Layer.fromJSON(items[i], resourceManager, itemGlobals);
       playlist.add(layer);
     }
     return playlist;

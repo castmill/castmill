@@ -7,6 +7,7 @@ import { GroupComponent } from './group';
 import { TextComponent } from './text';
 import { ImageComponent } from './image';
 import { VideoComponent } from './video';
+import { WebComponent } from './web';
 import { PaginatedListComponent, ListComponent } from './paginated-list';
 import { ScrollerComponent } from './scroller';
 import { ImageCarouselComponent } from './image-carousel';
@@ -21,6 +22,7 @@ export type TemplateComponentTypeUnion =
   | TextComponent
   | ImageComponent
   | VideoComponent
+  | WebComponent
   | PaginatedListComponent
   | ScrollerComponent
   | GroupComponent
@@ -34,6 +36,7 @@ export enum TemplateComponentType {
   Text = 'text',
   Image = 'image',
   Video = 'video',
+  Web = 'web',
   /** @deprecated Use PaginatedList instead */
   List = 'list',
   PaginatedList = 'paginated-list',
@@ -105,6 +108,8 @@ export class TemplateComponent {
         return ImageComponent.fromJSON(json);
       case TemplateComponentType.Video:
         return VideoComponent.fromJSON(json);
+      case TemplateComponentType.Web:
+        return WebComponent.fromJSON(json);
       case TemplateComponentType.ImageCarousel:
         return ImageCarouselComponent.fromJSON(json);
       case TemplateComponentType.QRCode:
@@ -167,8 +172,10 @@ export const Template: Component<{
   // the size is usually known at mount; later sizes come from the observer.
   onMount(() => {
     if (!props.fontScale) return;
-    applyBaseFont();
+    // The font update dispatches resize, which can letterbox the layer.
+    // Observe first so legacy browsers do not miss that initial size change.
     if (rootRef) stopObserving = observeElementResize(rootRef, applyBaseFont);
+    applyBaseFont();
   });
 
   onCleanup(() => {

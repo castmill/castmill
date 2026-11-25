@@ -18,16 +18,117 @@ Layout readiness waits for the initial content in every populated zone (empty
 zones are immediately ready). Keep this signal after nested media initialization:
 the dashboard uses renderer readiness to measure durations without polling a
 magic fallback value. This does not pre-load every later item in zone playlists.
+Decoder-blocked zones must still finish seeks so their playlists can run the
+blocked-item skip mechanism. Reserve newly loaded WebOS decoders across initial
+seeks until playback starts; another preload must not steal them during handoff.
 
-Paused dashboard carousel previews gate readiness only on the first image.
-Resolve later image URLs independently and update their backgrounds without
-rebuilding the timeline or delaying the first frame. Keep device playback's
-existing cache resolution and slot timing unchanged.
+Carousels gate initial readiness on the visible image loading (and decoding
+where `Image.decode` exists), then prepare only the next image. Keep at most
+the current and next photos assigned, releasing evicted backgrounds, preloader
+references and render-only Blob URLs. Remove inactive elements from layout with
+`display: none` as well; empty animated elements can retain GPU surfaces.
+Eagerly decoding a whole property gallery can exhaust legacy player memory.
+If the next photo is not ready at its
+transition, hold the fully loaded current photo and extend the slot by the wait.
+Seeks must also wait for their selected visible photos before handoff.
+Ordinary image components also wait for their selected background to load.
+Release their image preparations on source replacement and unload. Carousel
+preparation failures stay blocked until that image is evicted or rebuilt;
+successful ticks for another photo must not clear the failed photo's skip timer.
+Cache URL resolution or CSS background assignment alone is not readiness.
+Old Crosswalk uses image load events without requiring `Image.decode`.
+Image errors or a 30-second load/decode timeout report a media-load failure and
+block the item for the playlist's existing skip mechanism; never mark it ready.
+All declared fonts must finish loading and join `document.fonts` before rendering
+the template. The renderer keeps the outgoing layer until the incoming layer
+emits readiness; cancellation must not commit an unfinished handoff.
+
+Playlists with multiple items set `loopPlaylistItem: false` on their widgets.
+Carousels hold the last image instead of fading back to the first, keeping the
+same slot duration. Their root timelines also stop at the end so preparing the
+next widget cannot briefly restart the outgoing one. Single-item playlists and
+standalone previews retain the loop-back transition.
+
+Autofitted text keeps its initial synchronous fit for readiness. Coalesce later
+resize and content notifications into one animation-frame fit, using the latest
+text and container dimensions, and cancel queued work on cleanup.
+Install the template's resize observer before applying its initial base font:
+that font update dispatches a window resize and can letterbox the layer.
+Without `ResizeObserver`, observing afterward misses the initial inline-size
+change and leaves portrait widgets with landscape-sized text.
 
 The legacy adapter player displays English-only UI on Android, WebOS, and
 Electron. Keep startup and diagnostics strings in English; do not add locale
 files or language selection to `packages/platforms/legacy-adapter-player/`.
 Dashboard localization remains separate.
+
+### Independent control-channel recovery
+
+The shared device `ControlConnection` keeps one five-second watchdog independent
+of Phoenix's reconnect timers. It sends a device heartbeat every 30 seconds and
+requires an acknowledgement; an open WebSocket alone is not healthy. After 90
+seconds without a round trip it disposes the old socket and its channels, creates
+a fresh authenticated connection, reinstalls listeners once, and resynchronizes
+assignments/automations. Cached playback is not stopped or reloaded. Failed fresh
+attempts get a 15-second connection budget plus exponential backoff (1–60 seconds).
+Reuse the Phoenix owner while replacing its native WebSocket and device channel:
+Phoenix installs anonymous page lifecycle handlers with no removal API, so
+constructing another Phoenix owner on each attempt would leak those handlers.
+Disposal also clears buffered writes and protocol heartbeat timers (even if the
+native transport never emits `close`), and guards against late pageshow reconnects.
+Online/foreground events nudge recovery; `Device.stop()` removes all watchdog
+timers and browser listeners.
+
+Servers advertise `heartbeat_ack: true` in the device join reply and acknowledge
+the existing `heartbeat` event. Old players ignore the extra reply. With older
+servers, new players explicitly fall back to correlated Phoenix protocol pongs
+while requiring an authenticated joined device channel. This compatibility mode
+proves transport health, not execution of the old one-way custom handler.
+
+On recovery the existing durable Device Events reporter records
+`control_connection_recovered` (`network-sync`) with the observed disconnect
+duration and fresh-connection attempt count (zero when Phoenix recovered itself).
+For silent failures duration starts at the last acknowledgement; it is not an
+exact measurement of when the network failed. No credentials enter the report.
+Physical tests can briefly drop only the custom heartbeat on the current
+WebSocket, keeping Phoenix pongs and cached playback running; restore the
+instrumentation afterwards. Do not modify or reinstall the Android APK.
+With old servers, also drop the immediately paired compatibility probe while
+allowing Phoenix's own protocol heartbeats to continue.
+
+### Android legacy crash recovery events
+
+The Android adapter opts into the `Device` option `reportUnexpectedExit`. A small per-device
+`castmill.device-session:*` localStorage marker checkpoints every 15 seconds.
+It does not use native settings or store media URLs, payloads, or credentials.
+After an interrupted session, the next authenticated startup queues a
+`runtime` event with code `player-unclean-exit` through the existing Device Events
+error reporter. Recovery reports are persisted immediately and retain the normal
+offline retry and server acknowledgement/deduplication behavior.
+
+The report includes the previous start/heartbeat times, bounded mounted template
+names and image counts, and a JS heap estimate when available. That estimate is
+not native/GPU/process memory and cannot establish OOM. A fatal native crash cannot
+run JavaScript: this is a **possible crash/unclean exit**, indistinguishable from
+an OS kill or power loss, reported only after restart and reconnection. It cannot
+recover crashes that happened before this adapter update or after storage loss.
+
+Normal page unloads and `Device.stop()` mark the session clean. Maintenance actions
+mark an expected exit before invoking the platform, with a 60-second grace period
+for delayed native restarts/reboots; failed actions resume tracking immediately.
+Do not silently enable this for other player types without validating their
+shutdown behavior. Regression tests cover recovery delivery, ordinary refreshes,
+maintenance, malformed markers and unavailable storage; verify process-loss
+recovery on physical Crosswalk as well.
+
+QR generation must work without `TextEncoder` (missing on Chromium 38).
+Pass UTF-8 bytes as a QR byte segment on those engines; the encoder's string
+path requires `TextEncoder`. Keep the optimized string path on modern browsers
+and preserve SVG `viewBox` sizing on both.
+Both Chrome 38 app builds must include `es.typed-array.slice`: the QR encoder's
+error-correction code uses `Uint8Array.prototype.slice`, which is not covered by
+`es.array.slice`. The bootstrap regression builds and executes both real Vite
+configurations with `TextEncoder` and typed-array `slice` absent.
 
 The legacy Android adapter and native Android app use `getBrowserLocation` from
 `@castmill/device`. Geolocation is optional: use coordinates when available, but
@@ -38,15 +139,85 @@ The Android adapter must not send JSON/configuration or widget code through the
 APK's native downloader: it assumes HEAD provides a nonnegative Content-Length
 and generates byte ranges from it. `Cache` and `MemoryCache` pass the item `type`
 to storage. Android uses authenticated XHR GETs for data/code and persists
-versioned data URLs in `FILE_MAP` for offline startup, without persisting headers.
+versioned data URLs in IndexedDB for offline reads, without persisting headers.
 Put revisions in the data URL's MIME parameters, never a `#fragment`: Crosswalk
 23/Chromium 53 includes that fragment in XHR responseText, breaking JSON/code.
 The fetch polyfill upgrades older fragment-versioned cache URLs while reading
 them so existing offline data remains usable.
 Keep its 30-second timeout, HTTP failure/206 rejection, and Range-request guard.
-Only media uses native files. Do not log configuration payloads or native URLs
-containing auth parameters. The native Java/downloader sources are not in this
-repository; the adapter does not fix their range arithmetic.
+Fonts (`otf`, `ttf`, `woff`, `woff2`, `eot`) and media from
+`broker.images.castmill.io` bypass the native downloader as well: the broker
+omits HEAD lengths and ignores ranges, which can also produce corrupted native
+files without a download error. Use full authenticated binary XHR GETs and
+versioned base64 data URLs, preserving the response MIME type (or inferring it
+from a recognized extension for missing/octet-stream types). Other recognized
+images use the same fallback after a native download error, except `CacheFull`,
+which retains normal native cache eviction. Successful native media downloads,
+videos, and unrecognized media URLs keep the existing native path.
+
+Native deletion must only receive app-owned
+`content://com.optimalbits.fileprovider/cache/` file URLs. The deployed APK calls
+`ContentResolver.delete` without catching Java exceptions; sending an HTTPS
+fallback URL kills the entire app. Cache eviction/reconciliation can supply an
+original source URL without a storage mapping. Treat unowned URLs as having no
+native file, including mapped remote/data URLs and stale mapped replacements.
+Keep deleting orphaned or superseded app-owned content URLs, preserve replacement
+mappings, and propagate real native deletion failures before removing metadata.
+
+Binary persistence is capped at 2 MiB per asset and 8 MiB total raw binary
+bytes in the file cache (base64 adds about one-third). Abort oversized downloads
+using progress bytes even when the total is unknown, and check the final Blob
+size too. Reject empty, partial, non-image/font, or failed responses; never
+persist session-only blob URLs. Enforce the total budget inside serialized
+map writes and report capacity pressure through the cache's eviction path.
+Return `result.evictableUrls` with only binary fallback source URLs (excluding
+the resource being replaced). Cache must evict those entries through its normal
+deletion path so metadata and the Android file map stay synchronized, without
+deleting native videos, code, or channel data to satisfy the binary-only budget.
+Configuration/code do not count toward that binary budget. Failed downloads,
+encoding, and persistence must leave the old mapping intact.
+
+Image carousels convert cached base64 image data URLs to temporary Blob URLs
+before assigning CSS backgrounds. Megabyte-sized data URLs in animated inline
+styles stall old Crosswalk during transitions. Feature-detect the Blob URL APIs,
+preserve the MIME type and exact binary bytes, and revoke URLs after replacement
+or carousel cleanup. These URLs are render-only: cache metadata and IndexedDB
+must retain their original revisioned data URLs. This does not require storing
+Blobs in IndexedDB or changing the deployed Android APK.
+Overlapping carousels with the same resource manager share identical image
+URLs so incoming widgets do not repeat base64 decoding. Count carousel owners
+and revoke only after the last owner releases an image; do not keep an
+unbounded warm cache after all owners unload.
+
+Android's `castmill-android-files` IndexedDB database stores the complete file
+map, including data URL strings and native media references. Native `FILE_MAP`
+contains only a compact database pointer. Keeping payloads in native preferences
+causes the unchanged APK's 30-second `LAST_SEEN` commit to serialize megabytes
+of XML on the Android UI thread.
+
+On upgrade, copy the old native map in one transaction, wait for completion,
+and read it back byte-for-byte before replacing native `FILE_MAP`. Keep cached
+URLs unchanged so existing `@castmill/cache` metadata and offline content still
+match. A failed migration must surface the error and retain the native map for
+retry. Subsequent writes/deletions are atomic IndexedDB transactions and do not
+rewrite native preferences. Use cursor/request events and plain objects/strings:
+do not require `getAll`, explicit transaction `commit`, or IndexedDB Blob support.
+Test large payloads, migration, offline reads and process restarts on physical
+Crosswalk hardware. The cache is origin-bound, and adapters predating this
+migration cannot read the new native pointer; do not roll back an offline player
+to an older adapter.
+
+Large incompatible media still needs hosting that supplies accurate HEAD
+lengths and actual `206` byte-range responses. The existing Android bridge
+cannot set downloader headers or write arbitrary binary files, so adapter size
+estimates and `Accept-Encoding` options cannot repair the native downloader.
+XHR downloads require CORS permission on external hosts. Validate binary
+image/font rendering, refresh, and offline restart on physical Crosswalk
+hardware before release.
+
+Do not log configuration payloads or native URLs containing auth parameters.
+The native Java/downloader sources are not in this repository; the adapter
+does not fix their range arithmetic.
 
 The Android, WebOS, and Electron debug menus send the literal `console`
 message to the adapter. The Android, WebOS, and Electron wrappers use file origins that

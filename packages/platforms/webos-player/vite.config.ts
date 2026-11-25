@@ -18,6 +18,7 @@ export default defineConfig({
         'es/promise',
         'web.queue-microtask',
         'es.promise.finally',
+        'es.typed-array.slice',
         'es.array.at',
         'es.array.concat',
         'es.array.copy-within',

@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { EventEmitter } from 'eventemitter3';
+import { render, screen } from '@solidjs/testing-library';
+import { createComponent } from 'solid-js';
+import { DeviceComponent } from '../src/components/device.component';
 import {
   Device,
   MAINTENANCE_TOAST_DELAY_MS,
@@ -52,7 +55,11 @@ function createMockPhoenixChannel(joinPush = createMockPush()) {
   return {
     join: vi.fn().mockReturnValue(joinPush),
     on: vi.fn(),
-    push: vi.fn(),
+    push: vi.fn().mockImplementation(() => createMockPush()),
+    off: vi.fn(),
+    leave: vi.fn(),
+    onError: vi.fn(),
+    onClose: vi.fn(),
     state: 'closed' as string,
     _joinPush: joinPush,
   };
@@ -64,6 +71,16 @@ function createMockSocket(
   return {
     connect: vi.fn(),
     channel: vi.fn().mockReturnValue(mockChannel),
+    channels: [mockChannel],
+    disconnect: vi.fn((callback?: () => void) => callback?.()),
+    clearHeartbeats: vi.fn(),
+    off: vi.fn(),
+    onClose: vi.fn(),
+    onError: vi.fn(),
+    onMessage: vi.fn(),
+    makeRef: vi.fn().mockReturnValue('heartbeat-ref'),
+    push: vi.fn(),
+    isConnected: vi.fn().mockReturnValue(true),
   };
 }
 
@@ -390,10 +407,13 @@ describe('Device', () => {
     [true, 'connected'],
     [false, 'disconnected'],
   ] as const)(
-    'should report the current server socket state',
+    'should report acknowledged control health rather than just socket state',
     (isConnected, expectedStatus) => {
       device['socket'] = {
-        isConnected: vi.fn().mockReturnValue(isConnected),
+        isConnected: vi.fn().mockReturnValue(true),
+      } as any;
+      device['controlConnection'] = {
+        isHealthy: vi.fn().mockReturnValue(isConnected),
       } as any;
 
       expect(device.getServerConnectionStatus()).toBe(expectedStatus);
@@ -837,6 +857,7 @@ describe('Device - Commands', () => {
       vi.useFakeTimers();
       device['maintenanceToastDelayMs'] = MAINTENANCE_TOAST_DELAY_MS;
       mockIntegration[method] = vi.fn().mockResolvedValue(undefined);
+      const expectExit = vi.spyOn(device['errorReporter'], 'expectExit');
       const mockChannel = { on: vi.fn(), push: vi.fn(), join: vi.fn() };
       device['initListeners'](mockChannel as any);
       const commandHandler = mockChannel.on.mock.calls.find(
@@ -847,8 +868,10 @@ describe('Device - Commands', () => {
 
       expect(toastText()).toBe(message);
       expect(mockIntegration[method]).not.toHaveBeenCalled();
+      expect(expectExit).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(MAINTENANCE_TOAST_DELAY_MS);
       expect(mockIntegration[method]).toHaveBeenCalledOnce();
+      expect(expectExit).toHaveBeenCalledOnce();
       vi.useRealTimers();
     }
   );
@@ -877,10 +900,12 @@ describe('Device - Commands', () => {
   it('shows a failure toast and reports instead of rejecting when an action fails', async () => {
     mockIntegration.reboot = vi.fn().mockRejectedValue(new Error('denied'));
     const report = vi.spyOn(device['errorReporter'], 'report');
+    const resumeSession = vi.spyOn(device['errorReporter'], 'resumeSession');
 
     await expect(device.reboot()).resolves.toBeUndefined();
 
     expect(toastText()).toBe('Reboot failed');
+    expect(resumeSession).toHaveBeenCalledOnce();
     expect(report).toHaveBeenCalledWith(
       expect.objectContaining({ category: 'device' })
     );
@@ -1815,7 +1840,7 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
     );
   });
 
-  it('should set up listeners and heartbeat after background login succeeds', async () => {
+  it('should post device info after background login succeeds', async () => {
     const validCredentials = JSON.stringify({
       device: { id: 'device1', token: 'token123', name: 'Device 1' },
     });
@@ -1826,8 +1851,6 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
     // Mock login to resolve with a mock channel
     vi.spyOn(device as any, 'login').mockResolvedValue(mockChannel);
 
-    const initListenersSpy = vi.spyOn(device as any, 'initListeners');
-    const initHeartbeatSpy = vi.spyOn(device as any, 'initHeartbeat');
     const updateDeviceInfoSpy = vi
       .spyOn(device as any, 'updateDeviceInfo')
       .mockResolvedValue(undefined);
@@ -1836,10 +1859,9 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
 
     // Wait for the background .then() to execute
     await vi.waitFor(() => {
-      expect(initListenersSpy).toHaveBeenCalledWith(mockChannel);
+      expect(updateDeviceInfoSpy).toHaveBeenCalled();
     });
 
-    expect(initHeartbeatSpy).toHaveBeenCalledWith(mockChannel);
     expect(updateDeviceInfoSpy).toHaveBeenCalledWith({
       device: { id: 'device1', token: 'token123', name: 'Device 1' },
     });
@@ -2072,6 +2094,7 @@ describe('Device - Login Reconnection', () => {
   });
 
   afterEach(() => {
+    device['controlConnection']?.stop();
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
@@ -2087,6 +2110,84 @@ describe('Device - Login Reconnection', () => {
     mockPhoenixChannel._joinPush._trigger('error', 'invalid_device');
 
     await expect(loginPromise).rejects.toBe('invalid_device');
+  });
+
+  it('restores listeners, reporting and assignments on a fresh socket without stopping playback', async () => {
+    const credentials = { device: { id: 'd1', token: 't1', name: 'D1' } };
+    const listeners = vi.spyOn(device as any, 'initListeners');
+    const sync = vi.spyOn(device, 'syncChannels').mockResolvedValue(undefined);
+    const automations = vi
+      .spyOn(device as any, 'refreshAutomations')
+      .mockResolvedValue(undefined);
+    const report = vi.spyOn(device['errorReporter'], 'report');
+    const player = { stop: vi.fn(), play: vi.fn() };
+    device['player'] = player as any;
+    mockPhoenixChannel.state = 'joined';
+    const initialLogin = device.login(credentials, 'hw1');
+    mockPhoenixChannel._joinPush._trigger('ok', { heartbeat_ack: true });
+    await initialLogin;
+    mockPhoenixChannel.push.mock.results[0].value._trigger('ok');
+    const socket = vi.mocked(Socket).mock.results.at(-1)!.value as ReturnType<
+      typeof createMockSocket
+    >;
+    const next = createMockPhoenixChannel();
+    socket.channel.mockImplementation(() => {
+      socket.channels = [next];
+      return next;
+    });
+    next.state = 'joined';
+
+    await vi.advanceTimersByTimeAsync(91_000);
+    next._joinPush._trigger('ok', { heartbeat_ack: true });
+    next.push.mock.results[0].value._trigger('ok');
+
+    expect(listeners).toHaveBeenCalledTimes(2);
+    expect(sync).toHaveBeenCalledTimes(2);
+    expect(automations).toHaveBeenCalledTimes(2);
+    expect(player.stop).not.toHaveBeenCalled();
+    expect(player.play).not.toHaveBeenCalled();
+    expect(device.getServerConnectionStatus()).toBe('connected');
+    expect(report).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: 'network-sync',
+        code: 'control_connection_recovered',
+        error:
+          'Control connection recovered after 91000 ms disconnected; 1 watchdog reconnect attempts',
+      })
+    );
+    expect(
+      next.on.mock.calls.filter(([event]) => event === 'command')
+    ).toHaveLength(1);
+  });
+
+  it('restarts OS status reporting on rejoin and stops it on shutdown', async () => {
+    const status = { state: 'idle' };
+    const getStatus = vi.fn().mockResolvedValue(status);
+    device['integration'].getOsUpdateStatus = getStatus;
+    vi.spyOn(device, 'syncChannels').mockResolvedValue(undefined);
+    vi.spyOn(device, 'refreshAutomations').mockResolvedValue(undefined);
+    const listeners = vi.spyOn(device, 'initListeners');
+    const login = device.login(
+      { device: { id: 'd1', token: 't1', name: 'D1' } },
+      'hw1'
+    );
+    mockPhoenixChannel._joinPush._trigger('ok', { heartbeat_ack: true });
+    await login;
+    await vi.advanceTimersByTimeAsync(0);
+    expect(device['connectedAt']).toBeDefined();
+    expect(mockPhoenixChannel.push).toHaveBeenCalledWith(
+      'os_update:report',
+      status
+    );
+
+    mockPhoenixChannel._joinPush._trigger('ok', { heartbeat_ack: true });
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(listeners).toHaveBeenCalledOnce();
+    expect(getStatus).toHaveBeenCalledTimes(3);
+
+    await device.stop();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(getStatus).toHaveBeenCalledTimes(3);
   });
 
   it('should only reject on auth errors (unauthorized)', async () => {
@@ -2123,15 +2224,16 @@ describe('Device - Login Reconnection', () => {
     expect(resolved).toBe(false);
     expect(rejected).toBe(false);
 
-    // Now simulate a successful rejoin via the polling mechanism
+    // Phoenix runs the join receive hooks again after a successful rejoin.
     mockPhoenixChannel.state = 'joined';
+    mockPhoenixChannel._joinPush._trigger('ok', { heartbeat_ack: true });
     await vi.advanceTimersByTimeAsync(1000);
 
     expect(resolved).toBe(true);
     expect(rejected).toBe(false);
   });
 
-  it('should resolve when channel state becomes joined (polling mechanism)', async () => {
+  it('should resolve when a rejoin is acknowledged after initial timeout', async () => {
     const credentials = {
       device: { id: 'd1', token: 't1', name: 'D1' },
     };
@@ -2146,15 +2248,16 @@ describe('Device - Login Reconnection', () => {
 
     // Simulate the channel successfully joining via reconnection
     mockPhoenixChannel.state = 'joined';
+    mockPhoenixChannel._joinPush._trigger('ok', { heartbeat_ack: true });
 
-    // Advance past the 1s polling interval
+    // Let asynchronous rejoin work finish.
     await vi.advanceTimersByTimeAsync(1000);
 
     const result = await loginPromise;
     expect(result).toBe(mockPhoenixChannel);
   });
 
-  it('should clean up polling interval after resolving', async () => {
+  it('should clean up the watchdog interval on stop', async () => {
     const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
 
     const credentials = {
@@ -2167,30 +2270,32 @@ describe('Device - Login Reconnection', () => {
     mockPhoenixChannel._joinPush._trigger('ok');
 
     await loginPromise;
+    await device.stop();
 
     expect(clearIntervalSpy).toHaveBeenCalled();
   });
 
-  it('should not resolve twice when both ok and polling detect joined', async () => {
+  it('keeps listeners installed once across repeated successful rejoins', async () => {
     const credentials = {
       device: { id: 'd1', token: 't1', name: 'D1' },
     };
 
     let resolveCount = 0;
+    const listeners = vi.spyOn(device as any, 'initListeners');
     const loginPromise = device.login(credentials as any, 'hw1');
     loginPromise.then(() => resolveCount++);
 
     // Trigger ok callback
     mockPhoenixChannel._joinPush._trigger('ok');
 
-    // Also set state to joined
+    // Phoenix repeats the join receive hook after reconnecting.
     mockPhoenixChannel.state = 'joined';
+    mockPhoenixChannel._joinPush._trigger('ok');
 
-    // Advance past polling interval
     await vi.advanceTimersByTimeAsync(2000);
 
-    // Should only resolve once
     expect(resolveCount).toBe(1);
+    expect(listeners).toHaveBeenCalledOnce();
   });
 });
 
@@ -2333,6 +2438,51 @@ describe('Device - Progress Events', () => {
 
     window.location = originalLocation;
     vi.restoreAllMocks();
+  });
+
+  it('replaces registration progress with credential recovery instructions on a blocked response', async () => {
+    vi.useFakeTimers();
+    mockIntegration.getCredentials.mockResolvedValue(null);
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 403,
+      json: async () => ({
+        error: 'Device recovery blocked for security reasons',
+        error_code: 'recovery_blocked',
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const view = render(() => createComponent(DeviceComponent, { device }));
+
+    try {
+      await vi.advanceTimersByTimeAsync(0);
+
+      const alert = screen.getByRole('alert');
+      expect(alert).toHaveTextContent('lost its stored credentials');
+      expect(alert).toHaveTextContent('Castmill dashboard');
+      expect(alert).toHaveTextContent('Maintenance tab');
+      expect(alert).toHaveTextContent('enable Recover lost settings');
+      expect(
+        screen.getByRole('link', { name: 'docs.castmill.io' })
+      ).toHaveAttribute(
+        'href',
+        'https://docs.castmill.io/docs/players/troubleshooting#the-screen-shows-automatic-recovery-is-blocked'
+      );
+      expect(screen.queryByText('Initializing…')).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('Connecting to server')
+      ).not.toBeInTheDocument();
+      expect(mockIntegration.storeCredentials).not.toHaveBeenCalled();
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://localhost:4000/registrations',
+        expect.objectContaining({ method: 'POST' })
+      );
+    } finally {
+      view.unmount();
+      await device.stop();
+      await vi.advanceTimersByTimeAsync(5000);
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+    }
   });
 });
 

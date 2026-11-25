@@ -1,8 +1,9 @@
 /**
  * This storage integration uses the API provided by the legacy Android
- * Castmill player app. Media uses native file storage with estimated sizes
- * and a 1GB capacity. Configuration and code use authenticated XHR and are
- * persisted as data URLs through the wrapper's key/value API.
+ * Castmill player app. Compatible media uses native file storage with estimated
+ * sizes and a 1GB capacity. Configuration, code, and bounded binary fallbacks
+ * use authenticated XHR and persistent data URLs in IndexedDB. Native preferences
+ * retain only a small database pointer, not the cached payloads.
  */
 
 import {
@@ -29,19 +30,60 @@ interface FileData {
 
 const TOTAL_STORAGE = 1e9; // 1GB
 const DOWNLOAD_TIMEOUT_MS = 30_000;
+const MAX_BINARY_FILE_BYTES = 2 * 1024 * 1024;
+const MAX_BINARY_CACHE_BYTES = 8 * 1024 * 1024;
+const FILE_MAP_DATABASE = 'castmill-android-files';
+const NATIVE_CACHE_URL_PREFIX = 'content://com.optimalbits.fileprovider/cache/';
+const FILE_MAP_POINTER = JSON.stringify({
+  indexedDB: FILE_MAP_DATABASE,
+  version: 1,
+});
+const BINARY_MIME_TYPES = new Map<string, string>([
+  ['jpg', 'image/jpeg'],
+  ['jpeg', 'image/jpeg'],
+  ['png', 'image/png'],
+  ['gif', 'image/gif'],
+  ['webp', 'image/webp'],
+  ['bmp', 'image/bmp'],
+  ['svg', 'image/svg+xml'],
+  ['ico', 'image/x-icon'],
+  ['otf', 'font/otf'],
+  ['ttf', 'font/ttf'],
+  ['woff', 'font/woff'],
+  ['woff2', 'font/woff2'],
+  ['eot', 'application/vnd.ms-fontobject'],
+]);
+
+function isNativeCacheUrl(url: string): boolean {
+  return (
+    url.startsWith(NATIVE_CACHE_URL_PREFIX) &&
+    url.length > NATIVE_CACHE_URL_PREFIX.length
+  );
+}
+
+class BinaryAssetLimitError extends Error {
+  constructor(
+    readonly code: 'TOO_LARGE' | 'NOT_ENOUGH_SPACE',
+    message: string,
+    readonly requiredBytes?: number,
+    readonly evictableUrls?: string[]
+  ) {
+    super(message);
+  }
+}
 
 export class AndroidLegacyFileStorage implements StorageIntegration {
   private storagePath: string;
   private fileMap = new Map<string, FileData>();
   private fileRevision = Date.now();
   private fileMapWrites: Promise<void> = Promise.resolve();
+  private database?: IDBDatabase;
 
   constructor(storagePath: string) {
     this.storagePath = storagePath;
   }
 
-  private async loadFileMap(): Promise<Map<string, FileData>> {
-    const fileMap = await getItem('FILE_MAP');
+  private loadLegacyFileMap(fileMap: string | null): Map<string, FileData> {
     if (fileMap) {
       try {
         const parsed: unknown = JSON.parse(fileMap);
@@ -63,21 +105,137 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
         return new Map(parsed as Array<[string, FileData]>);
       } catch (err) {
         console.error('Error parsing file map', err);
-        await setItem('FILE_MAP', '[]');
       }
     }
 
     return new Map<string, FileData>();
   }
 
+  private openDatabase(): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+      if (typeof indexedDB === 'undefined') {
+        reject(new Error('Android file cache requires IndexedDB'));
+        return;
+      }
+
+      let settled = false;
+      const request = indexedDB.open(FILE_MAP_DATABASE, 1);
+      const fail = (error: Error) => {
+        settled = true;
+        clearTimeout(timeout);
+        reject(error);
+      };
+      const timeout = setTimeout(
+        () => fail(new Error('Opening Android file cache timed out')),
+        DOWNLOAD_TIMEOUT_MS
+      );
+      request.onerror = () =>
+        fail(request.error || new Error('Opening Android file cache failed'));
+      request.onblocked = () =>
+        fail(new Error('Opening Android file cache is blocked'));
+      request.onupgradeneeded = () => {
+        if (settled) {
+          request.transaction?.abort();
+          return;
+        }
+        request.result.createObjectStore('files');
+      };
+      request.onsuccess = () => {
+        const database = request.result;
+        if (settled) {
+          database.close();
+          return;
+        }
+        settled = true;
+        clearTimeout(timeout);
+        database.onversionchange = () => database.close();
+        resolve(database);
+      };
+    });
+  }
+
+  private readFileMap(): Promise<Map<string, FileData>> {
+    return new Promise((resolve, reject) => {
+      const files = new Map<string, FileData>();
+      const transaction = this.database!.transaction('files', 'readonly');
+      const request = transaction.objectStore('files').openCursor();
+      let error: Error | undefined;
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (!cursor) return;
+        const file: unknown = cursor.value;
+        if (
+          typeof cursor.key !== 'string' ||
+          typeof file !== 'object' ||
+          file === null ||
+          !('url' in file) ||
+          typeof file.url !== 'string' ||
+          !('size' in file) ||
+          typeof file.size !== 'number'
+        ) {
+          error = new Error('Invalid Android IndexedDB file entry');
+          transaction.abort();
+          return;
+        }
+        files.set(cursor.key, { url: file.url, size: file.size });
+        cursor.continue();
+      };
+      transaction.oncomplete = () => resolve(files);
+      transaction.onabort = () =>
+        reject(
+          error ||
+            transaction.error ||
+            new Error('Reading Android file cache aborted')
+        );
+    });
+  }
+
+  private persistFileMap(
+    files: Map<string, FileData>,
+    replace = false
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const transaction = this.database!.transaction('files', 'readwrite');
+      transaction.oncomplete = () => resolve();
+      transaction.onabort = () =>
+        reject(
+          transaction.error || new Error('Writing Android file cache aborted')
+        );
+      try {
+        const store = transaction.objectStore('files');
+        if (replace) store.clear();
+        else {
+          for (const key of this.fileMap.keys()) {
+            if (!files.has(key)) store.delete(key);
+          }
+        }
+        for (const [key, file] of files) {
+          if (replace || this.fileMap.get(key) !== file) {
+            store.put(file, key);
+          }
+        }
+      } catch (error) {
+        transaction.abort();
+        reject(error);
+      }
+    });
+  }
+
   private updateFileMap(
     update: (files: Map<string, FileData>) => void
   ): Promise<void> {
+    const queuedAt = performance.now();
     const write = this.fileMapWrites.then(async () => {
+      const started = performance.now();
       const updated = new Map(this.fileMap);
       update(updated);
-      await setItem('FILE_MAP', JSON.stringify(Array.from(updated.entries())));
+      await this.persistFileMap(updated);
       this.fileMap = updated;
+      if (import.meta.env.VITE_LOGGING === 'true') {
+        console.log(
+          `[legacy performance] IndexedDB files=${updated.size} queue=${Math.round(started - queuedAt)}ms persist=${Math.round(performance.now() - started)}ms`
+        );
+      }
     });
     // Keep later writes usable after failure; each caller still awaits its error.
     this.fileMapWrites = write.then(
@@ -88,7 +246,40 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   }
 
   async init(): Promise<void> {
-    this.fileMap = await this.loadFileMap();
+    if (this.database) return;
+    this.database = await this.openDatabase();
+    try {
+      const legacy = await getItem('FILE_MAP');
+      if (legacy === FILE_MAP_POINTER) {
+        this.fileMap = await this.readFileMap();
+        return;
+      }
+      const files = this.loadLegacyFileMap(legacy);
+      await this.persistFileMap(files, true);
+      const persisted = await this.readFileMap();
+      if (
+        persisted.size !== files.size ||
+        Array.from(files).some(
+          ([key, file]) =>
+            persisted.get(key)?.url !== file.url ||
+            persisted.get(key)?.size !== file.size
+        )
+      ) {
+        throw new Error('Android file cache migration verification failed');
+      }
+      // Publish only after commit and read-back; failed migrations retain FILE_MAP.
+      await setItem('FILE_MAP', FILE_MAP_POINTER);
+      this.fileMap = persisted;
+      if (import.meta.env.VITE_LOGGING === 'true') {
+        console.log(
+          `[legacy performance] Migrated ${files.size} Android cache entries to IndexedDB`
+        );
+      }
+    } catch (error) {
+      this.database.close();
+      this.database = undefined;
+      throw error;
+    }
   }
 
   async info(): Promise<StorageInfo> {
@@ -158,6 +349,15 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
         return await this.storeTextFile(url, mappedUrl, opts);
       }
 
+      const extension = this.getBinaryExtension(mappedUrl);
+      const isFont = /^(otf|ttf|woff2?|eot)$/.test(extension);
+      // This broker is known to omit HEAD lengths and ignore byte ranges.
+      const isBrokerImage =
+        new URL(mappedUrl).hostname === 'broker.images.castmill.io';
+      if (isFont || isBrokerImage) {
+        return await this.storeBinaryFile(url, mappedUrl, opts);
+      }
+
       const fileName = this.getFileName(mappedUrl, this.fileRevision++);
       const localPath = this.getLocalUrl(fileName);
 
@@ -168,7 +368,26 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
         nativeUrl.search += `${nativeUrl.search ? '&' : '?'}auth=${encodeURIComponent(auth)}`;
       }
       const urlWithParams = auth ? nativeUrl.toString() : mappedUrl;
-      const localUrl = await downloadFile(urlWithParams, localPath);
+      let localUrl: string;
+      try {
+        localUrl = await downloadFile(urlWithParams, localPath);
+      } catch (err) {
+        if (
+          BINARY_MIME_TYPES.has(extension) &&
+          !(
+            typeof err === 'object' &&
+            err !== null &&
+            'message' in err &&
+            err.message === 'CacheFull'
+          )
+        ) {
+          console.warn(
+            'Native image download failed; retrying with bounded XHR'
+          );
+          return await this.storeBinaryFile(url, mappedUrl, opts);
+        }
+        throw err;
+      }
 
       const size = this.estimateSize(mappedUrl);
 
@@ -177,7 +396,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
       // when it differs.
       if (mappedUrl !== url) {
         const staleMappedFile = this.fileMap.get(mappedUrl);
-        if (staleMappedFile) {
+        if (staleMappedFile && isNativeCacheUrl(staleMappedFile.url)) {
           await deleteFile(staleMappedFile.url);
         }
       }
@@ -196,6 +415,22 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
         },
       };
     } catch (err) {
+      if (err instanceof BinaryAssetLimitError) {
+        console.warn(err.message);
+        return {
+          result: {
+            code: 'FAILURE',
+            error: err.code,
+            errMsg:
+              err.requiredBytes === undefined
+                ? err.message
+                : String(err.requiredBytes),
+            ...(err.evictableUrls === undefined
+              ? {}
+              : { evictableUrls: err.evictableUrls }),
+          },
+        };
+      }
       console.error('Error downloading file', err);
 
       const errorMessage =
@@ -224,6 +459,132 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
         },
       };
     }
+  }
+
+  private getBinaryExtension(url: string): string {
+    return (
+      /\.([a-z0-9]+)$/i.exec(new URL(url).pathname)?.[1].toLowerCase() ?? ''
+    );
+  }
+
+  private async storeBinaryFile(
+    sourceUrl: string,
+    downloadUrl: string,
+    opts?: StoreOptions
+  ): Promise<StoreFileReturnValue> {
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', downloadUrl);
+      xhr.responseType = 'blob';
+      xhr.timeout = DOWNLOAD_TIMEOUT_MS;
+      for (const [key, value] of Object.entries(opts?.headers ?? {})) {
+        xhr.setRequestHeader(key, value);
+      }
+      const rejectTooLarge = () =>
+        reject(
+          new BinaryAssetLimitError(
+            'TOO_LARGE',
+            'Binary asset exceeds the 2 MiB persistent cache limit'
+          )
+        );
+      xhr.onprogress = (event) => {
+        if (event.loaded > MAX_BINARY_FILE_BYTES) {
+          rejectTooLarge();
+          xhr.abort();
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status < 200 || xhr.status >= 300 || xhr.status === 206) {
+          reject(new Error(`Binary download failed: HTTP ${xhr.status}`));
+        } else if (!(xhr.response instanceof Blob)) {
+          reject(new Error('Binary download failed: invalid response'));
+        } else if (xhr.response.size > MAX_BINARY_FILE_BYTES) {
+          rejectTooLarge();
+        } else if (xhr.response.size === 0) {
+          reject(new Error('Binary download failed: empty response'));
+        } else {
+          resolve(xhr.response);
+        }
+      };
+      xhr.onerror = () =>
+        reject(new Error('Binary download failed: network error'));
+      xhr.ontimeout = () =>
+        reject(new Error('Binary download failed: request timed out'));
+      xhr.onabort = () =>
+        reject(new Error('Binary download failed: request aborted'));
+      xhr.send();
+    });
+
+    const mimeType = blob.type.split(';')[0].trim().toLowerCase();
+    const expectedType = BINARY_MIME_TYPES.get(
+      this.getBinaryExtension(downloadUrl)
+    );
+    const binaryType =
+      !mimeType || mimeType === 'application/octet-stream'
+        ? expectedType
+        : mimeType;
+    if (
+      !binaryType ||
+      !(
+        binaryType.startsWith('image/') ||
+        binaryType.startsWith('font/') ||
+        /^application\/(?:x-)?font-(?:sfnt|ttf|otf|truetype|opentype|woff2?)$/.test(
+          binaryType
+        ) ||
+        binaryType === 'application/vnd.ms-opentype' ||
+        binaryType === 'application/vnd.ms-fontobject'
+      )
+    ) {
+      throw new Error('Binary download failed: unsupported content type');
+    }
+
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (
+          typeof reader.result !== 'string' ||
+          !/^data:[^,]*;base64,/.test(reader.result)
+        ) {
+          reject(new Error('Binary encoding failed: invalid result'));
+          return;
+        }
+        const base64 = reader.result.slice(reader.result.indexOf(',') + 1);
+        resolve(
+          `data:${binaryType};castmill-revision=${this.fileRevision++};base64,${base64}`
+        );
+      };
+      reader.onerror = () =>
+        reject(new Error('Binary encoding failed: read error'));
+      reader.onabort = () =>
+        reject(new Error('Binary encoding failed: read aborted'));
+      reader.readAsDataURL(blob);
+    });
+
+    const item = { url: dataUrl, size: blob.size };
+    await this.updateFileMap((files) => {
+      let binaryBytes = item.size;
+      const evictableUrls: string[] = [];
+      for (const [url, file] of files) {
+        if (
+          url !== sourceUrl &&
+          file.url.startsWith('data:') &&
+          file.url.includes(';base64,')
+        ) {
+          binaryBytes += file.size;
+          evictableUrls.push(url);
+        }
+      }
+      if (binaryBytes > MAX_BINARY_CACHE_BYTES) {
+        throw new BinaryAssetLimitError(
+          'NOT_ENOUGH_SPACE',
+          'Binary assets exceed the 8 MiB persistent cache budget',
+          binaryBytes - MAX_BINARY_CACHE_BYTES,
+          evictableUrls
+        );
+      }
+      files.set(sourceUrl, item);
+    });
+    return { result: { code: 'SUCCESS' }, item };
   }
 
   private async storeTextFile(
@@ -258,8 +619,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
 
     const mimeType =
       opts?.type === 'code' ? 'text/javascript' : 'application/json';
-    // Persist the payload through the wrapper's key/value API, not its ranged
-    // downloader. Data URLs also survive offline starts and content changes.
+    // Data URLs preserve offline reads without relying on IndexedDB Blob support.
     const item = {
       url: `data:${mimeType};charset=utf-8;castmill-revision=${this.fileRevision++},${encodeURIComponent(text)}`,
       size: new Blob([text]).size,
@@ -285,22 +645,18 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
    */
   async deleteFile(url: string): Promise<void> {
     const entry = this.getFileEntry(url);
-
+    const localUrl = entry?.file.url ?? url;
+    // Cache may evict an uncached HTTPS fallback or a replaced data URL.
+    // The deployed APK crashes if ContentResolver receives a non-provider URI.
+    if (isNativeCacheUrl(localUrl)) {
+      await deleteFile(localUrl);
+    }
     if (entry) {
-      if (!entry.file.url.startsWith('data:')) {
-        await deleteFile(entry.file.url);
-      }
       await this.updateFileMap((files) => {
         if (files.get(entry.key) === entry.file) {
           files.delete(entry.key);
         }
       });
-    } else {
-      // Cache replaces a source URL with a newly downloaded local URI before
-      // asking the integration to remove the superseded local URI.
-      if (!url.startsWith('data:')) {
-        await deleteFile(url);
-      }
     }
   }
 
@@ -315,7 +671,9 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   }
 
   async close(): Promise<void> {
-    throw new Error('Method not implemented.');
+    await this.fileMapWrites;
+    this.database?.close();
+    this.database = undefined;
   }
 
   /*

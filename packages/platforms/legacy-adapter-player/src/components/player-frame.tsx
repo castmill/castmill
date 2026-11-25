@@ -91,6 +91,78 @@ const getLegacyStorage = (platform: LegacyPlatform): StorageIntegration => {
   }
 };
 
+export const startLegacyPerformanceDiagnostics = (): (() => void) => {
+  const started = performance.now();
+  let lastFrame = started;
+  let lastTick = started;
+  let overlayChanged = started;
+  let overlayText: string | undefined;
+  let overlayHadStall = false;
+  let lastTemplate: Element | undefined;
+  let frameId: number;
+  const report = (message: string) =>
+    console.log(
+      `[legacy performance +${Math.round(performance.now() - started)}ms] ${message}`
+    );
+  const reset = () => {
+    lastFrame = lastTick = overlayChanged = performance.now();
+    overlayText = undefined;
+    overlayHadStall = false;
+  };
+  const frame = (now: number) => {
+    if (!document.hidden && now - lastFrame > 500) {
+      overlayHadStall = true;
+      report(`animation frame gap=${Math.round(now - lastFrame)}ms`);
+    }
+    lastFrame = now;
+    frameId = requestAnimationFrame(frame);
+  };
+  frameId = requestAnimationFrame(frame);
+  const timer = setInterval(() => {
+    if (document.hidden) {
+      reset();
+      return;
+    }
+    const now = performance.now();
+    if (now - lastTick > 500) {
+      overlayHadStall = true;
+      report(`event loop gap=${Math.round(now - lastTick)}ms`);
+    }
+    lastTick = now;
+    const templates = document.querySelectorAll('[data-component="template"]');
+    const template = templates[templates.length - 1];
+    if (lastTemplate && template !== lastTemplate) {
+      report('template instance changed');
+    }
+    lastTemplate = template;
+    const overlays = document.querySelectorAll<HTMLElement>(
+      '[data-castmill-debug-overlay]'
+    );
+    let text = '';
+    for (let i = 0; i < overlays.length; i++) {
+      if (overlays[i].style.display === 'block') {
+        text += overlays[i].textContent;
+      }
+    }
+    if (text !== overlayText) {
+      if (overlayText && now - overlayChanged > 1000) {
+        report(
+          `overlay held=${Math.round(now - overlayChanged)}ms eventLoopStalled=${overlayHadStall}`
+        );
+      }
+      overlayText = text;
+      overlayChanged = now;
+      overlayHadStall = false;
+    }
+  }, 100);
+  document.addEventListener('visibilitychange', reset);
+  return () => {
+    clearInterval(timer);
+    cancelAnimationFrame(frameId);
+    document.removeEventListener('visibilitychange', reset);
+  };
+};
+
 export const PlayerFrame: Component = () => {
   let ref: HTMLDivElement | undefined;
   let startupOverlay: HTMLDivElement | undefined;
@@ -133,6 +205,9 @@ export const PlayerFrame: Component = () => {
     }
 
     enableDebugOverlayFromEnv(import.meta.env.VITE_DEBUG_OVERLAY);
+    if (import.meta.env.VITE_LOGGING === 'true') {
+      onCleanup(startLegacyPerformanceDiagnostics());
+    }
 
     const platform = getLegacyPlatform();
     const legacyMachine = getLegacyMachine(platform);
@@ -148,7 +223,9 @@ export const PlayerFrame: Component = () => {
             createVideoPlaybackController: createWebosVideoPlayback,
             cacheBackend: memoryCache,
           }
-        : undefined
+        : platform === 'android'
+          ? { reportUnexpectedExit: true }
+          : undefined
     );
     const configuredServerUrl = getLegacyBaseUrl(
       window.location,

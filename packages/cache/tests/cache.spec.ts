@@ -10,6 +10,42 @@ import { StorageIntegration, StorageItem } from '../src/storage.integration';
 import { StorageMockup } from './storage.mockup';
 
 describe('Cache', () => {
+  it.each([
+    { evictableUrls: [] },
+    { evictableUrls: ['https://example.com/missing'] },
+  ])(
+    'does not evict unrelated entries when scoped capacity candidates cannot free space: %j',
+    async ({ evictableUrls }) => {
+      const kept = 'https://example.com/kept';
+      const incoming = 'https://example.com/new';
+      const storage = new StorageMockup({ [kept]: 'retained offline content' });
+      const cache = new Cache(
+        storage,
+        `scoped-eviction-${evictableUrls.length}`,
+        10
+      );
+      try {
+        await cache.set(kept, ItemType.Code, 'text/javascript');
+        const remove = vi.spyOn(storage, 'deleteFile');
+        vi.spyOn(storage, 'storeFile').mockResolvedValue({
+          result: {
+            code: 'FAILURE',
+            error: 'NOT_ENOUGH_SPACE',
+            errMsg: '1',
+            evictableUrls,
+          },
+        });
+        await expect(
+          cache.set(incoming, ItemType.Media, 'image/jpeg')
+        ).rejects.toThrow('Not enough eligible space to free');
+        expect(remove).not.toHaveBeenCalled();
+        expect(await cache.items.get(kept)).toBeDefined();
+      } finally {
+        cache.close();
+      }
+    }
+  );
+
   it('should return undefined for a non-cached item', async () => {
     const storage = new StorageMockup({});
     const cache = new Cache(storage, 'test', 10);

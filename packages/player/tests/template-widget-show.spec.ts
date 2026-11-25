@@ -2,9 +2,10 @@ import { expect } from 'chai';
 import { afterEach, beforeEach, describe, it } from 'mocha';
 // @ts-ignore jsdom is hoisted from other workspaces without type declarations.
 import { JSDOM } from 'jsdom';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject } from 'rxjs';
+import { useFakeTimers } from 'sinon';
 
-import { TemplateWidget } from '../dist/index.js';
+import { TemplateWidget, Layer, Renderer } from '../dist/index.js';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -22,6 +23,8 @@ describe('TemplateWidget.show', () => {
     'getComputedStyle',
     'requestAnimationFrame',
     'cancelAnimationFrame',
+    'Image',
+    'FontFace',
   ];
   let dom: any;
 
@@ -59,6 +62,330 @@ describe('TemplateWidget.show', () => {
       config: { options: {}, data: {} } as any,
       globals: { target: 'poster' },
     });
+
+  it('waits for every declared font before rendering or reporting ready', async () => {
+    const resolveFonts: Array<() => void> = [];
+    const added: unknown[] = [];
+    globals.FontFace = class {
+      load() {
+        return new Promise((resolve) => resolveFonts.push(() => resolve(this)));
+      }
+    };
+    Object.defineProperty(dom.window.document, 'fonts', {
+      value: { add: (font: unknown) => added.push(font), delete: () => {} },
+    });
+    const widget = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: {
+          name: 'font-ready',
+          template: { type: 'text', name: 'text', opts: { text: 'Ready' } },
+        } as any,
+        fonts: [
+          { name: 'one', url: '/one.woff' },
+          { name: 'two', url: '/two.woff' },
+        ],
+        config: { options: {}, data: {} } as any,
+        globals: { target: 'poster' },
+      }
+    );
+    let ready = false;
+    const root = dom.window.document.getElementById('root');
+    const shown = firstValueFrom(widget.show(root, 0)).then(() => {
+      ready = true;
+    });
+    try {
+      await flush();
+      expect(resolveFonts).to.have.length(2);
+      expect(root.children.length).to.equal(0);
+      resolveFonts[1]();
+      await flush();
+      expect(ready).to.equal(false);
+      resolveFonts[0]();
+      await shown;
+      expect(added).to.have.length(2);
+      expect(root.textContent).to.equal('Ready');
+    } finally {
+      resolveFonts.forEach((resolve) => resolve());
+      await shown;
+      await widget.unload();
+    }
+  });
+
+  it('reports a failed font as blocked without rendering an incomplete template', async () => {
+    globals.FontFace = class {
+      load() {
+        return Promise.reject(new Error('Font download failed'));
+      }
+    };
+    const widget = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: {
+          name: 'font-failure',
+          template: { type: 'text', name: 'text', opts: { text: 'Not ready' } },
+        } as any,
+        fonts: [{ name: 'missing', url: '/missing.woff' }],
+        config: { options: {}, data: {} } as any,
+        globals: { target: 'poster' },
+      }
+    );
+    const root = dom.window.document.getElementById('root');
+    let ready = false;
+    const blocks: unknown[] = [];
+    const blocking = widget.blocked$().subscribe((value) => {
+      if (value) blocks.push(value);
+    });
+    const error = console.error;
+    console.error = () => {};
+    const showing = widget.show(root, 0).subscribe(() => {
+      ready = true;
+    });
+    try {
+      await flush();
+      expect(ready).to.equal(false);
+      expect(root.children.length).to.equal(0);
+      expect(blocks).to.have.length(1);
+    } finally {
+      console.error = error;
+      showing.unsubscribe();
+      blocking.unsubscribe();
+      await widget.unload();
+    }
+  });
+
+  for (const kind of ['image', 'image-carousel']) {
+    it(`keeps the previous layer when ${kind} fails instead of reporting readiness`, async () => {
+      const preloads: Array<{ onerror: (() => void) | null }> = [];
+      globals.Image = class {
+        complete = false;
+        naturalWidth = 0;
+        src = '';
+        onload = null;
+        onerror: (() => void) | null = null;
+        constructor() {
+          preloads.push(this);
+        }
+      };
+      const errors: unknown[] = [];
+      const make = (name: string, template: object) =>
+        new Layer(name, {
+          widget: new TemplateWidget(
+            { getMedia: async (url: string) => url } as any,
+            {
+              widget: { name, template } as any,
+              config: { options: {}, data: {} } as any,
+              globals: {
+                target: 'poster',
+                reportError: (error) => errors.push(error),
+              },
+            }
+          ),
+        });
+      const previous = make('previous', {
+        type: 'text',
+        name: 'text',
+        opts: { text: 'Previous' },
+      });
+      const incoming = make('failed', {
+        type: kind,
+        name: kind,
+        opts:
+          kind === 'image'
+            ? { url: '/missing.png' }
+            : { images: ['/missing.png'], imageDuration: 5 },
+      });
+      const renderer = new Renderer(dom.window.document.getElementById('root'));
+      await firstValueFrom(renderer.show(previous, 0));
+      let ready = false;
+      const blocked: unknown[] = [];
+      const blocking = incoming.blocked$().subscribe((value) => {
+        if (value) blocked.push(value);
+      });
+      const showing = renderer.show(incoming, 0).subscribe(() => {
+        ready = true;
+      });
+      const warn = console.warn;
+      console.warn = () => {};
+      try {
+        await flush();
+        preloads[0].onerror?.();
+        await flush();
+        expect(ready).to.equal(false);
+        expect(renderer.getCurrentLayer()).to.equal(previous);
+        expect(previous.el.isConnected).to.equal(true);
+        expect(incoming.el.style.visibility).to.equal('hidden');
+        expect(errors).to.have.length(1);
+        expect(blocked).to.have.length(1);
+      } finally {
+        console.warn = warn;
+        showing.unsubscribe();
+        blocking.unsubscribe();
+        renderer.clear();
+      }
+    });
+
+    for (const playing of [false, true]) {
+      it(`keeps the previous layer visible until ${kind} loads and decodes during ${playing ? 'play' : 'show'}`, async () => {
+        const preloads: Array<{ onload: (() => void) | null }> = [];
+        const decode: Array<() => void> = [];
+        globals.Image = class {
+          complete = false;
+          naturalWidth = 0;
+          src = '';
+          onload: (() => void) | null = null;
+          onerror = null;
+          constructor() {
+            preloads.push(this);
+          }
+          decode() {
+            return new Promise<void>((resolve) => decode.push(resolve));
+          }
+        };
+        const resourceManager = { getMedia: async (url: string) => url };
+        const make = (name: string, template: object) =>
+          new Layer(name, {
+            widget: new TemplateWidget(resourceManager as any, {
+              widget: { name, template } as any,
+              config: { options: {}, data: {} } as any,
+              globals: { target: 'poster' },
+            }),
+          });
+        const previous = make('previous', {
+          type: 'text',
+          name: 'text',
+          opts: { text: 'Previous' },
+        });
+        const incoming = make('incoming', {
+          type: kind,
+          name: kind,
+          opts:
+            kind === 'image'
+              ? { url: '/image.png' }
+              : { images: ['/one.png', '/two.png'], imageDuration: 5 },
+        });
+        const renderer = new Renderer(
+          dom.window.document.getElementById('root')
+        );
+        const timer = new Subject<number>();
+        await firstValueFrom(renderer.show(previous, 0));
+        let switched = false;
+        const subscription = (
+          playing
+            ? renderer.play(incoming, timer, 0, 100)
+            : renderer.show(incoming, 0)
+        ).subscribe(() => {
+          switched = true;
+        });
+        try {
+          await flush();
+          expect(preloads).to.have.length(1);
+          expect(renderer.getCurrentLayer()).to.equal(previous);
+          expect(previous.el.isConnected).to.equal(true);
+          expect(incoming.el.style.visibility).to.equal('hidden');
+          preloads.forEach((image) => image.onload?.());
+          await flush();
+          expect(renderer.getCurrentLayer()).to.equal(previous);
+          expect(switched).to.equal(false);
+          decode.forEach((resolve) => resolve());
+          await flush();
+          expect(renderer.getCurrentLayer()).to.equal(incoming);
+          expect(incoming.el.style.visibility).to.equal('visible');
+          expect(previous.el.isConnected).to.equal(false);
+        } finally {
+          subscription.unsubscribe();
+          await incoming.stop();
+          renderer.clear();
+        }
+      });
+    }
+  }
+
+  it('releases an unfinished image preparation when the widget unloads', async () => {
+    const preloads: Array<{
+      src: string;
+      onload: (() => void) | null;
+      onerror: (() => void) | null;
+    }> = [];
+    globals.Image = class {
+      complete = false;
+      naturalWidth = 0;
+      src = '';
+      onload = null;
+      onerror = null;
+      constructor() {
+        preloads.push(this);
+      }
+    };
+    const errors: unknown[] = [];
+    const widget = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: {
+          name: 'stalled-image',
+          template: {
+            type: 'image',
+            name: 'image',
+            opts: { url: '/stalled.png' },
+          },
+        } as any,
+        config: { options: {}, data: {} } as any,
+        globals: {
+          target: 'poster',
+          reportError: (error) => errors.push(error),
+        },
+      }
+    );
+    const clock = useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    let ready = false;
+    const showing = widget
+      .show(dom.window.document.getElementById('root'), 0)
+      .subscribe(() => {
+        ready = true;
+      });
+    try {
+      await clock.tickAsync(0);
+      expect(preloads).to.have.length(1);
+      const pendingTimers = clock.countTimers();
+      const lateLoad = preloads[0].onload;
+      await widget.unload();
+      expect(preloads[0].src).to.equal('');
+      expect(preloads[0].onload).to.equal(null);
+      expect(preloads[0].onerror).to.equal(null);
+      expect(clock.countTimers()).to.be.lessThan(pendingTimers);
+      lateLoad?.();
+      await clock.tickAsync(30000);
+      expect(ready).to.equal(false);
+      expect(errors).to.have.length(0);
+    } finally {
+      showing.unsubscribe();
+      await widget.unload();
+      clock.restore();
+    }
+  });
+
+  it('does not reveal a pending layer when its show is cancelled', async () => {
+    const previous = new Layer('previous', {
+      widget: new TemplateWidget({} as any, {
+        widget: {
+          name: 'previous',
+          template: { type: 'text', name: 'text', opts: { text: 'Previous' } },
+        } as any,
+        config: { options: {}, data: {} } as any,
+        globals: { target: 'poster' },
+      }),
+    });
+    const incoming = new Layer('pending', { widget: createVideoWidget() });
+    const renderer = new Renderer(dom.window.document.getElementById('root'));
+    await firstValueFrom(renderer.show(previous, 0));
+    const subscription = renderer.show(incoming, 0).subscribe();
+    await flush();
+    subscription.unsubscribe();
+    expect(renderer.getCurrentLayer()).to.equal(previous);
+    expect(previous.el.isConnected).to.equal(true);
+    expect(incoming.el.style.visibility).to.equal('hidden');
+    renderer.clear();
+  });
 
   it('uses a measured duration hint until the visible widget loads its actual duration', async () => {
     const widget = createVideoWidget();

@@ -40,7 +40,13 @@ export type StoreError =
   | 'NOT_ENOUGH_SPACE';
 
 export interface StoreFileReturnValue {
-  result: { code: StoreResult; error?: StoreError; errMsg?: string };
+  result: {
+    code: StoreResult;
+    error?: StoreError;
+    errMsg?: string;
+    /** Restrict capacity eviction to these source URLs; omitted means all items. */
+    evictableUrls?: string[];
+  };
   item?: StorageItem;
 }
 

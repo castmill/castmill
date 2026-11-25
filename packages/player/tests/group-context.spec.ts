@@ -268,6 +268,56 @@ describe('Group context, when and limit', () => {
     });
   });
 
+  it('follows initial letterboxing triggered by the base-font resize event without ResizeObserver', async () => {
+    await withDom(async (root) => {
+      // Solid's cached template nodes can belong to an earlier jsdom document.
+      const seed = await show(root, { type: 'group', components: [] }, {});
+      const prototype = Object.getPrototypeOf(
+        root.querySelector('[data-component="template"]')
+      );
+      await seed.unload();
+      Object.defineProperty(prototype, 'clientWidth', {
+        configurable: true,
+        get() {
+          return this.style.width === '607.5px' ? 608 : 1920;
+        },
+      });
+      Object.defineProperty(prototype, 'clientHeight', {
+        configurable: true,
+        get: () => 1080,
+      });
+      const letterbox = () => {
+        const template = root.querySelector(
+          '[data-component="template"]'
+        ) as HTMLElement | null;
+        if (template) template.style.width = '607.5px';
+      };
+      window.addEventListener('resize', letterbox);
+      let widget: TemplateWidget | undefined;
+      try {
+        widget = await show(
+          root,
+          { type: 'group', name: 'portrait', fontScale: true, components: [] },
+          {}
+        );
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        const template = root.querySelector(
+          '[data-component="template"]'
+        ) as HTMLElement;
+        expect(template.style.width).to.equal('607.5px');
+        expect(parseFloat(template.style.fontSize)).to.be.closeTo(
+          baseFontSize(608, 1080)!,
+          0.0001
+        );
+      } finally {
+        window.removeEventListener('resize', letterbox);
+        await widget?.unload();
+        delete prototype.clientWidth;
+        delete prototype.clientHeight;
+      }
+    });
+  });
+
   it('does not change the font baseline unless the template opts in', async () => {
     await withDom(async (root) => {
       await show(root, { type: 'group', name: 'root', components: [] }, {});

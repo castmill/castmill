@@ -57,37 +57,67 @@ describe('ImageCarousel', () => {
   });
 
   describe('preloadCarouselImages', () => {
-    it('waits for all images, tolerates failures, and bounds stalled loads', async () => {
-      const clock = useFakeTimers();
+    it('waits for decoding and falls back to load events on legacy engines', async () => {
+      let finishDecode!: () => void;
       const images: HTMLImageElement[] = [];
-      try {
-        let complete = false;
-        const { result, warnings } = await silenceWarnings(async () => {
-          const loading = preloadCarouselImages(['a', 'b', 'c'], () => {
+      let complete = false;
+      const loading = preloadCarouselImages(['a', 'b'], () => {
+        const image = {
+          complete: false,
+          naturalWidth: 0,
+          ...(images.length === 0
+            ? {
+                decode: () =>
+                  new Promise<void>((resolve) => {
+                    finishDecode = resolve;
+                  }),
+              }
+            : {}),
+        } as HTMLImageElement;
+        images.push(image);
+        return image;
+      }).then(() => {
+        complete = true;
+      });
+      images.forEach((image) => image.onload?.call(image, new Event('load')));
+      await flush();
+      expect(complete).to.equal(false);
+      finishDecode();
+      await loading;
+      expect(complete).to.equal(true);
+    });
+
+    for (const failure of ['error', 'timeout', 'decode']) {
+      it(`rejects ${failure} instead of reporting an unloaded image ready`, async () => {
+        const clock = useFakeTimers();
+        const images: HTMLImageElement[] = [];
+        try {
+          const loading = preloadCarouselImages(['a'], () => {
             const image = {
               complete: false,
               naturalWidth: 0,
+              ...(failure === 'decode'
+                ? { decode: () => Promise.reject(new Error('decode failed')) }
+                : {}),
             } as HTMLImageElement;
             images.push(image);
             return image;
-          }).then(() => {
-            complete = true;
-          });
-          images[0].onload?.call(images[0], new Event('load'));
-          images[1].onerror?.call(images[1], new Event('error'));
-          await clock.tickAsync(4999);
-          expect(complete).to.equal(false);
-          await clock.tickAsync(1);
-          await loading;
-          return complete;
-        });
-        expect(result).to.equal(true);
-        expect(warnings).to.have.length(2);
-        expect(images[2].onload).to.equal(null);
-      } finally {
-        clock.restore();
-      }
-    });
+          }).then(
+            () => undefined,
+            (error: Error) => error
+          );
+          if (failure === 'error')
+            images[0].onerror?.call(images[0], new Event('error'));
+          if (failure === 'decode')
+            images[0].onload?.call(images[0], new Event('load'));
+          if (failure === 'timeout') await clock.tickAsync(30000);
+          expect(await loading).to.be.instanceOf(Error);
+          expect(images[0].onload).to.equal(null);
+        } finally {
+          clock.restore();
+        }
+      });
+    }
   });
 
   describe('resolveCarouselImageUrls', () => {
@@ -211,6 +241,556 @@ describe('ImageCarousel', () => {
       });
     });
 
+    it('renders and preloads exact cached bytes through reusable, render-only blob URLs', async () => {
+      const source =
+        'data:image/png;charset=iso-8859-1;castmill-revision=123;base64,AAECA/7/';
+      const blobs: Blob[] = [];
+      const revoked: string[] = [];
+      dom.window.URL.createObjectURL = (blob: Blob) => {
+        blobs.push(blob);
+        return `blob:carousel-${blobs.length}`;
+      };
+      dom.window.URL.revokeObjectURL = (url: string) => revoked.push(url);
+      const preloads: Array<{ src: string }> = [];
+      globals.Image = class {
+        complete = true;
+        naturalWidth = 100;
+        onload = null;
+        onerror = null;
+        src = '';
+        constructor() {
+          preloads.push(this);
+        }
+      };
+      const lookups: string[] = [];
+      const widget = new TemplateWidget(
+        {
+          getMedia: async (url: string) => {
+            lookups.push(url);
+            return source;
+          },
+        } as any,
+        {
+          widget: {
+            name: 'binary-carousel',
+            template: {
+              type: 'image-carousel',
+              name: 'binary-carousel',
+              opts: {
+                images: ['https://img/1', 'https://img/2'],
+                imageDuration: 5,
+                transition: 'fade',
+              },
+            },
+          } as any,
+          config: { options: {}, data: {} } as any,
+          globals: { target: 'preview', freezePreviewDuringLoad: true },
+        }
+      );
+      try {
+        await firstValueFrom(
+          widget.show(dom.window.document.getElementById('root'), 0)
+        );
+        await flush();
+        expect(blobs).to.have.length(1);
+        expect(blobs[0].type).to.equal(
+          'image/png;charset=iso-8859-1;castmill-revision=123'
+        );
+        const bytes = await new Promise<Uint8Array>((resolve, reject) => {
+          const reader = new dom.window.FileReader();
+          reader.onload = () =>
+            resolve(new Uint8Array(reader.result as ArrayBuffer));
+          reader.onerror = () => reject(reader.error);
+          reader.readAsArrayBuffer(blobs[0]);
+        });
+        expect(Array.from(bytes)).to.deep.equal([0, 1, 2, 3, 254, 255]);
+        const images = dom.window.document.querySelectorAll(
+          '[data-component="image"]'
+        );
+        expect(images[0].style.backgroundImage).to.contain('blob:carousel-1');
+        expect(images[1].style.backgroundImage).to.contain('blob:carousel-1');
+        expect(preloads[0].src).to.equal('blob:carousel-1');
+        await firstValueFrom(widget.seek(6500));
+        expect(images[1].style.opacity).to.equal('1');
+        expect(revoked).to.deep.equal([]);
+        expect(lookups).to.deep.equal(['https://img/1', 'https://img/2']);
+      } finally {
+        await widget.unload();
+      }
+      expect(revoked).to.deep.equal(['blob:carousel-1']);
+    });
+
+    for (const firstToUnload of [0, 1]) {
+      it(`reuses overlapping widget images until owner ${1 - firstToUnload} also unloads`, async () => {
+        const created: Blob[] = [];
+        const revoked: string[] = [];
+        dom.window.URL.createObjectURL = (blob: Blob) => {
+          created.push(blob);
+          return `blob:shared-${created.length}`;
+        };
+        dom.window.URL.revokeObjectURL = (url: string) => revoked.push(url);
+        const resourceManager = {
+          getMedia: async () => 'data:image/png;base64,AA==',
+        };
+        const roots = [0, 1].map(() => {
+          const root = dom.window.document.createElement('div');
+          dom.window.document.getElementById('root').appendChild(root);
+          return root;
+        });
+        const widgets = roots.map(
+          (_root, index) =>
+            new TemplateWidget(resourceManager as any, {
+              widget: {
+                name: `overlapping-${index}`,
+                template: {
+                  type: 'image-carousel',
+                  name: `overlapping-${index}`,
+                  opts: { images: ['https://img/1'], imageDuration: 5 },
+                },
+              } as any,
+              config: { options: {}, data: {} } as any,
+              globals: { target: 'poster' },
+            })
+        );
+        try {
+          for (let index = 0; index < widgets.length; index++) {
+            await firstValueFrom(widgets[index].show(roots[index], 0));
+          }
+          expect(created).to.have.length(1);
+          await widgets[firstToUnload].unload();
+          expect(revoked).to.deep.equal([]);
+          expect(
+            roots[1 - firstToUnload].querySelector('[data-component="image"]')
+              .style.backgroundImage
+          ).to.contain('blob:shared-1');
+          await widgets[1 - firstToUnload].unload();
+          expect(revoked).to.deep.equal(['blob:shared-1']);
+
+          await firstValueFrom(widgets[0].show(roots[0], 0));
+          expect(created).to.have.length(2);
+        } finally {
+          for (const widget of widgets) await widget.unload();
+        }
+        expect(revoked).to.deep.equal(['blob:shared-1', 'blob:shared-2']);
+      });
+    }
+
+    it('keeps cached data URLs usable without Blob URL support', async () => {
+      const source = 'data:image/png;base64,AA==';
+      const widget = new TemplateWidget(
+        { getMedia: async () => source } as any,
+        {
+          widget: {
+            name: 'unsupported-blob-carousel',
+            template: {
+              type: 'image-carousel',
+              name: 'unsupported-blob-carousel',
+              opts: { images: ['https://img/1'], imageDuration: 5 },
+            },
+          } as any,
+          config: { options: {}, data: {} } as any,
+          globals: { target: 'poster' },
+        }
+      );
+      try {
+        await firstValueFrom(
+          widget.show(dom.window.document.getElementById('root'), 0)
+        );
+        expect(
+          dom.window.document.querySelector('[data-component="image"]').style
+            .backgroundImage
+        ).to.contain(source);
+      } finally {
+        await widget.unload();
+      }
+    });
+
+    it('does not allocate blob URLs for late preview loads after cleanup', async () => {
+      const created: Blob[] = [];
+      const revoked: string[] = [];
+      dom.window.URL.createObjectURL = (blob: Blob) => {
+        created.push(blob);
+        return `blob:preview-${created.length}`;
+      };
+      dom.window.URL.revokeObjectURL = (url: string) => revoked.push(url);
+      let resolveLater: ((url: string) => void) | undefined;
+      const widget = new TemplateWidget(
+        {
+          getMedia: (url: string) =>
+            url.endsWith('/1')
+              ? Promise.resolve('data:image/png;base64,AA==')
+              : new Promise<string>((resolve) => {
+                  resolveLater = resolve;
+                }),
+        } as any,
+        {
+          widget: {
+            name: 'late-blob-carousel',
+            template: {
+              type: 'image-carousel',
+              name: 'late-blob-carousel',
+              opts: {
+                images: ['https://img/1', 'https://img/2'],
+                imageDuration: 5,
+              },
+            },
+          } as any,
+          config: { options: {}, data: {} } as any,
+          globals: { target: 'preview', freezePreviewDuringLoad: true },
+        }
+      );
+      await firstValueFrom(
+        widget.show(dom.window.document.getElementById('root'), 0)
+      );
+      await widget.unload();
+      resolveLater!('data:image/png;base64,AQ==');
+      await flush();
+      expect(created).to.have.length(1);
+      expect(revoked).to.deep.equal(['blob:preview-1']);
+    });
+
+    it('does not clear transforms on fresh carousel images', async () => {
+      const prototype = dom.window.CSSStyleDeclaration.prototype;
+      const removeProperty = prototype.removeProperty;
+      let transformClears = 0;
+      prototype.removeProperty = function (property: string) {
+        if (property === 'transform' && this.backgroundImage) transformClears++;
+        return removeProperty.call(this, property);
+      };
+      const widget = new TemplateWidget(
+        { getMedia: async (url: string) => url } as any,
+        {
+          widget: {
+            name: 'fresh-carousel',
+            template: {
+              type: 'image-carousel',
+              name: 'fresh-carousel',
+              opts: {
+                images: ['https://img/1', 'https://img/2'],
+                imageDuration: 5,
+                transition: 'fade',
+              },
+            },
+          } as any,
+          config: { options: {}, data: {} } as any,
+          globals: { target: 'poster' },
+        }
+      );
+      try {
+        await firstValueFrom(
+          widget.show(dom.window.document.getElementById('root'), 0)
+        );
+        expect(transformClears).to.equal(0);
+      } finally {
+        await widget.unload();
+        prototype.removeProperty = removeProperty;
+      }
+    });
+
+    it('bounds a large gallery to the current and next photos, releasing images on seeks and unload', async () => {
+      let created = 0;
+      const live = new Set<string>();
+      dom.window.URL.createObjectURL = () => {
+        const url = `blob:bounded-${++created}`;
+        live.add(url);
+        expect(live.size).to.be.at.most(2);
+        return url;
+      };
+      dom.window.URL.revokeObjectURL = (url: string) => live.delete(url);
+      const sources = Array.from(
+        { length: 30 },
+        (_value, index) => `photo-${index}`
+      );
+      const widget = new TemplateWidget(
+        {
+          getMedia: async (url: string) =>
+            `data:image/png;base64,${dom.window.btoa(url)}`,
+        } as any,
+        {
+          widget: {
+            name: 'large-gallery',
+            template: {
+              type: 'image-carousel',
+              name: 'large-gallery',
+              opts: { images: sources, imageDuration: 5, transition: 'fade' },
+            },
+          } as any,
+          config: { options: {}, data: {} } as any,
+          globals: { target: 'poster' },
+        }
+      );
+      try {
+        await firstValueFrom(
+          widget.show(dom.window.document.getElementById('root'), 0)
+        );
+        await flush();
+        const images = Array.from(
+          dom.window.document.querySelectorAll('[data-component="image"]')
+        ) as HTMLElement[];
+        const assigned = () =>
+          images.filter((image) => image.style.backgroundImage).length;
+        expect(assigned()).to.equal(2);
+        expect(
+          images.filter((image) => image.style.display !== 'none')
+        ).to.have.length(2);
+        expect(created).to.equal(2);
+        expect(widget.duration()).to.equal(180000);
+        for (const index of [2, 8, 29, 0]) {
+          await firstValueFrom(widget.seek(index * 6000 + 2000));
+          await flush();
+          expect(images[index].style.backgroundImage).not.to.equal('');
+          expect(images[index].style.opacity, `photo ${index}`).to.equal('1');
+          expect(assigned()).to.be.at.most(2);
+          expect(
+            images.filter((image) => image.style.display !== 'none')
+          ).to.have.length(2);
+          expect(live.size).to.be.at.most(2);
+        }
+      } finally {
+        await widget.unload();
+      }
+      expect(live.size).to.equal(0);
+    });
+
+    it('holds the decoded photo and extends playback while the next photo is still loading', async () => {
+      const preloads: Array<{ onload: (() => void) | null }> = [];
+      globals.Image = class {
+        complete = false;
+        naturalWidth = 0;
+        onload: (() => void) | null = null;
+        onerror = null;
+        src = '';
+        constructor() {
+          preloads.push(this);
+        }
+      };
+      const widget = new TemplateWidget(
+        { getMedia: async (url: string) => url } as any,
+        {
+          widget: {
+            name: 'slow-gallery',
+            template: {
+              type: 'image-carousel',
+              name: 'slow-gallery',
+              opts: {
+                images: ['/one', '/two', '/three'],
+                imageDuration: 5,
+                transition: 'fade',
+              },
+            },
+          } as any,
+          config: { options: {}, data: {} } as any,
+          globals: { target: 'preview', freezePreviewDuringLoad: true },
+        }
+      );
+      const shown = firstValueFrom(
+        widget.show(dom.window.document.getElementById('root'), 0)
+      );
+      await flush();
+      preloads[0].onload?.();
+      await shown;
+      await flush();
+      const images = dom.window.document.querySelectorAll(
+        '[data-component="image"]'
+      );
+      const clock = useFakeTimers({
+        toFake: ['Date', 'setInterval', 'clearInterval'],
+      });
+      const timer = new Subject<number>();
+      const playing = widget.play(timer).subscribe();
+      try {
+        await clock.tickAsync(7000);
+        expect(images[0].style.opacity).to.equal('1');
+        expect(Number(images[1].style.opacity)).to.equal(0);
+        expect(widget.duration()).to.be.greaterThan(19000);
+        expect(preloads).to.have.length(2);
+        preloads[1].onload?.();
+        await flush();
+        await clock.tickAsync(500);
+        expect(Number(images[0].style.opacity)).to.be.within(0, 1);
+        expect(Number(images[1].style.opacity)).to.be.within(0, 1);
+        await clock.tickAsync(600);
+        expect(images[1].style.opacity).to.equal('1');
+        expect(images[0].style.backgroundImage).to.equal('');
+        expect(preloads).to.have.length(3);
+      } finally {
+        playing.unsubscribe();
+        await widget.stop();
+        await widget.unload();
+        clock.restore();
+      }
+    });
+
+    it('keeps a failed next photo blocked through playback until that preparation is evicted', async () => {
+      const preloads: Array<{
+        src: string;
+        onload: (() => void) | null;
+        onerror: (() => void) | null;
+      }> = [];
+      globals.Image = class {
+        complete = false;
+        naturalWidth = 0;
+        src = '';
+        onload = null;
+        onerror = null;
+        constructor() {
+          preloads.push(this);
+        }
+      };
+      const widget = new TemplateWidget(
+        { getMedia: async (url: string) => url } as any,
+        {
+          widget: {
+            name: 'failed-next-photo',
+            template: {
+              type: 'image-carousel',
+              name: 'carousel',
+              opts: {
+                images: ['/one', '/failed', '/three', '/four'],
+                imageDuration: 5,
+                transition: 'fade',
+              },
+            },
+          } as any,
+          config: { options: {}, data: {} } as any,
+          globals: { target: 'preview', freezePreviewDuringLoad: true },
+        }
+      );
+      const shown = firstValueFrom(
+        widget.show(dom.window.document.getElementById('root'), 0)
+      );
+      await flush();
+      preloads[0].onload?.();
+      await shown;
+      await flush();
+      const clock = useFakeTimers({
+        toFake: ['Date', 'setInterval', 'clearInterval'],
+      });
+      const timer = new Subject<number>();
+      const playing = widget.play(timer).subscribe();
+      let blocked: unknown;
+      const blocking = widget.blocked$().subscribe((value) => {
+        blocked = value;
+      });
+      try {
+        await silenceWarnings(async () => {
+          preloads[1].onerror?.();
+          await flush();
+        });
+        const failure = blocked;
+        expect(failure).not.to.equal(undefined);
+        await clock.tickAsync(6000);
+        expect(blocked).to.equal(failure);
+        let sought = false;
+        const seeking = firstValueFrom(widget.seek(16500)).then(() => {
+          sought = true;
+        });
+        await flush();
+        expect(blocked).to.equal(undefined);
+        expect(sought).to.equal(false);
+        expect(preloads[1].src).to.equal('');
+        preloads[2].onload?.();
+        await seeking;
+        expect(sought).to.equal(true);
+      } finally {
+        playing.unsubscribe();
+        blocking.unsubscribe();
+        await widget.stop();
+        await widget.unload();
+        clock.restore();
+      }
+    });
+
+    it('waits for a distant seek and cancels evicted and unloaded image preparations', async () => {
+      const preloads: Array<{ src: string; onload: (() => void) | null }> = [];
+      globals.Image = class {
+        complete = false;
+        naturalWidth = 0;
+        src = '';
+        onload: (() => void) | null = null;
+        onerror = null;
+        constructor() {
+          preloads.push(this);
+        }
+      };
+      const widget = new TemplateWidget(
+        { getMedia: async (url: string) => url } as any,
+        {
+          widget: {
+            name: 'seek-gallery',
+            template: {
+              type: 'image-carousel',
+              name: 'seek-gallery',
+              opts: {
+                images: Array.from(
+                  { length: 10 },
+                  (_value, index) => `/photo-${index}`
+                ),
+                imageDuration: 5,
+                transition: 'fade',
+              },
+            },
+          } as any,
+          config: { options: {}, data: {} } as any,
+          globals: { target: 'preview', freezePreviewDuringLoad: true },
+        }
+      );
+      try {
+        const shown = firstValueFrom(
+          widget.show(dom.window.document.getElementById('root'), 0)
+        );
+        await flush();
+        preloads[0].onload?.();
+        await shown;
+        await flush();
+        const images = Array.from(
+          dom.window.document.querySelectorAll('[data-component="image"]')
+        ) as HTMLElement[];
+        let sought = false;
+        const seeking = firstValueFrom(widget.seek(32000)).then(() => {
+          sought = true;
+        });
+        await flush();
+        expect(sought).to.equal(false);
+        expect(preloads[1].src).to.equal('');
+        expect(preloads[1].onload).to.equal(null);
+        expect(preloads[2].src).to.equal('/photo-5');
+        expect(images[0].style.opacity).to.equal('1');
+        expect(
+          images.filter((image) => image.style.backgroundImage)
+        ).to.have.length(2);
+        preloads[2].onload?.();
+        await seeking;
+        await flush();
+        expect(images[5].style.opacity).to.equal('1');
+        expect(images[0].style.backgroundImage).to.equal('');
+        expect(preloads[0].src).to.equal('');
+        expect(preloads[3].src).to.equal('/photo-6');
+        preloads[3].onload?.();
+        await flush();
+        await firstValueFrom(widget.seek(35500));
+        expect(Number(images[5].style.opacity)).to.be.within(0.01, 0.99);
+        const nextSeek = firstValueFrom(widget.seek(44000));
+        await flush();
+        expect(images[5].style.opacity).to.equal('1');
+        expect(images[6].style.display).to.equal('none');
+        preloads[4].onload?.();
+        await nextSeek;
+        await flush();
+        const lateLoad = preloads[5].onload;
+        await widget.unload();
+        expect(preloads.every((image) => image.src === '')).to.equal(true);
+        lateLoad?.();
+        await flush();
+        expect(preloads).to.have.length(6);
+        expect(
+          dom.window.document.querySelector('[data-component="image-carousel"]')
+        ).to.equal(null);
+      } finally {
+        await widget.unload();
+      }
+    });
+
     it('cross-fades images in order even when downloads finish out of order', async function () {
       this.timeout(6000);
       const delays: Record<string, number> = {
@@ -259,7 +839,7 @@ describe('ImageCarousel', () => {
         await flush();
         return shown;
       });
-      expect(warnings).to.have.length(1);
+      expect(warnings).to.have.length(0);
 
       const images = el.querySelectorAll('[data-component="image"]');
       expect(images.length).to.equal(3);
@@ -274,11 +854,15 @@ describe('ImageCarousel', () => {
       expect(images[0].style.opacity).to.equal('1');
 
       // Fade keeps images in place: no slide or zoom transforms.
-      await firstValueFrom(widget.seek(6500));
+      const { warnings: laterWarnings } = await silenceWarnings(async () => {
+        await firstValueFrom(widget.seek(6500));
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      });
+      expect(laterWarnings).to.have.length(1);
       expect(images[1].style.backgroundImage).to.contain('blob:https://img/2');
       expect(images[1].style.opacity).to.equal('1');
       expect(images[0].style.visibility).to.equal('hidden');
-      expect(images[0].style.backgroundImage).to.contain('blob:https://img/1');
+      expect(images[0].style.backgroundImage).to.equal('');
       expect(images[1].style.transform).to.equal('');
 
       // The image that could not be cached plays from its original URL.
@@ -294,6 +878,69 @@ describe('ImageCarousel', () => {
       expect(Number(images[2].style.opacity)).to.be.within(0, 0.5);
       widget.stop();
     });
+
+    for (const count of [1, 2]) {
+      it(`${count === 1 ? 'loops back' : 'holds the last image'} at the end of a ${count}-widget playlist item`, async () => {
+        const resourceManager = { getMedia: async (url: string) => url };
+        const playlist = Playlist.fromJSON(
+          {
+            name: 'carousel-boundary',
+            items: Array.from({ length: count }, (_value, index) => ({
+              name: `carousel-${index}`,
+              widget: {
+                name: `carousel-${index}`,
+                template: {
+                  type: 'image-carousel',
+                  name: `carousel-${index}`,
+                  opts: {
+                    images: ['https://img/1', 'https://img/2', 'https://img/3'],
+                    imageDuration: 5,
+                    transition: 'fade',
+                  },
+                },
+              },
+              config: { options: {}, data: {} },
+            })),
+          } as any,
+          resourceManager as any,
+          { target: 'preview', freezePreviewDuringLoad: true }
+        );
+        const root = dom.window.document.getElementById('root');
+        const renderer = new Renderer(root);
+        try {
+          await firstValueFrom(playlist.show(renderer));
+          const images = root.querySelectorAll('[data-component="image"]');
+          expect(playlist.layers[0].duration()).to.equal(18000);
+          await firstValueFrom(playlist.layers[0].seek(17500));
+          if (count === 1) {
+            expect(Number(images[0].style.opacity)).to.be.within(0.5, 1);
+            expect(Number(images[2].style.opacity)).to.be.within(0, 0.5);
+          } else {
+            expect(Number(images[0].style.opacity)).to.equal(0);
+            expect(Number(images[2].style.opacity)).to.equal(1);
+            await firstValueFrom(playlist.layers[0].seek(20000));
+            expect(Number(images[0].style.opacity)).to.equal(0);
+            expect(Number(images[2].style.opacity)).to.equal(1);
+
+            const clock = useFakeTimers();
+            const timer = new Subject<number>();
+            const playing = playlist.layers[0].play(timer).subscribe();
+            try {
+              await clock.tickAsync(2000);
+              expect(Number(images[0].style.opacity)).to.equal(0);
+              expect(Number(images[2].style.opacity)).to.equal(1);
+            } finally {
+              playing.unsubscribe();
+              await playlist.layers[0].stop();
+              clock.restore();
+            }
+          }
+        } finally {
+          playlist.unload();
+          renderer.clean();
+        }
+      });
+    }
 
     it('does not show the carousel until the incoming image has loaded', async () => {
       const preloads: Array<{ onload: ((event: Event) => void) | null }> = [];
@@ -345,7 +992,10 @@ describe('ImageCarousel', () => {
         '[data-component="image"]'
       );
       expect(images[0].style.opacity).to.equal('1');
-      await firstValueFrom(widget.seek(5500));
+      const seeking = firstValueFrom(widget.seek(5500));
+      await flush();
+      preloads[1].onload?.(new Event('load'));
+      await seeking;
       expect(Number(images[0].style.opacity)).to.be.greaterThan(0);
       expect(Number(images[1].style.opacity)).to.be.greaterThan(0);
       await widget.unload();
@@ -403,11 +1053,18 @@ describe('ImageCarousel', () => {
     });
 
     for (const loop of [false, true]) {
-      it(`does not extend a ${loop ? 'looping' : 'finite'} device playlist slot while images load`, async () => {
+      it(`waits for device images before starting a ${loop ? 'looping' : 'finite'} playlist slot`, async () => {
         let preloadCount = 0;
+        const preloads: Array<{ onload: (() => void) | null }> = [];
         globals.Image = class {
+          complete = false;
+          naturalWidth = 0;
+          onload: (() => void) | null = null;
+          onerror = null;
+          src = '';
           constructor() {
             preloadCount++;
+            preloads.push(this);
           }
         };
         const resourceManager = { getMedia: async (url: string) => url };
@@ -449,7 +1106,12 @@ describe('ImageCarousel', () => {
         try {
           await flush();
           await flush();
-          expect(preloadCount).to.equal(0);
+          expect(preloadCount).to.equal(1);
+          expect(renderer.getCurrentLayer()).to.equal(undefined);
+          preloads.forEach((image) => image.onload?.());
+          await flush();
+          await flush();
+          expect(renderer.getCurrentLayer()).to.equal(playlist.layers[0]);
           const first = dom.window.document.querySelector(
             '[data-layer="carousel"]'
           );

@@ -46,6 +46,8 @@ export interface PlayerGlobals {
   muted?: boolean;
   /** Keep a paused editor preview at its requested position while assets load. */
   freezePreviewDuringLoad?: boolean | (() => boolean);
+  /** Set by the owning playlist: only a sole item loops back within its slot. */
+  loopPlaylistItem?: boolean;
   reportError?: (input: PlayerRuntimeError) => void;
   /** Optional per-element integration; omitted to use the default HTML video behavior. */
   createVideoPlaybackController?: VideoPlaybackControllerFactory;

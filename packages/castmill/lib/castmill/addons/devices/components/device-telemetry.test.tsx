@@ -12,7 +12,7 @@ const device = { id: 'device-1', online: true } as Device;
 
 describe('formatPercent', () => {
   it('rounds and clamps', () => {
-    expect(formatPercent(37.894736842105264)).toBe('38%');
+    expect(formatPercent(37.89)).toBe('38%');
     expect(formatPercent(0.4)).toBe('0%');
     expect(formatPercent(100.2)).toBe('100%');
     expect(formatPercent(-1)).toBe('0%');
@@ -24,7 +24,7 @@ describe('DeviceTelemetry', () => {
 
   it('shows whole percentages for CPU, signal and battery', async () => {
     vi.mocked(DevicesService.getDeviceTelemetry).mockResolvedValue({
-      cpuUsagePercent: 37.894736842105264,
+      cpuUsagePercent: 37.89,
       network: { type: 'wifi', wifiSignalStrengthPercent: 71.5 },
       battery: { levelPercent: 99.6, isCharging: false },
     } as never);

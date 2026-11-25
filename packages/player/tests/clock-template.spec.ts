@@ -39,6 +39,7 @@ describe('time-dependent template updates', () => {
       'Element',
       'MutationObserver',
       'getComputedStyle',
+      'Image',
     ];
     const saved: Record<string, unknown> = {};
     keys.forEach((key) => {
@@ -51,6 +52,13 @@ describe('time-dependent template updates', () => {
     globals.Element = dom.window.Element;
     globals.MutationObserver = dom.window.MutationObserver;
     globals.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
+    globals.Image = class {
+      complete = true;
+      naturalWidth = 100;
+      src = '';
+      onload = null;
+      onerror = null;
+    };
 
     dom.window.HTMLElement.prototype.getBoundingClientRect = () =>
       ({
@@ -150,6 +158,145 @@ describe('time-dependent template updates', () => {
       });
     }
   };
+
+  it('coalesces repeated fitted-text resize notifications into one fit per frame', async () => {
+    await withWidget(
+      {
+        type: 'text',
+        name: 'coalesced-autofit',
+        opts: { text: 'fitted', autofit: { baseSize: 1 } },
+      },
+      {},
+      async (root) => {
+        const span = root.querySelector('span')!;
+        const getRect = span.getBoundingClientRect.bind(span);
+        let measurements = 0;
+        span.getBoundingClientRect = () => {
+          measurements++;
+          return getRect();
+        };
+        for (let index = 0; index < 3; index++) {
+          window.dispatchEvent(new window.Event('resize'));
+        }
+        expect(measurements).to.equal(0);
+        await flush();
+        expect(measurements).to.equal(1);
+        expect(span.style.fontSize).to.equal('1em');
+
+        for (let index = 0; index < 3; index++) {
+          window.dispatchEvent(new window.Event('resize'));
+        }
+        await flush();
+        expect(measurements).to.equal(2);
+      }
+    );
+  });
+
+  it('does not initialize transforms for fitted text that never scrolls', async () => {
+    await withWidget(
+      {
+        type: 'text',
+        name: 'static-fitted-text',
+        opts: { text: 'Static text', autofit: { baseSize: 1 } },
+      },
+      {},
+      async (root) => {
+        await flush();
+        const span = root.querySelector('[data-component="text"] span')!;
+        expect((span as HTMLElement).style.transform).to.equal('');
+        globals.window.dispatchEvent(new globals.window.Event('resize'));
+        await flush();
+        expect((span as HTMLElement).style.transform).to.equal('');
+      }
+    );
+  });
+
+  it('resets an actual scroll transform when updated text no longer needs scrolling', async () => {
+    const later = new Date(2026, 0, 1, 11, 0).getTime();
+    await withWidget(
+      {
+        type: 'text',
+        name: 'scroll-reset',
+        opts: {
+          text: {
+            cond: { key: '@now', gte: later, then: 'After', else: 'Before' },
+          },
+          autofit: {
+            baseSize: 1,
+            minSize: {
+              cond: { key: '@now', gte: later, then: 0, else: 2 },
+            },
+          },
+        },
+      },
+      {},
+      async (root, widget, _media, advanceClock) => {
+        const span = root.querySelector(
+          '[data-component="text"] span'
+        ) as HTMLElement;
+        const x = () =>
+          Number(
+            /translate(?:3d)?\(([-\d.]+)/.exec(span.style.transform)?.[1] || 0
+          );
+        await flush();
+        await firstValueFrom(widget.seek(1500));
+        expect(x(), span.style.transform).to.be.lessThan(0);
+        advanceClock();
+        await flush();
+        expect(span.textContent).to.equal('After');
+        expect(x()).to.equal(0);
+      }
+    );
+  });
+
+  it('reuses resolved text options during layout while preserving clock updates', async () => {
+    let reads = 0;
+    await withWidget(
+      {
+        type: 'text',
+        name: 'memoized-text',
+        opts: {
+          text: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: { key: 'data.later' },
+              else: { key: 'data.early' },
+            },
+          },
+          autofit: { baseSize: 1 },
+        },
+      },
+      {
+        get early() {
+          reads++;
+          return 'early';
+        },
+        get later() {
+          reads++;
+          return 'later';
+        },
+      },
+      async (root, _widget, _media, advanceClock) => {
+        await flush();
+        const text = root.querySelector('[data-component="text"] span')!;
+        expect(text.textContent).to.equal('early');
+        const beforeResize = reads;
+        globals.window.dispatchEvent(new globals.window.Event('resize'));
+        await flush();
+        expect(reads).to.equal(beforeResize);
+
+        advanceClock();
+        await flush();
+        expect(text.textContent).to.equal('later');
+        expect(reads).to.be.greaterThan(beforeResize);
+        const afterClock = reads;
+        globals.window.dispatchEvent(new globals.window.Event('resize'));
+        await flush();
+        expect(reads).to.equal(afterClock);
+      }
+    );
+  });
 
   it('unloads preview layers when the player UI is destroyed', async () => {
     await withWidget(
@@ -280,6 +427,55 @@ describe('time-dependent template updates', () => {
         expect(media).to.have.length(initialMediaCount);
       }
     );
+  });
+
+  it('revokes replaced carousel blob URLs without revoking retained images', async () => {
+    const created: Blob[] = [];
+    const revoked: string[] = [];
+    await withWidget(
+      {
+        type: 'image-carousel',
+        name: 'blob-clock-carousel',
+        opts: {
+          images: {
+            list: {
+              key: 'data.images',
+              where: [{ key: '$.until', gte: '@now' }],
+              item: { key: '$.src' },
+            },
+          },
+          imageDuration: 2,
+        },
+      },
+      {
+        images: [
+          { src: 'expired.jpg', until: '2026-01-01T10:30:00' },
+          { src: 'current.jpg', until: '2026-01-01T12:00:00' },
+        ],
+      },
+      async (root, _widget, _media, advanceClock) => {
+        await flush();
+        expect(created).to.have.length(2);
+        expect(revoked).to.deep.equal([]);
+        advanceClock();
+        await flush();
+        expect(created).to.have.length(2);
+        expect(revoked).to.deep.equal(['blob:clock-1']);
+        expect(
+          root.querySelector('[data-component="image"]')?.getAttribute('style')
+        ).to.contain('blob:clock-2');
+      },
+      () => {
+        window.URL.createObjectURL = (blob: Blob) => {
+          created.push(blob);
+          return `blob:clock-${created.length}`;
+        };
+        window.URL.revokeObjectURL = (url: string) => revoked.push(url);
+      },
+      async (url) =>
+        `data:image/png;base64,${url === 'expired.jpg' ? 'AA==' : 'AQ=='}`
+    );
+    expect(revoked).to.deep.equal(['blob:clock-1', 'blob:clock-2']);
   });
 
   it('rebuilds an unchanged carousel when its resolved transition changes', async () => {
@@ -532,6 +728,73 @@ describe('time-dependent template updates', () => {
         new Promise((resolve) => {
           pending.push({ url, resolve });
         })
+    );
+  });
+
+  it('releases a stalled image preparation when its time-dependent URL changes', async () => {
+    const preloads: Array<{
+      src: string;
+      onload: (() => void) | null;
+      onerror: (() => void) | null;
+    }> = [];
+    await withWidget(
+      {
+        type: 'image',
+        name: 'clock-image',
+        opts: {
+          url: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 12, 0).getTime(),
+              then: 'second.png',
+              else: {
+                cond: {
+                  key: '@now',
+                  gte: new Date(2026, 0, 1, 11, 0).getTime(),
+                  then: 'first.png',
+                  else: '',
+                },
+              },
+            },
+          },
+        },
+      },
+      {},
+      async (root, _widget, _media, advanceClock) => {
+        advanceClock(11);
+        await flush();
+        expect(preloads).to.have.length(1);
+        const lateLoad = preloads[0].onload;
+        advanceClock(12);
+        await flush();
+        expect(preloads).to.have.length(2);
+        expect(preloads[0].src).to.equal('');
+        expect(preloads[0].onload).to.equal(null);
+        expect(preloads[0].onerror).to.equal(null);
+        expect(preloads[1].src).to.equal('/cached/second.png');
+        lateLoad?.();
+        await flush();
+        expect(preloads[1].onload).not.to.equal(null);
+        preloads[1].onload?.();
+        await flush();
+        expect(preloads[1].src).to.equal('');
+        expect(
+          (root.querySelector('[data-component="image"]') as HTMLElement).style
+            .backgroundImage
+        ).to.contain('/cached/second.png');
+      },
+      () => {
+        globals.Image = class {
+          complete = false;
+          naturalWidth = 0;
+          src = '';
+          onload = null;
+          onerror = null;
+          constructor() {
+            preloads.push(this);
+          }
+        };
+      }
     );
   });
 
