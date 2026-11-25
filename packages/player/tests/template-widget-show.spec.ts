@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, it } from 'mocha';
 // @ts-ignore jsdom is hoisted from other workspaces without type declarations.
 import { JSDOM } from 'jsdom';
 import { firstValueFrom, Subject } from 'rxjs';
+import { useFakeTimers } from 'sinon';
 
 import { TemplateWidget, Layer, Renderer } from '../dist/index.js';
 
@@ -299,6 +300,69 @@ describe('TemplateWidget.show', () => {
       });
     }
   }
+
+  it('releases an unfinished image preparation when the widget unloads', async () => {
+    const preloads: Array<{
+      src: string;
+      onload: (() => void) | null;
+      onerror: (() => void) | null;
+    }> = [];
+    globals.Image = class {
+      complete = false;
+      naturalWidth = 0;
+      src = '';
+      onload = null;
+      onerror = null;
+      constructor() {
+        preloads.push(this);
+      }
+    };
+    const errors: unknown[] = [];
+    const widget = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: {
+          name: 'stalled-image',
+          template: {
+            type: 'image',
+            name: 'image',
+            opts: { url: '/stalled.png' },
+          },
+        } as any,
+        config: { options: {}, data: {} } as any,
+        globals: {
+          target: 'poster',
+          reportError: (error) => errors.push(error),
+        },
+      }
+    );
+    const clock = useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    let ready = false;
+    const showing = widget
+      .show(dom.window.document.getElementById('root'), 0)
+      .subscribe(() => {
+        ready = true;
+      });
+    try {
+      await clock.tickAsync(0);
+      expect(preloads).to.have.length(1);
+      const pendingTimers = clock.countTimers();
+      const lateLoad = preloads[0].onload;
+      await widget.unload();
+      expect(preloads[0].src).to.equal('');
+      expect(preloads[0].onload).to.equal(null);
+      expect(preloads[0].onerror).to.equal(null);
+      expect(clock.countTimers()).to.be.lessThan(pendingTimers);
+      lateLoad?.();
+      await clock.tickAsync(30000);
+      expect(ready).to.equal(false);
+      expect(errors).to.have.length(0);
+    } finally {
+      showing.unsubscribe();
+      await widget.unload();
+      clock.restore();
+    }
+  });
 
   it('does not reveal a pending layer when its show is cancelled', async () => {
     const previous = new Layer('previous', {

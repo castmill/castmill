@@ -32,6 +32,9 @@ If the next photo is not ready at its
 transition, hold the fully loaded current photo and extend the slot by the wait.
 Seeks must also wait for their selected visible photos before handoff.
 Ordinary image components also wait for their selected background to load.
+Release their image preparations on source replacement and unload. Carousel
+preparation failures stay blocked until that image is evicted or rebuilt;
+successful ticks for another photo must not clear the failed photo's skip timer.
 Cache URL resolution or CSS background assignment alone is not readiness.
 Old Crosswalk uses image load events without requiring `Image.decode`.
 Image errors or a 30-second load/decode timeout report a media-load failure and
@@ -167,6 +170,10 @@ using progress bytes even when the total is unknown, and check the final Blob
 size too. Reject empty, partial, non-image/font, or failed responses; never
 persist session-only blob URLs. Enforce the total budget inside serialized
 map writes and report capacity pressure through the cache's eviction path.
+Return `result.evictableUrls` with only binary fallback source URLs (excluding
+the resource being replaced). Cache must evict those entries through its normal
+deletion path so metadata and the Android file map stay synchronized, without
+deleting native videos, code, or channel data to satisfy the binary-only budget.
 Configuration/code do not count toward that binary budget. Failed downloads,
 encoding, and persistence must leave the old mapping intact.
 

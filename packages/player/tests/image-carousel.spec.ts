@@ -621,6 +621,86 @@ describe('ImageCarousel', () => {
       }
     });
 
+    it('keeps a failed next photo blocked through playback until that preparation is evicted', async () => {
+      const preloads: Array<{
+        src: string;
+        onload: (() => void) | null;
+        onerror: (() => void) | null;
+      }> = [];
+      globals.Image = class {
+        complete = false;
+        naturalWidth = 0;
+        src = '';
+        onload = null;
+        onerror = null;
+        constructor() {
+          preloads.push(this);
+        }
+      };
+      const widget = new TemplateWidget(
+        { getMedia: async (url: string) => url } as any,
+        {
+          widget: {
+            name: 'failed-next-photo',
+            template: {
+              type: 'image-carousel',
+              name: 'carousel',
+              opts: {
+                images: ['/one', '/failed', '/three', '/four'],
+                imageDuration: 5,
+                transition: 'fade',
+              },
+            },
+          } as any,
+          config: { options: {}, data: {} } as any,
+          globals: { target: 'preview', freezePreviewDuringLoad: true },
+        }
+      );
+      const shown = firstValueFrom(
+        widget.show(dom.window.document.getElementById('root'), 0)
+      );
+      await flush();
+      preloads[0].onload?.();
+      await shown;
+      await flush();
+      const clock = useFakeTimers({
+        toFake: ['Date', 'setInterval', 'clearInterval'],
+      });
+      const timer = new Subject<number>();
+      const playing = widget.play(timer).subscribe();
+      let blocked: unknown;
+      const blocking = widget.blocked$().subscribe((value) => {
+        blocked = value;
+      });
+      try {
+        await silenceWarnings(async () => {
+          preloads[1].onerror?.();
+          await flush();
+        });
+        const failure = blocked;
+        expect(failure).not.to.equal(undefined);
+        await clock.tickAsync(6000);
+        expect(blocked).to.equal(failure);
+        let sought = false;
+        const seeking = firstValueFrom(widget.seek(16500)).then(() => {
+          sought = true;
+        });
+        await flush();
+        expect(blocked).to.equal(undefined);
+        expect(sought).to.equal(false);
+        expect(preloads[1].src).to.equal('');
+        preloads[2].onload?.();
+        await seeking;
+        expect(sought).to.equal(true);
+      } finally {
+        playing.unsubscribe();
+        blocking.unsubscribe();
+        await widget.stop();
+        await widget.unload();
+        clock.restore();
+      }
+    });
+
     it('waits for a distant seek and cancels evicted and unloaded image preparations', async () => {
       const preloads: Array<{ src: string; onload: (() => void) | null }> = [];
       globals.Image = class {

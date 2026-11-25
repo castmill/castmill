@@ -78,10 +78,7 @@ const WebFrame: Component<WebProps & { url: string }> = (props) => {
     if (!ready) {
       timeout = setTimeout(
         () =>
-          fail(
-            'web-load-timeout',
-            `Web page ${props.url} did not load within 30 seconds`
-          ),
+          fail('web-load-timeout', 'Web page did not load within 30 seconds'),
         30000
       );
     }
@@ -127,9 +124,7 @@ const WebFrame: Component<WebProps & { url: string }> = (props) => {
           props.onReady();
         }
       }}
-      onError={() =>
-        fail('web-load-failed', `Web page ${props.url} could not be loaded`)
-      }
+      onError={() => fail('web-load-failed', 'Web page could not be loaded')}
     />
   );
 };

@@ -731,6 +731,73 @@ describe('time-dependent template updates', () => {
     );
   });
 
+  it('releases a stalled image preparation when its time-dependent URL changes', async () => {
+    const preloads: Array<{
+      src: string;
+      onload: (() => void) | null;
+      onerror: (() => void) | null;
+    }> = [];
+    await withWidget(
+      {
+        type: 'image',
+        name: 'clock-image',
+        opts: {
+          url: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 12, 0).getTime(),
+              then: 'second.png',
+              else: {
+                cond: {
+                  key: '@now',
+                  gte: new Date(2026, 0, 1, 11, 0).getTime(),
+                  then: 'first.png',
+                  else: '',
+                },
+              },
+            },
+          },
+        },
+      },
+      {},
+      async (root, _widget, _media, advanceClock) => {
+        advanceClock(11);
+        await flush();
+        expect(preloads).to.have.length(1);
+        const lateLoad = preloads[0].onload;
+        advanceClock(12);
+        await flush();
+        expect(preloads).to.have.length(2);
+        expect(preloads[0].src).to.equal('');
+        expect(preloads[0].onload).to.equal(null);
+        expect(preloads[0].onerror).to.equal(null);
+        expect(preloads[1].src).to.equal('/cached/second.png');
+        lateLoad?.();
+        await flush();
+        expect(preloads[1].onload).not.to.equal(null);
+        preloads[1].onload?.();
+        await flush();
+        expect(preloads[1].src).to.equal('');
+        expect(
+          (root.querySelector('[data-component="image"]') as HTMLElement).style
+            .backgroundImage
+        ).to.contain('/cached/second.png');
+      },
+      () => {
+        globals.Image = class {
+          complete = false;
+          naturalWidth = 0;
+          src = '';
+          onload = null;
+          onerror = null;
+          constructor() {
+            preloads.push(this);
+          }
+        };
+      }
+    );
+  });
+
   it('replaces a video source when its time-dependent URL changes', async () => {
     const pending: {
       url: string;

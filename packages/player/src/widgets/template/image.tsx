@@ -13,7 +13,7 @@ import { ComponentAnimation, applyAnimations } from './animation';
 import { BaseComponentProps } from './interfaces/base-component-props';
 import { ResourceManager } from '@castmill/cache';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
-import { preloadImages } from './image-loading';
+import { prepareImage } from './image-loading';
 
 export interface ImageComponentOptions {
   url?: string;
@@ -90,6 +90,7 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
   let cleanUpAnimations: () => void;
   let loadId = 0;
   let hasReportedReady = false;
+  let preparation: ReturnType<typeof prepareImage> | undefined;
   const loadBlock = {};
 
   const merged = createMemo(() => {
@@ -110,6 +111,7 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
 
   onCleanup(() => {
     loadId++;
+    preparation?.release();
     props.globals.setPlaybackBlocked?.(loadBlock);
     cleanUpAnimations?.();
   });
@@ -131,6 +133,8 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
     const sourceUrl =
       props.opts.url?.trim?.() || props.opts.fallbackUrl?.trim?.() || '';
     const currentLoad = ++loadId;
+    preparation?.release();
+    preparation = undefined;
     props.globals.setPlaybackBlocked?.(loadBlock);
     if (!imageRef) return;
 
@@ -157,8 +161,12 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
           );
         }
         imageRef.style.backgroundImage = `url(${cachedUrl || sourceUrl})`;
-        await preloadImages([cachedUrl || sourceUrl]);
+        const loading = prepareImage(cachedUrl || sourceUrl);
+        preparation = loading;
+        await loading.ready;
         if (currentLoad !== loadId) return;
+        loading.release();
+        preparation = undefined;
         if (!hasReportedReady) {
           hasReportedReady = true;
           props.onReady();
@@ -166,6 +174,8 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
       })
       .catch((error) => {
         if (currentLoad !== loadId || !imageRef) return;
+        preparation?.release();
+        preparation = undefined;
         console.warn(`Image ${sourceUrl} could not be loaded`, error);
         props.globals.reportError?.({ category: 'media-load', error });
         props.globals.setPlaybackBlocked?.(loadBlock, {

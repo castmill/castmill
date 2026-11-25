@@ -344,6 +344,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       if (keep.indexOf(index) !== -1) return;
       prepared.delete(index);
       image.release?.();
+      props.globals.setPlaybackBlocked?.(image);
       if (images[index]) {
         images[index].style.backgroundImage = '';
         // Empty transformed elements can still retain full-size GPU surfaces.
@@ -373,7 +374,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       })
       .catch((error) => {
         if (generation === buildId && prepared.get(index) === image) {
-          reportLoadError(error);
+          reportLoadError(error, image);
         }
       });
   };
@@ -479,7 +480,10 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     const transitionArgs = carouselTransitionArgs(transition);
     ++buildId;
     props.timeline.remove(timelineItem);
-    prepared.forEach((image) => image.release?.());
+    prepared.forEach((image) => {
+      image.release?.();
+      props.globals.setPlaybackBlocked?.(image);
+    });
     prepared.clear();
     releaseUnusedUrls();
     images = nextImages;
@@ -572,11 +576,11 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     syncImages();
   };
 
-  const reportLoadError = (error: unknown) => {
+  const reportLoadError = (error: unknown, source: object = loadBlock) => {
     if (disposed) return;
     console.warn('Carousel images could not be prepared', error);
     props.globals.reportError?.({ category: 'media-load', error });
-    props.globals.setPlaybackBlocked?.(loadBlock, {
+    props.globals.setPlaybackBlocked?.(source, {
       category: 'media-load',
       error,
     });

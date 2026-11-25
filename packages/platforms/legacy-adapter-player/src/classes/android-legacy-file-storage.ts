@@ -65,7 +65,8 @@ class BinaryAssetLimitError extends Error {
   constructor(
     readonly code: 'TOO_LARGE' | 'NOT_ENOUGH_SPACE',
     message: string,
-    readonly requiredBytes?: number
+    readonly requiredBytes?: number,
+    readonly evictableUrls?: string[]
   ) {
     super(message);
   }
@@ -414,9 +415,8 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
         },
       };
     } catch (err) {
-      console.error('Error downloading file', err);
-
       if (err instanceof BinaryAssetLimitError) {
+        console.warn(err.message);
         return {
           result: {
             code: 'FAILURE',
@@ -425,9 +425,13 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
               err.requiredBytes === undefined
                 ? err.message
                 : String(err.requiredBytes),
+            ...(err.evictableUrls === undefined
+              ? {}
+              : { evictableUrls: err.evictableUrls }),
           },
         };
       }
+      console.error('Error downloading file', err);
 
       const errorMessage =
         typeof err === 'object' &&
@@ -559,6 +563,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
     const item = { url: dataUrl, size: blob.size };
     await this.updateFileMap((files) => {
       let binaryBytes = item.size;
+      const evictableUrls: string[] = [];
       for (const [url, file] of files) {
         if (
           url !== sourceUrl &&
@@ -566,13 +571,15 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
           file.url.includes(';base64,')
         ) {
           binaryBytes += file.size;
+          evictableUrls.push(url);
         }
       }
       if (binaryBytes > MAX_BINARY_CACHE_BYTES) {
         throw new BinaryAssetLimitError(
           'NOT_ENOUGH_SPACE',
           'Binary assets exceed the 8 MiB persistent cache budget',
-          binaryBytes - MAX_BINARY_CACHE_BYTES
+          binaryBytes - MAX_BINARY_CACHE_BYTES,
+          evictableUrls
         );
       }
       files.set(sourceUrl, item);

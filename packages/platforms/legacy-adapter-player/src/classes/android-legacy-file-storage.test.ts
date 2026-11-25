@@ -1224,7 +1224,14 @@ describe('AndroidLegacyFileStorage', () => {
       results
         .filter((stored) => stored.result.code === 'FAILURE')
         .map((stored) => stored.result)
-    ).toEqual([{ code: 'FAILURE', error: 'NOT_ENOUGH_SPACE', errMsg: '2' }]);
+    ).toMatchObject([
+      { code: 'FAILURE', error: 'NOT_ENOUGH_SPACE', errMsg: '2' },
+    ]);
+    const failure = results.find((stored) => stored.result.code === 'FAILURE')!;
+    expect(failure.result.evictableUrls).toHaveLength(5);
+    expect(failure.result.evictableUrls).not.toContain(
+      urls[results.indexOf(failure)]
+    );
     expect(setItem).toHaveBeenCalledOnce();
     const replacement = await storage.storeFile(
       'https://broker.images.castmill.io/0',
@@ -1240,7 +1247,7 @@ describe('AndroidLegacyFileStorage', () => {
     expect(recovered.result.code).toBe('SUCCESS');
   });
 
-  it('evicts old binary media through Cache and restores the new image offline through ResourceManager', async () => {
+  it('evicts only binary media through Cache and restores preserved video/code/data and the new image offline', async () => {
     const cacheName = 'legacy-binary-media-eviction';
     const cache = new Cache(storage, cacheName, 10);
     const resources = new ResourceManager(cache);
@@ -1248,8 +1255,31 @@ describe('AndroidLegacyFileStorage', () => {
       { length: 4 },
       (_, index) => `https://broker.images.castmill.io/cached-${index}`
     );
+    const preserved = [
+      {
+        url: 'https://castmill.example/kept.mp4',
+        type: ItemType.Media,
+        mime: 'video/mp4',
+      },
+      {
+        url: 'https://castmill.example/kept.js',
+        type: ItemType.Code,
+        mime: 'text/javascript',
+      },
+      {
+        url: 'https://castmill.example/kept.json',
+        type: ItemType.Data,
+        mime: 'application/json',
+      },
+    ];
+    const preservedUrls = new Map<string, string>();
     try {
       await resources.init();
+      for (const { url, type, mime } of preserved) {
+        const item = await cache.set(url, type, mime);
+        preservedUrls.set(url, item!.cachedUrl);
+        await cache.items.update(url, { timestamp: 0 });
+      }
       binaryResponse = new Blob([new Uint8Array(2 * 1024 * 1024)], {
         type: 'image/jpeg',
       });
@@ -1262,8 +1292,14 @@ describe('AndroidLegacyFileStorage', () => {
       const url = 'https://broker.images.castmill.io/new-image';
       const cachedUrl = await resources.getMedia(url);
       expect(cachedUrl).toMatch(/^data:image\/jpeg;/);
-      expect(await cache.items.count()).toBe(4);
+      expect(await cache.items.count()).toBe(7);
       expect(await storage.retrieveFile(urls[0])).toBeUndefined();
+      expect(await cache.items.get(urls[0])).toBeUndefined();
+      for (const [source, local] of preservedUrls) {
+        expect(await storage.retrieveFile(source)).toBe(local);
+        expect((await cache.items.get(source))!.cachedUrl).toBe(local);
+      }
+      expect(deleteFile).not.toHaveBeenCalled();
       const saved = native.fileMap!;
       cache.close();
 
@@ -1278,8 +1314,12 @@ describe('AndroidLegacyFileStorage', () => {
         expect(await offlineResources.getMedia(url)).toBe(cachedUrl);
         expect(requests).toHaveLength(requestCount);
         expect(await restored.retrieveFile(url)).toBe(cachedUrl);
-        expect(downloadFile).not.toHaveBeenCalled();
-        expect(fileExists).not.toHaveBeenCalled();
+        for (const [source, local] of preservedUrls) {
+          expect(await restored.retrieveFile(source)).toBe(local);
+          expect((await offlineCache.items.get(source))!.cachedUrl).toBe(local);
+        }
+        expect(downloadFile).toHaveBeenCalledOnce();
+        expect(deleteFile).not.toHaveBeenCalled();
       } finally {
         offlineCache.close();
       }

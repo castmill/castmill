@@ -203,4 +203,34 @@ describe('Web template component', () => {
     expect(errors).to.have.length(0);
     expect(ready).to.equal(0);
   });
+
+  for (const failure of ['error', 'timeout']) {
+    it(`does not include configured URL credentials in ${failure} diagnostics`, async () => {
+      const warning = sinon.spy(console, 'warn');
+      clock = sinon.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      try {
+        show('https://user:password@example.com/private?token=secret#secret');
+        await Promise.resolve();
+        if (failure === 'timeout') clock.tick(30000);
+        else frame().dispatchEvent(new dom.window.Event('error'));
+        expect(errors).to.have.length(1);
+        expect(warning.calledOnce).to.equal(true);
+        const error = errors[0].error;
+        if (!(error instanceof Error))
+          throw new Error('Expected diagnostic Error');
+        expect(warning.firstCall.args[0]).to.equal(error.message);
+        for (const secret of [
+          'user',
+          'password',
+          'private',
+          'token',
+          'secret',
+        ]) {
+          expect(warning.firstCall.args[0]).not.to.contain(secret);
+        }
+      } finally {
+        warning.restore();
+      }
+    });
+  }
 });
