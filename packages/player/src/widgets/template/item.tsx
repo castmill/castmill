@@ -15,6 +15,7 @@ import { ImageCarousel, ImageCarouselComponent } from './image-carousel';
 import { Text, TextComponent, TextComponentOptions } from './text';
 import { TemplateConfig, resolveOption } from './binding';
 import { Video, VideoComponent } from './video';
+import { Web, WebComponent } from './web';
 import { QRCode, QRCodeComponent } from './qr-code';
 import {
   TemplateComponent,
@@ -136,6 +137,22 @@ export const Item: Component<{
             style={style()}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
+            globals={props.globals}
+            onReady={props.onReady}
+          />
+        </Match>
+        <Match when={props.component.type == TemplateComponentType.Web}>
+          <Web
+            name={props.component.name}
+            opts={WebComponent.resolveOptions(
+              props.component.opts,
+              props.config,
+              props.context,
+              props.globals
+            )}
+            style={style()}
+            animations={props.component.animations}
+            timeline={props.timeline}
             globals={props.globals}
             onReady={props.onReady}
           />
