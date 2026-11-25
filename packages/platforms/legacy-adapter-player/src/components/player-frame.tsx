@@ -19,7 +19,7 @@ import {
   WebosLegacyFileStorage,
   LegacyMachine,
 } from '../classes';
-import { getLegacyBaseUrl } from '../utils/base-url';
+import { getLegacyBaseUrl, getServedServerUrl } from '../utils/base-url';
 import { WebosWebSocket } from '../webos-legacy-api';
 import { createWebosVideoPlayback } from '@castmill/webos-player/shared';
 import { enableDebugOverlayFromEnv, setDebugOverlay } from '@castmill/player';
@@ -152,7 +152,8 @@ export const PlayerFrame: Component = () => {
     );
     const configuredServerUrl = getLegacyBaseUrl(
       window.location,
-      import.meta.env.VITE_BASE_URL
+      import.meta.env.VITE_BASE_URL,
+      getServedServerUrl(document)
     );
 
     setDebugContext({

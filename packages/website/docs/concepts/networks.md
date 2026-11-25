@@ -18,7 +18,7 @@ One Castmill server can host many networks. Typical setups:
 
 The dashboard sends its own address with every sign-in and sign-up request. The server looks up the network whose **domain** matches that address. A dashboard served from `signage.example.com` therefore belongs to the network with the domain `signage.example.com`. Domains are stored without `http://` or `https://`, and include the port when it is not the default, for example `localhost:3000`.
 
-The same domain list also controls which websites may call the API from a browser (CORS). A dashboard on a domain that no network knows about cannot sign in.
+The same domain list also controls which websites may call the API from a browser (CORS). A dashboard on a domain that no network knows about cannot sign in. Player endpoints that do not use cookies, such as device registration, accept any website; the server's `cors_any_origin_paths` setting can add more, for example the device API for [legacy players served from another domain](../players/legacy-players.md#moving-players-to-a-new-server).
 
 ## Network settings
 

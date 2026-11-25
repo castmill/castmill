@@ -59,6 +59,12 @@ var CACHE_PREFIX = 'castmill-legacy-shell-';
 var CACHE_NAME = CACHE_PREFIX + ${JSON.stringify(version)};
 var INDEX_URL = ${JSON.stringify(indexUrl)};
 var CONTROLLED_PATH = ${JSON.stringify(controlledPath)};
+// Another host may serve the adapter at a different path (e.g. "/" behind a
+// proxy) and register this worker there, so the scope path loads the shell too.
+var SCOPE_PATH =
+  self.registration && self.registration.scope
+    ? new URL(self.registration.scope).pathname
+    : CONTROLLED_PATH;
 var SHELL_URLS = ${JSON.stringify(shellUrls)};
 var SHELL_PATHS = SHELL_URLS.reduce(function (paths, url) {
   paths[new URL(url, self.location.origin).pathname] = true;
@@ -127,7 +133,8 @@ self.addEventListener('fetch', function (event) {
       (request.headers.get('accept') || '').indexOf('text/html') !== -1) &&
     (url.pathname === CONTROLLED_PATH ||
       url.pathname === CONTROLLED_PATH + '/' ||
-      url.pathname === INDEX_URL);
+      url.pathname === INDEX_URL ||
+      url.pathname === SCOPE_PATH);
 
   if (isLegacyNavigation) {
     event.respondWith(
