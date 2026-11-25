@@ -378,9 +378,8 @@ defmodule Castmill.OsUpdates do
          {:ok, updated} <- string.("updated", 64),
          true <- report["state"] in @states || {:error, {:invalid, "state"}},
          progress = report["progress"],
-         true <-
-           is_nil(progress) or (is_integer(progress) and progress in 0..100) ||
-             {:error, {:invalid, "progress"}} do
+         valid_progress = is_nil(progress) or (is_integer(progress) and progress in 0..100),
+         true <- valid_progress || {:error, {:invalid, "progress"}} do
       {:ok,
        %{
          "compatible" => compatible,

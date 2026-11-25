@@ -78,6 +78,7 @@ describe('Web template component', () => {
         init: unexpectedCacheAccess,
         list: unexpectedCacheAccess,
         count: unexpectedCacheAccess,
+        usage: unexpectedCacheAccess,
         get: unexpectedCacheAccess,
         hasUrl: unexpectedCacheAccess,
         set: unexpectedCacheAccess,

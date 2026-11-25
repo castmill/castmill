@@ -42,6 +42,8 @@ const data = {
   items: [story(1, 'https://example.com/1.jpg'), story(2), story(3)],
 };
 
+let shownWidget: TemplateWidget | undefined;
+
 const withDom = async (fn: (root: HTMLElement) => Promise<void>) => {
   const keys = [
     'window',
@@ -50,6 +52,7 @@ const withDom = async (fn: (root: HTMLElement) => Promise<void>) => {
     'HTMLElement',
     'Element',
     'MutationObserver',
+    'Image',
   ];
   const g = globalThis as any;
   const saved: Record<string, unknown> = {};
@@ -58,6 +61,13 @@ const withDom = async (fn: (root: HTMLElement) => Promise<void>) => {
     saved[key] = g[key];
     g[key] = key === 'window' ? dom.window : dom.window[key];
   });
+  g.Image = class {
+    complete = true;
+    naturalWidth = 100;
+    onload = null;
+    onerror = null;
+    src = '';
+  };
   const savedComputed = g.getComputedStyle;
   g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
   g.requestAnimationFrame ??= (callback: () => void) => {
@@ -108,6 +118,8 @@ const withDom = async (fn: (root: HTMLElement) => Promise<void>) => {
   try {
     await fn(root);
   } finally {
+    await shownWidget?.unload();
+    shownWidget = undefined;
     observer.disconnect();
     patched.forEach(
       (original, proto) => (proto.getBoundingClientRect = original)
@@ -118,14 +130,14 @@ const withDom = async (fn: (root: HTMLElement) => Promise<void>) => {
 };
 
 const show = async (root: HTMLElement, options: Record<string, any>) => {
-  const widget = new TemplateWidget(
+  const widget = (shownWidget = new TemplateWidget(
     { getMedia: async (url: string) => url } as any,
     {
       widget: { name: 'RSS News', template } as any,
       config: { options, data } as any,
       globals: { target: 'default' } as any,
     }
-  );
+  ));
   await firstValueFrom(widget.show(root, 0));
 };
 

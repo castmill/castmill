@@ -563,12 +563,12 @@ describe('WebOS native storage routing', () => {
     it('writes and restores content larger than one SCAP IO chunk', async () => {
       const text = `{"data":"${'é'.repeat(SCAP_IO_CHUNK_BYTES)}"}`;
       const send = MockXHR.prototype.send;
-      vi.spyOn(MockXHR.prototype, 'send').mockImplementation(
-        function (this: MockXHR) {
-          this.response = new Blob([text]);
-          send.call(this);
-        }
-      );
+      vi.spyOn(MockXHR.prototype, 'send').mockImplementation(function (
+        this: MockXHR
+      ) {
+        this.response = new Blob([text]);
+        send.call(this);
+      });
       await storage.storeFile(channels, { type: ItemType.Data });
       const path = writtenPath();
       const bytes = new Blob([text]).size;
@@ -640,12 +640,12 @@ describe('WebOS native storage routing', () => {
 
     it('does not persist empty responses', async () => {
       const send = MockXHR.prototype.send;
-      vi.spyOn(MockXHR.prototype, 'send').mockImplementationOnce(
-        function (this: MockXHR) {
-          this.response = new Blob([]);
-          send.call(this);
-        }
-      );
+      vi.spyOn(MockXHR.prototype, 'send').mockImplementationOnce(function (
+        this: MockXHR
+      ) {
+        this.response = new Blob([]);
+        send.call(this);
+      });
 
       await storage.storeFile(channels, { type: ItemType.Data });
 
@@ -686,14 +686,14 @@ describe('WebOS native storage routing', () => {
           vi.mocked(api.writeFile).mockRejectedValueOnce(new Error('full'));
         } else {
           const send = MockXHR.prototype.send;
-          vi.spyOn(MockXHR.prototype, 'send').mockImplementationOnce(
-            function (this: MockXHR) {
-              this.response = new Blob([
-                'x'.repeat(MAX_PERSISTED_TEXT_BYTES + 1),
-              ]);
-              send.call(this);
-            }
-          );
+          vi.spyOn(MockXHR.prototype, 'send').mockImplementationOnce(function (
+            this: MockXHR
+          ) {
+            this.response = new Blob([
+              'x'.repeat(MAX_PERSISTED_TEXT_BYTES + 1),
+            ]);
+            send.call(this);
+          });
         }
         const result = await storage.storeFile(channels, {
           type: ItemType.Data,
