@@ -724,6 +724,27 @@ defmodule Castmill.Organizations do
     members + extra <= Castmill.Quotas.get_quota_for_organization(organization_id, :users)
   end
 
+  # Invitations and acceptances check the `users` quota and then write: a
+  # transaction lock per organization, taken before counting and held until
+  # the write commits, keeps them from filling the same place together. It
+  # is taken before any invitation row lock, so they always lock in the
+  # same order.
+  @members_lock_namespace 49_202
+
+  defp lock_members(organization_id) do
+    {_namespace, key} = invitation_lock_key(organization_id, "")
+
+    Repo.query!("SELECT pg_advisory_xact_lock($1, hashtext($2))", [
+      @members_lock_namespace,
+      key
+    ])
+
+    :ok
+  end
+
+  defp active_invitation?(%OrganizationsInvitation{} = invitation),
+    do: invitation.status == "invited" and not OrganizationsInvitation.expired?(invitation)
+
   defp count_pending_invitations(organization_id) do
     now = DateTime.utc_now()
 
@@ -743,6 +764,8 @@ defmodule Castmill.Organizations do
     Ecto.Multi.new()
     # 0) The organization's `users` quota counts members and pending invitations
     |> Ecto.Multi.run(:check_quota, fn _repo, _changes ->
+      lock_members(organization_id)
+
       if members_room?(organization_id, count_pending_invitations(organization_id) + 1),
         do: {:ok, :room},
         else: {:error, :quota_exceeded}
@@ -963,6 +986,8 @@ defmodule Castmill.Organizations do
   # rotates the token and replaces the invitation's notification.
   defp renew_and_replace(organization_id, id) do
     Repo.transaction(fn ->
+      lock_members(organization_id)
+
       invitation =
         Repo.one(
           from(i in OrganizationsInvitation,
@@ -973,6 +998,7 @@ defmodule Castmill.Organizations do
 
       with %OrganizationsInvitation{} <- invitation,
            :ok <- check_resendable(invitation),
+           :ok <- check_reopen_room(invitation),
            {:ok, renewed} <- renew_invitation(invitation) do
         # By token, so the old notification is found even if its recipient has
         # changed their email address since they were invited.
@@ -1058,6 +1084,24 @@ defmodule Castmill.Organizations do
     if user_in_organization?(invitation.organization_id, invitation.email),
       do: {:error, :already_member},
       else: :ok
+  end
+
+  # Reopening an expired or declined invitation takes a place again; an
+  # active one already counts among the pending invitations.
+  defp check_reopen_room(%OrganizationsInvitation{} = invitation) do
+    cond do
+      active_invitation?(invitation) ->
+        :ok
+
+      members_room?(
+        invitation.organization_id,
+        count_pending_invitations(invitation.organization_id) + 1
+      ) ->
+        :ok
+
+      true ->
+        {:error, :quota_exceeded}
+    end
   end
 
   defp renew_invitation(invitation) do
@@ -1180,13 +1224,26 @@ defmodule Castmill.Organizations do
   # adding the user to the organization.
   def accept_invitation(token, user_id) do
     Repo.transaction(fn ->
-      invitation =
+      # The organization's members lock comes first (as for invites and
+      # resends), then the invitation's row lock.
+      organization_id =
         Repo.one(
           from(i in OrganizationsInvitation,
             where: i.token == ^token,
-            lock: "FOR UPDATE"
+            select: i.organization_id
           )
         )
+
+      if organization_id, do: lock_members(organization_id)
+
+      invitation =
+        organization_id &&
+          Repo.one(
+            from(i in OrganizationsInvitation,
+              where: i.token == ^token,
+              lock: "FOR UPDATE"
+            )
+          )
 
       case invitation do
         nil ->

@@ -154,6 +154,10 @@ describe('OrganizationInvitationsView', () => {
       'invitation_busy',
       'An invitation to pending@example.com is being sent right now. Try again in a moment.',
     ],
+    [
+      'quota_exceeded',
+      'Your organization has no room for more members. Upgrade your plan to invite people.',
+    ],
     ['Internal Server Error', 'Failed to resend the invitation'],
   ])('explains why %s invitations cannot be resent', async (code, message) => {
     vi.mocked(OrganizationsService.resendInvitation).mockRejectedValue(

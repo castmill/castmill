@@ -57,4 +57,27 @@ defmodule Castmill.OrganizationMembersQuotaTest do
 
     assert {:ok, _} = Organizations.invite_user(organization.id, "person@example.com", :member)
   end
+
+  test "reopening an expired invitation needs a free place", %{organization: organization} do
+    Quotas.add_quota_to_organization(organization.id, :users, 2)
+
+    {:ok, token} = Organizations.invite_user(organization.id, "first@example.com", :member)
+    expired = Organizations.get_invitation(token)
+
+    expired
+    |> Ecto.Changeset.change(
+      expires_at: DateTime.add(DateTime.utc_now(), -60) |> DateTime.truncate(:second)
+    )
+    |> Repo.update!()
+
+    # The expired invitation no longer holds a place, so another one fits.
+    {:ok, token} = Organizations.invite_user(organization.id, "second@example.com", :member)
+    active = Organizations.get_invitation(token)
+
+    assert {:error, :quota_exceeded} =
+             Organizations.resend_invitation(organization.id, expired.id)
+
+    # An active invitation already holds its place.
+    assert {:ok, _} = Organizations.resend_invitation(organization.id, active.id)
+  end
 end

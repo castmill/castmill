@@ -887,6 +887,12 @@ defmodule CastmillWeb.OrganizationController do
         |> put_status(:conflict)
         |> json(%{error: Atom.to_string(reason)})
 
+      # Reopening the invitation would exceed the organization's users quota.
+      {:error, :quota_exceeded} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "quota_exceeded"})
+
       {:error, %Ecto.Changeset{} = changeset} ->
         errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)
 

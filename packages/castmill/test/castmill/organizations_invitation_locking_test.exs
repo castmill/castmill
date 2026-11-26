@@ -190,4 +190,29 @@ defmodule Castmill.OrganizationsInvitationLockingTest do
     assert notification.metadata["token"] == resent.token
     assert Repo.get_by!(OrganizationsInvitation, id: invitation.id).token == resent.token
   end
+
+  test "invitations to different people cannot fill the last place together", %{
+    organization: organization
+  } do
+    # The invitation from setup is pending: one place is left.
+    Castmill.Quotas.add_quota_to_organization(organization.id, :users, 2)
+
+    # Hold the organization's members lock so both invitations queue up.
+    holder = other_session()
+    {_namespace, key} = Organizations.invitation_lock_key(organization.id, "")
+    Postgrex.query!(holder, "BEGIN", [])
+    Postgrex.query!(holder, "SELECT pg_advisory_xact_lock(49202, hashtext($1))", [key])
+
+    invites =
+      for email <- ["first-#{key}@example.com", "second-#{key}@example.com"] do
+        in_own_session(fn -> Organizations.invite_user(organization.id, email, :member) end)
+      end
+
+    await_lock_waiters(2)
+    Postgrex.query!(holder, "COMMIT", [])
+    results = Task.await_many(invites, 10_000)
+
+    assert Enum.count(results, &match?({:ok, _}, &1)) == 1
+    assert Enum.count(results, &(&1 == {:error, :quota_exceeded})) == 1
+  end
 end
