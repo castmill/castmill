@@ -103,12 +103,17 @@
     }
 
     thead {
-      height: 2em;
       background-color: var(--table-head-bg);
       border: 1px solid var(--cm-border-subtle);
       border-radius: 5em;
 
       color: var(--cm-text-tertiary);
+
+      /* As tall as body rows (and the selection checkbox header), also in
+         tables without selection */
+      tr {
+        height: 3em;
+      }
 
       th {
         cursor: pointer;
