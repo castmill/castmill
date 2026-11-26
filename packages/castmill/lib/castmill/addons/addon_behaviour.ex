@@ -40,6 +40,15 @@ defmodule Castmill.Addons.AddonBehaviour do
   @callback component_info() ::
               [component_info :: Castmill.Addons.ComponentInfo] | nil
 
+  @doc """
+  Whether the add-on's UI is shown to `user` on the dashboard of
+  `network_id` (the network of the domain in use, or nil). Add-ons without
+  this callback are shown to everyone. Hiding an add-on does not protect
+  its API: its endpoints must check access themselves.
+  """
+  @callback visible?(context :: %{user: Castmill.Accounts.User.t(), network_id: String.t() | nil}) ::
+              boolean()
+
   @callback search(
               organization_id :: String.t(),
               query :: String.t(),
@@ -157,6 +166,7 @@ defmodule Castmill.Addons.AddonBehaviour do
     mount_routes: 2,
     register_hooks: 0,
     component_info: 0,
+    visible?: 1,
     search: 3,
     router_module: 0,
     api_routes: 0,

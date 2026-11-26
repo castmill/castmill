@@ -72,10 +72,13 @@ defmodule Castmill.Addons.Supervisor do
   end
 
   @doc """
-  Returns component info for all addons that provide UI components.
+  Returns component info for all addons that provide UI components. With a
+  `context` (`%{user: user, network_id: id}`), leaves out add-ons whose
+  `visible?/1` callback hides them in that context.
   """
-  def list_component_infos do
+  def list_component_infos(context \\ nil) do
     list_addons()
+    |> Enum.filter(&visible?(&1, context))
     |> Enum.map(fn addon ->
       if function_exported?(addon, :component_info, 0) do
         addon.component_info()
@@ -84,6 +87,12 @@ defmodule Castmill.Addons.Supervisor do
       end
     end)
     |> Enum.filter(&(&1 != nil))
+  end
+
+  defp visible?(_addon, nil), do: true
+
+  defp visible?(addon, context) do
+    if function_exported?(addon, :visible?, 1), do: addon.visible?(context) == true, else: true
   end
 
   @doc """
