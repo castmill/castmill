@@ -34,6 +34,16 @@ organizations cannot exceed it together.
   devices among its organizations (high organization quotas) or assign each
   organization its own share (organization quotas adding up to the limit).
 
+## Network Storage Limit
+
+`networks.max_storage_mb` (`nil` means no limit) caps the storage of all a
+network's organizations together: their media files and copied feed media.
+`Castmill.Quotas.check_storage/2` checks it together with the organization's
+`storage` quota; uploads and feed media copies use it, and it returns
+`{:error, :quota_exceeded}` or `{:error, :network_storage_exceeded}`. Set it with
+`Castmill.Networks.set_storage_limit/2` (trusted code only, like the device
+limit); `Castmill.Quotas.get_network_storage_used/1` returns the bytes in use.
+
 ## Changing Quotas
 
 The dashboard API (`/dashboard/organizations/:id/quotas`) is read-only.

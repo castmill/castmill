@@ -27,6 +27,9 @@ defmodule Castmill.Networks.Network do
     # no limit. Set by trusted callers only (see `device_limit_changeset/2`),
     # for example from a licence subscription; network admins cannot change it.
     field(:max_devices, :integer)
+    # Most storage (MB) the network's organizations may use together; nil
+    # means no limit. Trusted callers only, like `max_devices`.
+    field(:max_storage_mb, :integer)
 
     has_many(:organizations, Castmill.Organizations.Organization)
 
@@ -43,6 +46,13 @@ defmodule Castmill.Networks.Network do
     )
 
     timestamps()
+  end
+
+  @doc false
+  def storage_limit_changeset(network, max_storage_mb) do
+    network
+    |> cast(%{max_storage_mb: max_storage_mb}, [:max_storage_mb])
+    |> validate_number(:max_storage_mb, greater_than_or_equal_to: 0)
   end
 
   @doc false

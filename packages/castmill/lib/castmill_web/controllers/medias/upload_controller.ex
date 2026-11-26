@@ -74,11 +74,8 @@ defmodule CastmillWeb.UploadController do
       })
       |> halt()
     else
-      # Check storage quota
-      current_storage = Castmill.Quotas.get_quota_used_for_organization(organization_id, :storage)
-      storage_quota = Castmill.Quotas.get_quota_for_organization_bytes(organization_id, :storage)
-
-      if current_storage + file_size > storage_quota do
+      # Check the organization's storage quota and its network's storage limit
+      if Castmill.Quotas.check_storage(organization_id, file_size) != :ok do
         conn
         |> put_status(:forbidden)
         |> json(%{

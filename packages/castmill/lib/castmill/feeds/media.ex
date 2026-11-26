@@ -273,9 +273,10 @@ defmodule Castmill.Feeds.Media do
   end
 
   defp check_quota(organization_id, size) do
-    used = Quotas.get_quota_used_for_organization(organization_id, :storage)
-    limit = Quotas.get_quota_for_organization_bytes(organization_id, :storage)
-    if used + size > limit, do: {:error, :quota_exceeded}, else: :ok
+    case Quotas.check_storage(organization_id, size) do
+      :ok -> :ok
+      {:error, _} -> {:error, :quota_exceeded}
+    end
   end
 
   @doc "The largest file copied for an organization: the configured limit or its upload limit."
@@ -528,6 +529,17 @@ defmodule Castmill.Feeds.Media do
   @doc "Bytes of feed media stored for an organization; counts towards its storage quota."
   def storage_used(organization_id),
     do: storage(dynamic([m], m.organization_id == ^organization_id))
+
+  @doc "Bytes of copied feed media stored for all organizations of a network."
+  def network_storage_used(network_id) do
+    organizations =
+      from(o in Castmill.Organizations.Organization,
+        where: o.network_id == ^network_id,
+        select: o.id
+      )
+
+    storage(dynamic([m], m.organization_id in subquery(organizations)))
+  end
 
   defp storage(condition) do
     files =
