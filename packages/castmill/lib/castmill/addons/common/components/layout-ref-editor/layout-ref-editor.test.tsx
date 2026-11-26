@@ -36,6 +36,7 @@ describe('LayoutRefEditor restoration', () => {
       const layout = {
         id: 42,
         name: 'Landscape 3 Zones',
+        description: null,
         aspect_ratio: '16:9',
         zones: { zones },
       };

@@ -75,7 +75,11 @@ export const LayoutRefEditor: Component<LayoutRefEditorProps> = (props) => {
           props.organizationId,
           value.layoutId
         );
-        setSelectedLayout({ ...layout, id: value.layoutId });
+        setSelectedLayout({
+          ...layout,
+          id: value.layoutId,
+          description: layout.description ?? undefined,
+        });
         // Restore zone-playlist assignments
         if (value.zonePlaylistMap) {
           setZonePlaylistMap(value.zonePlaylistMap);
