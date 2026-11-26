@@ -4,13 +4,13 @@ This directory contains the internationalization system for the Castmill Dashboa
 
 ## Features
 
-- 🌍 Support for 9 languages (English, Spanish, Swedish, German, French, Chinese, Arabic, Korean, Japanese)
+- 🌍 Support for 10 languages (English, Spanish, Swedish, German, French, Chinese, Arabic, Hebrew, Korean, Japanese)
 - 🔄 Automatic language detection from browser settings
 - 💾 Language preference persistence in localStorage
 - 🎯 Type-safe translation keys
 - 🤖 AI-friendly JSON translation format
 - ⚡ Dynamic translation loading (code-splitting)
-- 🔀 RTL (Right-to-Left) support for Arabic
+- 🔀 RTL (Right-to-Left) support for Arabic and Hebrew
 - 🔌 Simple React-like context API
 - 📊 **Pluralization support** - Handle singular/plural forms correctly for each language
 - 📅 **Date/time formatting** - Locale-aware date and time display using date-fns
@@ -28,6 +28,7 @@ This directory contains the internationalization system for the Castmill Dashboa
 | French             | `fr` | Français    | No  |
 | Chinese (Mandarin) | `zh` | 中文        | No  |
 | Arabic             | `ar` | العربية     | Yes |
+| Hebrew             | `he` | עברית       | Yes |
 | Korean             | `ko` | 한국어      | No  |
 | Japanese           | `ja` | 日本語      | No  |
 
@@ -250,6 +251,7 @@ locales/
 ├── fr.json  (French)
 ├── zh.json  (Chinese Mandarin)
 ├── ar.json  (Arabic - RTL)
+├── he.json  (Hebrew - RTL)
 ├── ko.json  (Korean)
 └── ja.json  (Japanese)
 ```
@@ -306,12 +308,12 @@ yarn test i18n-context.test
 
 ## RTL (Right-to-Left) Support
 
-Arabic is currently the only RTL language. The system automatically:
+Arabic and Hebrew are the RTL languages. The system automatically:
 
 - Sets `dir="rtl"` on the HTML element
 - Adjusts CSS for RTL layout (see `language-selector.scss` for examples)
 
-To add more RTL languages (Hebrew, Farsi, etc.):
+To add more RTL languages (Farsi, Urdu, etc.):
 
 1. Add language to `SUPPORTED_LOCALES` with `rtl: true`
 2. Create translation file
@@ -433,7 +435,7 @@ function MyComponent() {
 - [x] **Date/time formatting** - Locale-aware date display with date-fns
 - [x] **Number formatting** - Format numbers according to locale conventions
 - [x] **Currency formatting** - Display currency with proper symbols and formats
-- [x] **RTL support** - Right-to-left layout for Arabic
+- [x] **RTL support** - Right-to-left layout for Arabic and Hebrew
 - [x] **Type-safe translations** - TypeScript support throughout
 - [x] **Comprehensive tests** - Full test coverage for all features
 

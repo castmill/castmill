@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup, waitFor } from '@solidjs/testing-library';
 import { I18nProvider, useI18n } from './i18n-context';
-import { LOCALE_STORAGE_KEY } from './types';
+import {
+  LOCALE_DATE_FNS_MAP,
+  LOCALE_STORAGE_KEY,
+  SUPPORTED_LOCALES,
+} from './types';
 
 // Test component that uses i18n
 function TestComponent() {
@@ -83,6 +87,45 @@ describe('I18n Context', () => {
       },
       { timeout: 1000 }
     );
+  });
+
+  it('loads Hebrew translations with a right-to-left layout', async () => {
+    localStorage.setItem(LOCALE_STORAGE_KEY, 'he');
+
+    render(() => (
+      <I18nProvider>
+        <TestComponent />
+      </I18nProvider>
+    ));
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('current-locale').textContent).toBe('he');
+        expect(screen.getByTestId('translation').textContent).toMatch(
+          /[\u0590-\u05FF]/
+        );
+      },
+      { timeout: 1000 }
+    );
+    expect(document.documentElement.lang).toBe('he');
+    expect(document.documentElement.dir).toBe('rtl');
+
+    // Switching to a left-to-right locale restores the direction
+    screen.getByTestId('change-locale').click();
+    await waitFor(() => {
+      expect(screen.getByTestId('current-locale').textContent).toBe('es');
+    });
+    expect(document.documentElement.dir).toBe('ltr');
+  });
+
+  it('registers Hebrew as a supported right-to-left locale', () => {
+    expect(SUPPORTED_LOCALES).toContainEqual({
+      code: 'he',
+      name: 'Hebrew',
+      nativeName: 'עברית',
+      rtl: true,
+    });
+    expect(LOCALE_DATE_FNS_MAP.he.code).toBe('he');
   });
 
   it('handles missing translation keys gracefully', () => {

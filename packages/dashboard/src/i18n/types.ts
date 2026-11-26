@@ -3,7 +3,7 @@
  */
 
 import { Locale as DateFnsLocale } from 'date-fns';
-import { enUS, es, sv, de, fr, zhCN, arSA, ko, ja } from 'date-fns/locale';
+import { enUS, es, sv, de, fr, zhCN, arSA, he, ko, ja } from 'date-fns/locale';
 
 export type Locale =
   | 'en'
@@ -13,6 +13,7 @@ export type Locale =
   | 'fr'
   | 'zh'
   | 'ar'
+  | 'he'
   | 'ko'
   | 'ja';
 
@@ -31,6 +32,7 @@ export const SUPPORTED_LOCALES: LocaleInfo[] = [
   { code: 'fr', name: 'French', nativeName: 'Français' },
   { code: 'zh', name: 'Chinese (Mandarin)', nativeName: '中文' },
   { code: 'ar', name: 'Arabic', nativeName: 'العربية', rtl: true },
+  { code: 'he', name: 'Hebrew', nativeName: 'עברית', rtl: true },
   { code: 'ko', name: 'Korean', nativeName: '한국어' },
   { code: 'ja', name: 'Japanese', nativeName: '日本語' },
 ];
@@ -50,6 +52,7 @@ export const LOCALE_DATE_FNS_MAP: Record<Locale, DateFnsLocale> = {
   fr: fr,
   zh: zhCN,
   ar: arSA,
+  he: he,
   ko: ko,
   ja: ja,
 };

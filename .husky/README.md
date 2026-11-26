@@ -37,7 +37,7 @@ tests can be run with `node --test .husky/tests/lint-staged.test.cjs`.
 
 When you modify any translation file in `packages/dashboard/src/i18n/locales/`:
 
-- **Automatic check** runs to verify all 9 languages are 100% complete
+- **Automatic check** runs to verify all 10 languages are 100% complete
 - **Fails if**: Missing keys, untranslated strings, or incomplete coverage
 - **Shows**: Detailed report of what's missing in which language
 
@@ -106,7 +106,7 @@ yarn check-translations
 - See which language is incomplete in the error message
 - Run manually to see details: `yarn check-translations`
 - Fix missing translations in `packages/dashboard/src/i18n/locales/[language].json`
-- All 9 languages (en, es, sv, de, fr, zh, ar, ko, ja) must be 100% complete
+- All 10 languages (en, es, sv, de, fr, zh, ar, he, ko, ja) must be 100% complete
 
 **Want to see what will be formatted?**
 ```bash
