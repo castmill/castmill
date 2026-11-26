@@ -724,6 +724,62 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
     end
   end
 
+  describe "blocking and deleting users in other networks" do
+    setup do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      admin = create_network_admin(network)
+
+      # E.g. a colleague with an account on the main network who joined one
+      # of this network's organizations.
+      user = create_regular_user(network, organization)
+      {:ok, _} = Networks.add_user_to_network(user.id, network_fixture().id)
+
+      {:ok, network: network, organization: organization, admin: admin, user: user}
+    end
+
+    test "cannot block, unblock or delete them", %{
+      conn: conn,
+      network: network,
+      admin: admin,
+      user: user
+    } do
+      admin_conn = authenticate_conn(conn, admin, network)
+
+      for {method, path, action} <- [
+            {:post, "/dashboard/network/users/#{user.id}/block", "block"},
+            {:delete, "/dashboard/network/users/#{user.id}/block", "unblock"},
+            {:delete, "/dashboard/network/users/#{user.id}", "delete"}
+          ] do
+        conn = dispatch(admin_conn, @endpoint, method, path, %{})
+
+        assert json_response(conn, 403)["error"] ==
+                 "Cannot #{action} a user who also belongs to another network"
+      end
+
+      user = Accounts.get_user(user.id)
+      assert user
+      assert is_nil(user.blocked_at)
+    end
+
+    test "can still delete users who belong to the network only", %{
+      conn: conn,
+      network: network,
+      organization: organization,
+      admin: admin
+    } do
+      user = create_regular_user(network, organization)
+
+      conn =
+        conn
+        |> authenticate_conn(admin, network)
+        |> delete("/dashboard/network/users/#{user.id}")
+
+      assert json_response(conn, 200)["success"]
+      refute Accounts.get_user(user.id)
+    end
+  end
+
   describe "invite_user_to_organization/2" do
     setup do
       network = network_fixture()

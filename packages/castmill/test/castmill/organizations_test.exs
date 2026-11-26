@@ -578,4 +578,46 @@ defmodule Castmill.OrganizationsTest do
       assert Organizations.get_invitation(invitation.token)
     end
   end
+
+  describe "accept_invitation/2 network membership" do
+    import Swoosh.TestAssertions
+
+    alias Castmill.Networks
+
+    setup do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      %{network: network, organization: organization}
+    end
+
+    test "adds a user from another network to the organization's network", %{
+      network: network,
+      organization: organization
+    } do
+      # E.g. a colleague who signed up on the main network before their
+      # company got its own network.
+      other_network = network_fixture()
+      user = user_fixture(%{network_id: other_network.id, email: "colleague@example.com"})
+      invitation = invite(organization, user.email)
+
+      assert {:ok, _} = Organizations.accept_invitation(invitation.token, user.id)
+
+      assert Organizations.get_organizations_user(organization.id, user.id)
+      assert %{role: :member} = Networks.get_network_membership(user.id, network.id)
+      assert %{role: :member} = Networks.get_network_membership(user.id, other_network.id)
+      assert user.id in Enum.map(Networks.list_users(network.id), & &1.id)
+    end
+
+    test "keeps the role of a user already in the network", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, network_role: :admin})
+      invitation = invite(organization, user.email)
+
+      assert {:ok, _} = Organizations.accept_invitation(invitation.token, user.id)
+
+      assert %{role: :admin} = Networks.get_network_membership(user.id, network.id)
+    end
+  end
 end
