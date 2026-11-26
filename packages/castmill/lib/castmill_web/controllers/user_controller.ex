@@ -13,6 +13,24 @@ defmodule CastmillWeb.UserController do
   plug(Authorize, %{parent: :network, resource: :user, action: :index} when action in [:index])
   plug(Authorize, %{parent: :network, resource: :user, action: :create} when action in [:create])
 
+  # Dashboard actions on a user (`/dashboard/users/:id...`) are only for that
+  # user: profile, account deletion, passkeys and email changes. Changing a
+  # member's role needs an admin of the organization.
+  plug(
+    :authorize_dashboard_user
+    when action in [
+           :show,
+           :update,
+           :delete,
+           :list_credentials,
+           :create_credential_challenge,
+           :add_credential,
+           :delete_credential,
+           :update_credential,
+           :send_email_verification
+         ]
+  )
+
   def index(conn, %{"organization_id" => organization_id}) do
     users_access = Organizations.list_users(organization_id)
     render(conn, :index, users_access: users_access)
@@ -276,6 +294,35 @@ defmodule CastmillWeb.UserController do
 
       {:error, _} ->
         send_resp(conn, :unprocessable_entity, "Failed to verify email")
+    end
+  end
+
+  defp authorize_dashboard_user(conn, _opts) do
+    if String.starts_with?(conn.request_path, "/dashboard/") do
+      actor_id = CastmillWeb.CurrentUser.id(conn)
+
+      allowed? =
+        case {action_name(conn), conn.params} do
+          {:update, %{"access" => _, "organization_id" => organization_id}} ->
+            is_binary(actor_id) and Organizations.is_admin?(organization_id, actor_id)
+
+          {_action, %{"id" => user_id}} ->
+            is_binary(actor_id) and actor_id == user_id
+
+          _ ->
+            false
+        end
+
+      if allowed? do
+        conn
+      else
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "forbidden"})
+        |> halt()
+      end
+    else
+      conn
     end
   end
 end
