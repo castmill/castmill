@@ -309,6 +309,12 @@ defmodule CastmillWeb.OrganizationController do
             |> put_status(:conflict)
             |> json(%{error: "has_child_organizations"})
 
+          # Feeds kept being created while it was deleted.
+          {:error, :feeds_changed} ->
+            conn
+            |> put_status(:conflict)
+            |> json(%{error: "try_again"})
+
           {:error, _} = error ->
             error
         end

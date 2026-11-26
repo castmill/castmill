@@ -253,21 +253,32 @@ defmodule Castmill.Organizations do
   (`{:error, :has_child_organizations}`): delete the children first.
   `opts` may give the `:actor_id` for device removal notifications.
   """
-  def delete_organization(%Organization{id: id} = organization, opts \\ []) do
+  def delete_organization(%Organization{} = organization, opts \\ []),
+    do: delete_organization(organization, opts, 3)
+
+  defp delete_organization(%Organization{id: id} = organization, opts, attempts) do
     Repo.transaction(fn ->
       # Feed media downloads store their object and record its key under the
       # feed's lock (`Feeds.Media`): lock the feeds so no download records a
       # key after the stored objects are collected. A download finishing
       # afterwards finds its media gone and deletes its own object.
-      lock_feeds(id)
+      feed_ids = lock_feeds(id)
 
       # Lock the organization so no child organization, file, device or feed
       # can be added while it is checked and its contents are collected.
       Repo.one(from(o in Organization, where: o.id == ^id, lock: "FOR UPDATE")) ||
         Repo.rollback(:not_found)
 
-      # Feeds created before the organization was locked.
-      lock_feeds(id)
+      # A feed created before the organization was locked is not locked yet.
+      # Feed writers lock the feed and then reference the organization, so
+      # waiting for it now could deadlock: start again instead, locking it
+      # first.
+      if Repo.exists?(
+           from(f in Castmill.Feeds.Feed,
+             where: f.organization_id == ^id and f.id not in ^feed_ids
+           )
+         ),
+         do: Repo.rollback(:feeds_changed)
 
       if Repo.exists?(from(o in Organization, where: o.organization_id == ^id)),
         do: Repo.rollback(:has_child_organizations)
@@ -322,6 +333,9 @@ defmodule Castmill.Organizations do
         })
 
         {:ok, deleted}
+
+      {:error, :feeds_changed} when attempts > 1 ->
+        delete_organization(organization, opts, attempts - 1)
 
       error ->
         error

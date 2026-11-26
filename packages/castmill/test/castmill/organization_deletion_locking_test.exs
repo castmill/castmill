@@ -121,4 +121,68 @@ defmodule Castmill.OrganizationDeletionLockingTest do
     assert {{:ok, _}, true} = Task.await(deletion, 10_000)
     refute Repo.get(FeedMedia, media.id)
   end
+
+  test "a feed created while the organization is locked is locked first, without deadlock",
+       %{organization: organization} do
+    test_pid = self()
+
+    # Another session holds the organization so the deletion waits after
+    # locking the existing feeds.
+    {:ok, holder} =
+      Repo.config()
+      |> Keyword.take([:hostname, :port, :username, :password, :database])
+      |> Postgrex.start_link()
+
+    Postgrex.query!(holder, "BEGIN", [])
+
+    Postgrex.query!(holder, "SELECT id FROM organizations WHERE id = $1 FOR SHARE", [
+      Ecto.UUID.dump!(organization.id)
+    ])
+
+    deletion =
+      Task.async(fn ->
+        :ok = Sandbox.checkout(Repo, sandbox: false)
+        Organizations.delete_organization(organization)
+      end)
+
+    await_lock_waiters(1)
+
+    # A feed is created meanwhile, and a writer locks it and then references
+    # the organization (as appending entries does).
+    writer =
+      Task.async(fn ->
+        :ok = Sandbox.checkout(Repo, sandbox: false)
+
+        feed =
+          %Feed{}
+          |> Feed.create_changeset(organization.id, %{name: "New feed"})
+          |> Repo.insert!()
+
+        Repo.transaction(fn ->
+          Repo.one!(from(f in Feed, where: f.id == ^feed.id, lock: "FOR UPDATE"))
+          send(test_pid, :new_feed_locked)
+          receive do: (:finish -> :ok)
+          url = "https://example.com/new.jpg"
+
+          Repo.insert!(%FeedMedia{
+            feed_id: feed.id,
+            organization_id: organization.id,
+            original_url: url,
+            url_hash: FeedMedia.hash_url(url),
+            status: "pending"
+          })
+        end)
+      end)
+
+    assert_receive :new_feed_locked, 5_000
+    Postgrex.query!(holder, "COMMIT", [])
+
+    # The deletion starts again and waits for the new feed's writer.
+    await_lock_waiters(1)
+    send(writer.pid, :finish)
+
+    assert {:ok, _} = Task.await(writer, 10_000)
+    assert {:ok, _} = Task.await(deletion, 10_000)
+    refute Organizations.get_organization(organization.id)
+  end
 end
