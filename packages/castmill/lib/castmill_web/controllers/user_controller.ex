@@ -297,8 +297,11 @@ defmodule CastmillWeb.UserController do
     end
   end
 
+  # Applies to every route except the token-authenticated `/api` scope. The
+  # router matches percent-decoded segments, so the scope is read from the
+  # decoded path (an encoded `/%64ashboard/...` still gets these checks).
   defp authorize_dashboard_user(conn, _opts) do
-    if String.starts_with?(conn.request_path, "/dashboard/") do
+    if not api_request?(conn) do
       actor_id = CastmillWeb.CurrentUser.id(conn)
 
       # Same order as the `update/2` clauses: a request with `user` updates
@@ -330,4 +333,7 @@ defmodule CastmillWeb.UserController do
       conn
     end
   end
+
+  defp api_request?(%Plug.Conn{path_info: [first | _]}), do: URI.decode(first) == "api"
+  defp api_request?(_conn), do: false
 end

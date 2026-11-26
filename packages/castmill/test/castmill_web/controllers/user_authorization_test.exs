@@ -120,4 +120,11 @@ defmodule CastmillWeb.UserAuthorizationTest do
     refute name == "Renamed"
     refute email == "attacker@example.com"
   end
+
+  test "an encoded dashboard path gets the same checks", %{conn: conn, other: other} do
+    conn = put(conn, "/%64ashboard/users/#{other.id}", %{"user" => %{"name" => "Renamed"}})
+
+    assert json_response(conn, 403) == %{"error" => "forbidden"}
+    refute Accounts.get_user(other.id).name == "Renamed"
+  end
 end
