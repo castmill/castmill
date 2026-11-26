@@ -75,3 +75,11 @@
   font-size: 0.95em;
   margin: 0;
 }
+
+.invite-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em 0.75em;
+  min-width: 0;
+}

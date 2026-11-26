@@ -925,7 +925,8 @@
       "resendInvitationFailed": "No se pudo reenviar la invitación",
       "removeInvitationFailed": "No se pudo eliminar la invitación",
       "invitationEmailNotSent": "La invitación de {{email}} tiene un enlace nuevo, pero no se pudo enviar el correo. Reenvíela de nuevo.",
-      "invitationBusy": "Se está enviando una invitación a {{email}} en este momento. Inténtelo de nuevo en un momento."
+      "invitationBusy": "Se está enviando una invitación a {{email}} en este momento. Inténtelo de nuevo en un momento.",
+      "membersQuotaExceeded": "Tu organización no tiene espacio para más miembros. Mejora tu plan para invitar a otras personas."
     },
     "messages": {
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",

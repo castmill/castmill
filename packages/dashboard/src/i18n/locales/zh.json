@@ -923,7 +923,8 @@
       "resendInvitationFailed": "无法重新发送邀请",
       "removeInvitationFailed": "无法移除邀请",
       "invitationEmailNotSent": "{{email}} 的邀请已有新链接，但邮件未能发送。请再次重新发送。",
-      "invitationBusy": "正在向 {{email}} 发送邀请。请稍后再试。"
+      "invitationBusy": "正在向 {{email}} 发送邀请。请稍后再试。",
+      "membersQuotaExceeded": "您的组织已无法添加更多成员。请升级套餐以邀请他人。"
     },
     "messages": {
       "memberRemoved": "已成功移除成员 {{name}}",

@@ -923,7 +923,8 @@
       "resendInvitationFailed": "تعذرت إعادة إرسال الدعوة",
       "removeInvitationFailed": "تعذرت إزالة الدعوة",
       "invitationEmailNotSent": "دعوة {{email}} لها رابط جديد، لكن تعذر إرسال البريد الإلكتروني. أعد إرسالها مرة أخرى.",
-      "invitationBusy": "يتم الآن إرسال دعوة إلى {{email}}. حاول مرة أخرى بعد قليل."
+      "invitationBusy": "يتم الآن إرسال دعوة إلى {{email}}. حاول مرة أخرى بعد قليل.",
+      "membersQuotaExceeded": "لا توجد مساحة لأعضاء إضافيين في مؤسستك. قم بترقية خطتك لدعوة أشخاص."
     },
     "messages": {
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",

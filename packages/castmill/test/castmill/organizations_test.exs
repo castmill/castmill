@@ -435,7 +435,11 @@ defmodule Castmill.OrganizationsTest do
 
     test "releases its lock whether or not the resend succeeds", %{organization: organization} do
       advisory_locks = fn ->
-        Repo.query!("SELECT count(*) FROM pg_locks WHERE locktype = 'advisory'").rows
+        # The invitation delivery lock (namespace 49201); the members lock is
+        # a transaction lock, held until the test's sandbox transaction ends.
+        Repo.query!(
+          "SELECT count(*) FROM pg_locks WHERE locktype = 'advisory' AND classid = 49201"
+        ).rows
       end
 
       invitation = invite(organization, "lock@example.com")

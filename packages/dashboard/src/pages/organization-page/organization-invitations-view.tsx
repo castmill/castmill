@@ -149,6 +149,8 @@ export const OrganizationInvitationsView = (props: {
           return t('organization.errors.invitationEmailNotSent', { email });
         case 'invitation_busy':
           return t('organization.errors.invitationBusy', { email });
+        case 'quota_exceeded':
+          return t('organization.errors.membersQuotaExceeded');
       }
     }
     return t('organization.errors.resendInvitationFailed');

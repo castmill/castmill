@@ -891,7 +891,8 @@
       "resendInvitationFailed": "Failed to resend the invitation",
       "removeInvitationFailed": "Failed to remove the invitation",
       "invitationEmailNotSent": "The invitation for {{email}} has a new link, but its email could not be sent. Resend it again.",
-      "invitationBusy": "An invitation to {{email}} is being sent right now. Try again in a moment."
+      "invitationBusy": "An invitation to {{email}} is being sent right now. Try again in a moment.",
+      "membersQuotaExceeded": "Your organization has no room for more members. Upgrade your plan to invite people."
     },
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",

@@ -923,7 +923,8 @@
       "resendInvitationFailed": "招待を再送信できませんでした",
       "removeInvitationFailed": "招待を削除できませんでした",
       "invitationEmailNotSent": "{{email}}への招待に新しいリンクが発行されましたが、メールを送信できませんでした。もう一度再送信してください。",
-      "invitationBusy": "現在{{email}}に招待を送信中です。しばらくしてからもう一度お試しください。"
+      "invitationBusy": "現在{{email}}に招待を送信中です。しばらくしてからもう一度お試しください。",
+      "membersQuotaExceeded": "組織にこれ以上メンバーを追加できません。メンバーを招待するにはプランをアップグレードしてください。"
     },
     "messages": {
       "memberRemoved": "メンバー{{name}}を正常に削除しました",
