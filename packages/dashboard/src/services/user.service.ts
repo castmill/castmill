@@ -14,6 +14,14 @@ export class SoleAdministratorError extends Error {
   }
 }
 
+/** The account is the only member of an organization with child organizations. */
+export class ChildOrganizationsError extends Error {
+  constructor(public organizationName?: string) {
+    super('Cannot delete account - organization has child organizations');
+    this.name = 'ChildOrganizationsError';
+  }
+}
+
 export const UserService = {
   /**
    * Update current user's profile information
@@ -87,6 +95,10 @@ export const UserService = {
           );
         }
 
+        if (errorData.error === 'has_child_organizations') {
+          throw new ChildOrganizationsError(errorData.organization_name);
+        }
+
         // Handle other error types
         if (errorData.error) {
           throw new HttpError(errorData.error, response.status);
@@ -100,6 +112,7 @@ export const UserService = {
         // If it's already our custom error, re-throw it
         if (
           error instanceof SoleAdministratorError ||
+          error instanceof ChildOrganizationsError ||
           error instanceof HttpError
         ) {
           throw error;

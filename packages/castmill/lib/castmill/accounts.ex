@@ -218,13 +218,20 @@ defmodule Castmill.Accounts do
     Delete user by id.
 
     Before deleting:
-    - If user is the ONLY user in an organization, automatically delete that organization
+    - If user is the ONLY user in an organization, that organization is
+      deleted with everything in it, as `Organizations.delete_organization/2`
+      does (its devices are reset, its files deleted and the
+      `:organization_deleted` hook runs once committed). Such an organization
+      with child organizations refuses the deletion
+      (`{:error, {:has_child_organizations, org_name}}`).
     - If user is the sole admin BUT there are other users, prevent deletion (must transfer admin first)
     - Otherwise, allow deletion
 
     This ensures no dangling organizations are left in the system.
   """
-  def delete_user(user_id) do
+  def delete_user(user_id), do: delete_user(user_id, 3)
+
+  defp delete_user(user_id, attempts) do
     Repo.transaction(fn ->
       # Get all organizations where user is a member
       user_orgs =
@@ -234,75 +241,67 @@ defmodule Castmill.Accounts do
         )
         |> Repo.all()
 
-      # Check each organization and handle accordingly
-      Enum.each(user_orgs, fn %{org_id: org_id, role: role} ->
-        # Count total users in this organization
-        # AI agent members do not count: an organization left with only
-        # agents is deleted together with its last human member.
-        total_users =
-          from(ou in OrganizationsUsers,
-            join: u in Castmill.Accounts.User,
-            on: u.id == ou.user_id,
-            where: ou.organization_id == ^org_id and u.is_agent == false,
-            select: count(ou.user_id)
-          )
-          |> Repo.one()
+      # Check each organization and handle accordingly; collect the
+      # organizations removed with the user.
+      removed =
+        Enum.flat_map(user_orgs, fn %{org_id: org_id, role: role} ->
+          # Count total users in this organization
+          # AI agent members do not count: an organization left with only
+          # agents is deleted together with its last human member.
+          total_users =
+            from(ou in OrganizationsUsers,
+              join: u in Castmill.Accounts.User,
+              on: u.id == ou.user_id,
+              where: ou.organization_id == ^org_id and u.is_agent == false,
+              select: count(ou.user_id)
+            )
+            |> Repo.one()
 
-        cond do
-          # If this is the only user, delete the organization
-          total_users == 1 ->
-            case Repo.get(Organization, org_id) do
-              nil ->
-                :ok
+          cond do
+            # If this is the only user, delete the organization
+            total_users == 1 ->
+              case Repo.get(Organization, org_id) do
+                nil ->
+                  []
 
-              org ->
-                # Agent users belong to exactly one organization, remove them too
-                from(u in Castmill.Accounts.User,
-                  join: a in Castmill.Agents.Agent,
-                  on: a.user_id == u.id,
-                  where: a.organization_id == ^org_id
-                )
-                |> Repo.delete_all()
+                org ->
+                  if Repo.exists?(from(o in Organization, where: o.organization_id == ^org_id)),
+                    do: Repo.rollback({:has_child_organizations, org.name})
 
-                # Delete the organization (will cascade delete org_user relationships)
-                case Repo.delete(org) do
-                  {:ok, _} ->
-                    :ok
+                  [{org, Castmill.Organizations.remove_organization(org)}]
+              end
 
-                  {:error, changeset} ->
-                    Repo.rollback("Failed to delete organization: #{inspect(changeset)}")
-                end
-            end
-
-          # If user is sole admin but there are other users, prevent deletion
-          role == :admin ->
-            admin_count =
-              from(ou in OrganizationsUsers,
-                join: u in Castmill.Accounts.User,
-                on: u.id == ou.user_id,
-                where:
-                  ou.organization_id == ^org_id and ou.role == :admin and
-                    u.is_agent == false,
-                select: count(ou.user_id)
-              )
-              |> Repo.one()
-
-            if admin_count == 1 do
-              org_name =
-                from(o in Organization,
-                  where: o.id == ^org_id,
-                  select: o.name
+            # If user is sole admin but there are other users, prevent deletion
+            role == :admin ->
+              admin_count =
+                from(ou in OrganizationsUsers,
+                  join: u in Castmill.Accounts.User,
+                  on: u.id == ou.user_id,
+                  where:
+                    ou.organization_id == ^org_id and ou.role == :admin and
+                      u.is_agent == false,
+                  select: count(ou.user_id)
                 )
                 |> Repo.one()
 
-              Repo.rollback({:sole_administrator, org_name})
-            end
+              if admin_count == 1 do
+                org_name =
+                  from(o in Organization,
+                    where: o.id == ^org_id,
+                    select: o.name
+                  )
+                  |> Repo.one()
 
-          # User is not sole admin, safe to delete
-          true ->
-            :ok
-        end
-      end)
+                Repo.rollback({:sole_administrator, org_name})
+              end
+
+              []
+
+            # User is not sole admin, safe to delete
+            true ->
+              []
+          end
+        end)
 
       # Delete the user (network memberships and org_user relationships cascade automatically)
       case Repo.delete_all(
@@ -311,18 +310,32 @@ defmodule Castmill.Accounts do
              )
            ) do
         {1, nil} ->
-          "User successfully deleted."
+          removed
 
         _ ->
           Repo.rollback(:not_found)
       end
     end)
     |> case do
-      {:ok, message} ->
-        {:ok, message}
+      {:ok, removed} ->
+        # The deleted user is not told about their own organizations.
+        Enum.each(removed, fn {org, removal} ->
+          Castmill.Organizations.after_organization_removed(
+            org,
+            %{removal | members: List.delete(removal.members, user_id)}
+          )
+        end)
+
+        {:ok, "User successfully deleted."}
+
+      {:error, :feeds_changed} when attempts > 1 ->
+        delete_user(user_id, attempts - 1)
 
       {:error, :not_found} ->
         {:error, :not_found}
+
+      {:error, {:has_child_organizations, _org_name} = error} ->
+        {:error, error}
 
       {:error, reason} when is_binary(reason) ->
         {:error, reason}

@@ -256,83 +256,10 @@ defmodule Castmill.Organizations do
   def delete_organization(%Organization{} = organization, opts \\ []),
     do: delete_organization(organization, opts, 3)
 
-  defp delete_organization(%Organization{id: id} = organization, opts, attempts) do
-    Repo.transaction(fn ->
-      # Feed media downloads store their object and record its key under the
-      # feed's lock (`Feeds.Media`): lock the feeds so no download records a
-      # key after the stored objects are collected. A download finishing
-      # afterwards finds its media gone and deletes its own object.
-      feed_ids = lock_feeds(id)
-
-      # Lock the organization so no child organization, file, device or feed
-      # can be added while it is checked and its contents are collected.
-      Repo.one(from(o in Organization, where: o.id == ^id, lock: "FOR UPDATE")) ||
-        Repo.rollback(:not_found)
-
-      # A feed created before the organization was locked is not locked yet.
-      # Feed writers lock the feed and then reference the organization, so
-      # waiting for it now could deadlock: start again instead, locking it
-      # first.
-      if Repo.exists?(
-           from(f in Castmill.Feeds.Feed,
-             where: f.organization_id == ^id and f.id not in ^feed_ids
-           )
-         ),
-         do: Repo.rollback(:feeds_changed)
-
-      if Repo.exists?(from(o in Organization, where: o.organization_id == ^id)),
-        do: Repo.rollback(:has_child_organizations)
-
-      devices = Repo.all(from(d in Castmill.Devices.Device, where: d.organization_id == ^id))
-      members = member_ids(id)
-      cleanups = stored_objects(id)
-
-      Enum.each(devices, &Repo.delete!/1)
-
-      # Feed media records are kept (unlinked) when an organization goes;
-      # delete them, their stored objects are recorded above.
-      Repo.delete_all(from(m in Castmill.Feeds.FeedMedia, where: m.organization_id == ^id))
-
-      # Agent users belong to exactly one organization, remove them too
-      from(u in Castmill.Accounts.User,
-        join: a in Castmill.Agents.Agent,
-        on: a.user_id == u.id,
-        where: a.organization_id == ^id
-      )
-      |> Repo.delete_all()
-
-      case Repo.delete(organization) do
-        {:ok, deleted} -> {deleted, devices, members, Castmill.StorageCleanups.record(cleanups)}
-        {:error, changeset} -> Repo.rollback(changeset)
-      end
-    end)
-    |> case do
-      {:ok, {deleted, devices, members, cleanup_ids}} ->
-        # Players reset now that their devices are gone.
-        Enum.each(devices, &Castmill.Devices.broadcast_removal/1)
-
-        # Organization notifications cannot reference the deleted
-        # organization: each former member is told directly instead.
-        Enum.each(
-          members,
-          &Castmill.Notifications.Events.notify_organization_deleted(
-            &1,
-            organization.name,
-            length(devices),
-            Keyword.get(opts, :actor_id)
-          )
-        )
-
-        # Delete the stored objects now; anything that fails stays recorded
-        # and is retried by the daily maintenance job.
-        Castmill.StorageCleanups.run_soon(cleanup_ids)
-
-        Castmill.Hooks.trigger_hook(:organization_deleted, %{
-          organization_id: id,
-          network_id: organization.network_id
-        })
-
-        {:ok, deleted}
+  defp delete_organization(%Organization{} = organization, opts, attempts) do
+    case Repo.transaction(fn -> remove_organization(organization) end) do
+      {:ok, removed} ->
+        {:ok, after_organization_removed(organization, removed, opts)}
 
       {:error, :feeds_changed} when attempts > 1 ->
         delete_organization(organization, opts, attempts - 1)
@@ -340,6 +267,100 @@ defmodule Castmill.Organizations do
       error ->
         error
     end
+  end
+
+  @doc false
+  # The database part of `delete_organization/2`, inside the caller's
+  # transaction (account deletion uses it too). Rolls back with
+  # `:not_found`, `:feeds_changed` (retry) or `:has_child_organizations`.
+  # Once committed, pass the result to `after_organization_removed/3`.
+  def remove_organization(%Organization{id: id} = organization) do
+    # Feed media downloads store their object and record its key under the
+    # feed's lock (`Feeds.Media`): lock the feeds so no download records a
+    # key after the stored objects are collected. A download finishing
+    # afterwards finds its media gone and deletes its own object.
+    feed_ids = lock_feeds(id)
+
+    # Lock the organization so no child organization, file, device or feed
+    # can be added while it is checked and its contents are collected.
+    Repo.one(from(o in Organization, where: o.id == ^id, lock: "FOR UPDATE")) ||
+      Repo.rollback(:not_found)
+
+    # A feed created before the organization was locked is not locked yet.
+    # Feed writers lock the feed and then reference the organization, so
+    # waiting for it now could deadlock: start again instead, locking it
+    # first.
+    if Repo.exists?(
+         from(f in Castmill.Feeds.Feed,
+           where: f.organization_id == ^id and f.id not in ^feed_ids
+         )
+       ),
+       do: Repo.rollback(:feeds_changed)
+
+    if Repo.exists?(from(o in Organization, where: o.organization_id == ^id)),
+      do: Repo.rollback(:has_child_organizations)
+
+    devices = Repo.all(from(d in Castmill.Devices.Device, where: d.organization_id == ^id))
+    members = member_ids(id)
+    cleanups = stored_objects(id)
+
+    Enum.each(devices, &Repo.delete!/1)
+
+    # Feed media records are kept (unlinked) when an organization goes;
+    # delete them, their stored objects are recorded above.
+    Repo.delete_all(from(m in Castmill.Feeds.FeedMedia, where: m.organization_id == ^id))
+
+    # Agent users belong to exactly one organization, remove them too
+    from(u in Castmill.Accounts.User,
+      join: a in Castmill.Agents.Agent,
+      on: a.user_id == u.id,
+      where: a.organization_id == ^id
+    )
+    |> Repo.delete_all()
+
+    case Repo.delete(organization) do
+      {:ok, deleted} ->
+        %{
+          deleted: deleted,
+          devices: devices,
+          members: members,
+          cleanup_ids: Castmill.StorageCleanups.record(cleanups)
+        }
+
+      {:error, changeset} ->
+        Repo.rollback(changeset)
+    end
+  end
+
+  @doc false
+  # What `delete_organization/2` does once the removal is committed.
+  # Returns the deleted organization.
+  def after_organization_removed(%Organization{} = organization, removed, opts \\ []) do
+    # Players reset now that their devices are gone.
+    Enum.each(removed.devices, &Castmill.Devices.broadcast_removal/1)
+
+    # Organization notifications cannot reference the deleted
+    # organization: each former member is told directly instead.
+    Enum.each(
+      removed.members,
+      &Castmill.Notifications.Events.notify_organization_deleted(
+        &1,
+        organization.name,
+        length(removed.devices),
+        Keyword.get(opts, :actor_id)
+      )
+    )
+
+    # Delete the stored objects now; anything that fails stays recorded
+    # and is retried by the daily maintenance job.
+    Castmill.StorageCleanups.run_soon(removed.cleanup_ids)
+
+    Castmill.Hooks.trigger_hook(:organization_deleted, %{
+      organization_id: organization.id,
+      network_id: organization.network_id
+    })
+
+    removed.deleted
   end
 
   defp lock_feeds(organization_id) do

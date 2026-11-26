@@ -229,6 +229,7 @@
     "deleteAccountError": "Failed to delete account. Please try again.",
     "soleAdministratorError": "Cannot delete account. You are the sole administrator of '{{orgName}}' which has other members. Please promote another user to admin first.",
     "soleAdministratorErrorGeneric": "Cannot delete account. You are the sole administrator of one or more organizations with other members. Please promote another user to admin first.",
+    "childOrganizationsError": "Cannot delete account. You are the only member of '{{orgName}}', which has child organizations. Delete its child organizations first.",
     "retry": "Retry",
     "errors": {
       "loadCredentials": "Failed to load credentials. Please try refreshing the page.",

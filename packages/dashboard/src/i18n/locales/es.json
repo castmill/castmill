@@ -206,7 +206,8 @@
     "deleteAccountSuccess": "Cuenta eliminada con éxito. Redirigiendo...",
     "deleteAccountError": "Error al eliminar la cuenta. Por favor, inténtelo de nuevo.",
     "soleAdministratorError": "No se puede eliminar la cuenta. Usted es el único administrador de '{{orgName}}' que tiene otros miembros. Por favor, promocione a otro usuario a administrador primero.",
-    "soleAdministratorErrorGeneric": "No se puede eliminar la cuenta. Usted es el único administrador de una o más organizaciones con otros miembros. Por favor, promocione a otro usuario a administrador primero."
+    "soleAdministratorErrorGeneric": "No se puede eliminar la cuenta. Usted es el único administrador de una o más organizaciones con otros miembros. Por favor, promocione a otro usuario a administrador primero.",
+    "childOrganizationsError": "No se puede eliminar la cuenta. Eres el único miembro de '{{orgName}}', que tiene organizaciones hijas. Elimina primero sus organizaciones hijas."
   },
   "network": {
     "widgets": {
