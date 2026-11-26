@@ -32,7 +32,7 @@ During a migration, another server, such as the old player server, can serve the
 - Forward `/legacy/*` and `/widget_assets/*` to the Castmill server.
 - Serve `/legacy/sw.js` at `/sw.js` without its `Service-Worker-Allowed` header, so the player can start offline at `/`.
 
-The players then call the Castmill API from that domain. Allow it on the Castmill server with the `cors_any_origin_paths` setting. List the device API, and also media if the Castmill server stores it, for example `config :castmill, :cors_any_origin_paths, ["/devices/", "/medias/"]`. If your media is stored on a CDN, its CORS policy must allow the domain too.
+The players then call the Castmill API from that domain. Allow it on the Castmill server with the `cors_any_origin_paths` setting. List the device API and widget assets, and also media if the Castmill server stores it, for example `config :castmill, :cors_any_origin_paths, ["/devices/", "/widget_assets/", "/medias/"]`. Widget assets are needed because widgets reference them by Castmill URLs. If your media is stored on a CDN, its CORS policy must allow the domain too.
 
 Do not point the old player domain at the Castmill server itself yet. The server answers `/` there with the current browser player, which legacy players cannot run.
 

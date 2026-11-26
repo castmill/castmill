@@ -109,8 +109,9 @@ adapter and cache the new page.
 The adapter calls that API from the host's origin. Castmill accepts any origin only for
 `/registrations` and `/legacy/log`; list additional paths that authenticate without
 cookies or serve public files in `config :castmill, :cors_any_origin_paths`: `/devices/`,
-and `/medias/` when Castmill stores the media itself. Media stored on another origin, such
-as a CDN, must allow the host's origin in its own CORS policy.
+`/widget_assets/` (widgets reference their assets by absolute Castmill URLs), and
+`/medias/` when Castmill stores the media itself. Media stored on another origin, such as
+a CDN, must allow the host's origin in its own CORS policy.
 
 Players keep their registration, cached content, and offline shell on the host's origin.
 Castmill cannot take over that domain yet: it answers `/` with the browser player and
