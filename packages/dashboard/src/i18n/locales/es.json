@@ -981,7 +981,24 @@
       "installer": "Token temporal para registro de dispositivos (expira en 24h)"
     },
     "resend": "Reenviar",
-    "resendInvitation": "Reenviar invitación"
+    "resendInvitation": "Reenviar invitación",
+    "delete": {
+      "title": "Eliminar organización",
+      "description": "Elimina esta organización y todo su contenido de forma definitiva. No se puede deshacer.",
+      "action": "Eliminar organización",
+      "confirmTitle": "¿Eliminar {{name}}?",
+      "confirmDescription": "Esto elimina la organización de forma permanente. No se puede deshacer ni recuperar.",
+      "consequenceContent": "Se eliminan todos sus medios, listas de reproducción, canales, diseños, feeds y demás contenido, y sus archivos se borran del almacenamiento.",
+      "consequenceDevices": "Sus pantallas se dan de baja y dejan de reproducir su contenido.",
+      "consequenceMembers": "Sus miembros pierden el acceso; sus cuentas y otras organizaciones no se ven afectadas.",
+      "typeName": "Escribe {{name}} para confirmar",
+      "confirmAction": "Eliminar definitivamente",
+      "deleting": "Eliminando…",
+      "deleted": "Se ha eliminado {{name}}.",
+      "errorChildren": "Esta organización tiene organizaciones hijas. Elimínalas primero.",
+      "errorName": "El nombre escrito no coincide con el nombre de la organización.",
+      "errorGeneric": "No se pudo eliminar la organización. Inténtalo de nuevo."
+    }
   },
   "signup": {
     "title": "Registrarse",

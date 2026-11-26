@@ -51,6 +51,32 @@ export const OrganizationsService = {
    * Remove a member from an Organization.
    *
    */
+  /**
+   * Deletes an organization and everything in it. Irreversible: the server
+   * requires the organization's exact name as confirmation.
+   * Throws an error whose `code` is the server's error code, when it has one.
+   */
+  async deleteOrganization(organizationId: string, confirmName: string) {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}`,
+      {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm_name: confirmName }),
+      }
+    );
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      const error: Error & { code?: string; status?: number } = new Error(
+        'Failed to delete organization'
+      );
+      error.code = typeof data?.error === 'string' ? data.error : undefined;
+      error.status = response.status;
+      throw error;
+    }
+  },
+
   async removeMemberFromOrganization(organizationId: string, memberId: string) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/members/${memberId}`,

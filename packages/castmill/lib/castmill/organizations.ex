@@ -237,19 +237,78 @@ defmodule Castmill.Organizations do
   end
 
   @doc """
-  Deletes a organization.
+  Deletes an organization and everything in it, for good:
 
-  ## Examples
+    * its devices are removed first, so their players are told and reset;
+    * its copied feed media and their stored files are deleted (files other
+      records still use are kept);
+    * the organization and all its resources are deleted (database cascade),
+      with its agents' users;
+    * once committed, its media files are deleted from storage and the
+      `:organization_deleted` hook runs (e.g. to cancel a subscription).
 
-      iex> delete_organization(organization)
-      {:ok, %Organization{}}
-
-      iex> delete_organization(organization)
-      {:error, %Ecto.Changeset{}}
-
+  Organizations with child organizations are refused
+  (`{:error, :has_child_organizations}`): delete the children first.
+  `opts` may give the `:actor_id` for device removal notifications.
   """
-  def delete_organization(%Organization{} = organization) do
-    Repo.delete(organization)
+  def delete_organization(%Organization{} = organization, opts \\ []) do
+    if Repo.exists?(from(o in Organization, where: o.organization_id == ^organization.id)) do
+      {:error, :has_child_organizations}
+    else
+      do_delete_organization(organization, opts)
+    end
+  end
+
+  defp do_delete_organization(%Organization{id: id} = organization, opts) do
+    files = Repo.all(from(f in Castmill.Files.File, where: f.organization_id == ^id))
+
+    from(d in Castmill.Devices.Device, where: d.organization_id == ^id)
+    |> Repo.all()
+    |> Enum.each(&Castmill.Devices.delete_device(&1, Keyword.take(opts, [:actor_id])))
+
+    Castmill.Feeds.Media.purge_organization(id)
+
+    Repo.transaction(fn ->
+      # Agent users belong to exactly one organization, remove them too
+      from(u in Castmill.Accounts.User,
+        join: a in Castmill.Agents.Agent,
+        on: a.user_id == u.id,
+        where: a.organization_id == ^id
+      )
+      |> Repo.delete_all()
+
+      case Repo.delete(organization) do
+        {:ok, deleted} -> deleted
+        {:error, changeset} -> Repo.rollback(changeset)
+      end
+    end)
+    |> case do
+      {:ok, deleted} ->
+        Task.start(fn -> Enum.each(files, &delete_stored_file/1) end)
+
+        Castmill.Hooks.trigger_hook(:organization_deleted, %{
+          organization_id: id,
+          network_id: organization.network_id
+        })
+
+        {:ok, deleted}
+
+      error ->
+        error
+    end
+  end
+
+  defp delete_stored_file(file) do
+    case Castmill.Resources.delete_stored_file(file) do
+      {:error, reason} ->
+        Logger.error("[Organizations] Deleting stored file #{file.id} failed: #{inspect(reason)}")
+
+      _ ->
+        :ok
+    end
+  rescue
+    error ->
+      Logger.error("[Organizations] Deleting stored file #{file.id} failed: #{inspect(error)}")
   end
 
   @doc """

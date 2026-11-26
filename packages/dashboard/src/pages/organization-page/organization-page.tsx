@@ -11,6 +11,7 @@ import {
 import { Button, FormItem, TabItem, Tabs, useToast } from '@castmill/ui-common';
 import { OrganizationMembersView } from './organization-members-view';
 import { LogoSettings } from './logo-settings';
+import { DeleteOrganization } from './delete-organization';
 import { store, setStore } from '../../store';
 import { usePermissions } from '../../hooks/usePermissions';
 import { BsCheckLg } from 'solid-icons/bs';
@@ -198,6 +199,12 @@ const OrganizationPage: Component = () => {
             onLogoUpdate={(newLogoMediaId) => setLogoMediaId(newLogoMediaId)}
             disabled={!canEdit()}
           />
+          <Show when={canPerformAction('organizations', 'delete')}>
+            <DeleteOrganization
+              organizationId={store.organizations.selectedId!}
+              organizationName={store.organizations.selectedName!}
+            />
+          </Show>
         </Show>
       ),
     },

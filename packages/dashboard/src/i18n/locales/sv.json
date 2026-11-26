@@ -975,7 +975,24 @@
       "removeInvitationsMessage": "Är du säker på att du vill ta bort följande inbjudningar?"
     },
     "resend": "Skicka igen",
-    "resendInvitation": "Skicka inbjudan igen"
+    "resendInvitation": "Skicka inbjudan igen",
+    "delete": {
+      "title": "Ta bort organisation",
+      "description": "Tar bort organisationen och allt i den för gott. Det går inte att ångra.",
+      "action": "Ta bort organisation",
+      "confirmTitle": "Ta bort {{name}}?",
+      "confirmDescription": "Organisationen tas bort permanent. Det går inte att ångra eller återställa.",
+      "consequenceContent": "All media, alla spellistor, kanaler, layouter, flöden och annat innehåll tas bort, och filerna raderas från lagringen.",
+      "consequenceDevices": "Skärmarna avregistreras och slutar visa innehållet.",
+      "consequenceMembers": "Medlemmarna förlorar åtkomsten; deras konton och andra organisationer påverkas inte.",
+      "typeName": "Skriv {{name}} för att bekräfta",
+      "confirmAction": "Ta bort permanent",
+      "deleting": "Tar bort…",
+      "deleted": "{{name}} har tagits bort.",
+      "errorChildren": "Organisationen har underorganisationer. Ta bort dem först.",
+      "errorName": "Namnet du skrev stämmer inte med organisationens namn.",
+      "errorGeneric": "Organisationen kunde inte tas bort. Försök igen."
+    }
   },
   "playlists": {
     "title": "Spellistor",

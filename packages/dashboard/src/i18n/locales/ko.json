@@ -980,7 +980,24 @@
       "removeInvitationsMessage": "다음 초대를 제거하시겠습니까?"
     },
     "resend": "다시 보내기",
-    "resendInvitation": "초대 다시 보내기"
+    "resendInvitation": "초대 다시 보내기",
+    "delete": {
+      "title": "조직 삭제",
+      "description": "이 조직과 그 안의 모든 항목을 영구적으로 삭제합니다. 되돌릴 수 없습니다.",
+      "action": "조직 삭제",
+      "confirmTitle": "{{name}}을(를) 삭제하시겠습니까?",
+      "confirmDescription": "조직이 영구적으로 삭제됩니다. 되돌리거나 복구할 수 없습니다.",
+      "consequenceContent": "모든 미디어, 재생 목록, 채널, 레이아웃, 피드 및 기타 콘텐츠가 삭제되고 파일이 저장소에서 제거됩니다.",
+      "consequenceDevices": "화면 등록이 해제되고 더 이상 콘텐츠를 재생하지 않습니다.",
+      "consequenceMembers": "구성원은 액세스 권한을 잃지만 계정과 다른 조직은 영향을 받지 않습니다.",
+      "typeName": "확인하려면 {{name}}을(를) 입력하세요",
+      "confirmAction": "영구 삭제",
+      "deleting": "삭제 중…",
+      "deleted": "{{name}}이(가) 삭제되었습니다.",
+      "errorChildren": "이 조직에는 하위 조직이 있습니다. 먼저 하위 조직을 삭제하세요.",
+      "errorName": "입력한 이름이 조직 이름과 일치하지 않습니다.",
+      "errorGeneric": "조직을 삭제할 수 없습니다. 다시 시도하세요."
+    }
   },
   "playlists": {
     "title": "재생목록",

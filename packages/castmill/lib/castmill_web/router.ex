@@ -714,7 +714,7 @@ defmodule CastmillWeb.Router do
     post("/invitations/:token/accept", TeamController, :accept_invitation, as: :team_invitation)
     post("/invitations/:token/reject", TeamController, :reject_invitation, as: :team_invitation)
 
-    resources "/organizations", OrganizationController, only: [:update] do
+    resources "/organizations", OrganizationController, only: [:update, :delete] do
       post("/complete-onboarding", OrganizationController, :complete_onboarding)
       post("/devices", OrganizationController, :register_device)
 

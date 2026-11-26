@@ -981,7 +981,24 @@
     "noLogo": "ロゴが選択されていません",
     "noMediasAvailable": "画像メディアがありません。まず画像をアップロードしてください。",
     "resend": "再送信",
-    "resendInvitation": "招待を再送信"
+    "resendInvitation": "招待を再送信",
+    "delete": {
+      "title": "組織を削除",
+      "description": "この組織とその中のすべてを完全に削除します。元に戻すことはできません。",
+      "action": "組織を削除",
+      "confirmTitle": "{{name}} を削除しますか？",
+      "confirmDescription": "組織は完全に削除されます。元に戻すことも復元することもできません。",
+      "consequenceContent": "すべてのメディア、プレイリスト、チャンネル、レイアウト、フィードなどのコンテンツが削除され、ファイルもストレージから削除されます。",
+      "consequenceDevices": "画面の登録が解除され、コンテンツの再生が停止します。",
+      "consequenceMembers": "メンバーはアクセスできなくなりますが、アカウントや他の組織には影響しません。",
+      "typeName": "確認のため {{name}} と入力してください",
+      "confirmAction": "完全に削除",
+      "deleting": "削除しています…",
+      "deleted": "{{name}} を削除しました。",
+      "errorChildren": "この組織には子組織があります。先に子組織を削除してください。",
+      "errorName": "入力した名前が組織名と一致しません。",
+      "errorGeneric": "組織を削除できませんでした。もう一度お試しください。"
+    }
   },
   "playlists": {
     "title": "プレイリスト",

@@ -149,6 +149,11 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
 
+  # Deleting an organization is irreversible: only its admins.
+  def check_access(actor_id, :delete, %{"id" => organization_id}) do
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
   def check_access(actor_id, :complete_onboarding, %{"organization_id" => organization_id}) do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
@@ -280,11 +285,33 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
-  def delete(conn, %{"id" => id}) do
+  def delete(conn, %{"id" => id} = params) do
     organization = Organizations.get_organization!(id)
+    dashboard? = String.starts_with?(conn.request_path, "/dashboard/")
 
-    with {:ok, %Organization{}} <- Organizations.delete_organization(organization) do
-      send_resp(conn, :no_content, "")
+    cond do
+      # The dashboard asks the admin to type the organization's name, and
+      # the request must carry it: deletion cannot be undone.
+      dashboard? and params["confirm_name"] != organization.name ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "confirmation_mismatch"})
+
+      true ->
+        case Organizations.delete_organization(organization,
+               actor_id: CastmillWeb.CurrentUser.id(conn)
+             ) do
+          {:ok, %Organization{}} ->
+            send_resp(conn, :no_content, "")
+
+          {:error, :has_child_organizations} ->
+            conn
+            |> put_status(:conflict)
+            |> json(%{error: "has_child_organizations"})
+
+          {:error, _} = error ->
+            error
+        end
     end
   end
 

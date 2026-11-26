@@ -932,7 +932,24 @@
     "noLogo": "No logo selected",
     "noMediasAvailable": "No image medias available. Please upload an image first.",
     "resend": "Resend",
-    "resendInvitation": "Resend invitation"
+    "resendInvitation": "Resend invitation",
+    "delete": {
+      "title": "Delete organization",
+      "description": "Deletes this organization and everything in it for good. This cannot be undone.",
+      "action": "Delete organization",
+      "confirmTitle": "Delete {{name}}?",
+      "confirmDescription": "This permanently deletes the organization. It cannot be undone or recovered.",
+      "consequenceContent": "All its media, playlists, channels, layouts, feeds and other content are deleted, and their files removed from storage.",
+      "consequenceDevices": "Its screens are unregistered and stop playing its content.",
+      "consequenceMembers": "Its members lose access; their accounts and other organizations are not affected.",
+      "typeName": "Type {{name}} to confirm",
+      "confirmAction": "Delete permanently",
+      "deleting": "Deleting…",
+      "deleted": "{{name}} was deleted.",
+      "errorChildren": "This organization has child organizations. Delete them first.",
+      "errorName": "The name you typed does not match the organization's name.",
+      "errorGeneric": "The organization could not be deleted. Try again."
+    }
   },
   "login": {
     "title": "Login",

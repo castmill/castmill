@@ -4,7 +4,8 @@ defmodule Castmill.HookSchemas do
     user_signup: [:user_id, :email, :network_id],
     user_signin: [:user_id],
     file_upload: [:account_id, :file_id],
-    device_registered: [:device_id]
+    device_registered: [:device_id],
+    organization_deleted: [:organization_id, :network_id]
   }
 
   # Checks if a hook name is valid and if the given args match the expected schema

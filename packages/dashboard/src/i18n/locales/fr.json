@@ -992,7 +992,24 @@
       "removeInvitationsMessage": "Êtes-vous sûr de vouloir retirer les invitations suivantes ?"
     },
     "resend": "Renvoyer",
-    "resendInvitation": "Renvoyer l'invitation"
+    "resendInvitation": "Renvoyer l'invitation",
+    "delete": {
+      "title": "Supprimer l'organisation",
+      "description": "Supprime définitivement cette organisation et tout son contenu. Cette action est irréversible.",
+      "action": "Supprimer l'organisation",
+      "confirmTitle": "Supprimer {{name}} ?",
+      "confirmDescription": "L'organisation sera supprimée définitivement. Elle ne pourra être ni restaurée ni récupérée.",
+      "consequenceContent": "Tous ses médias, playlists, chaînes, mises en page, flux et autres contenus sont supprimés, et leurs fichiers retirés du stockage.",
+      "consequenceDevices": "Ses écrans sont désenregistrés et cessent d'afficher son contenu.",
+      "consequenceMembers": "Ses membres perdent l'accès ; leurs comptes et autres organisations ne sont pas concernés.",
+      "typeName": "Saisissez {{name}} pour confirmer",
+      "confirmAction": "Supprimer définitivement",
+      "deleting": "Suppression…",
+      "deleted": "{{name}} a été supprimée.",
+      "errorChildren": "Cette organisation a des organisations enfants. Supprimez-les d'abord.",
+      "errorName": "Le nom saisi ne correspond pas au nom de l'organisation.",
+      "errorGeneric": "L'organisation n'a pas pu être supprimée. Réessayez."
+    }
   },
   "playlists": {
     "title": "Playlists",

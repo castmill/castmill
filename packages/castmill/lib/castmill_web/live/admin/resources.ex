@@ -376,9 +376,19 @@ defmodule CastmillWeb.Live.Admin.Resources do
   @impl true
   def handle_event("delete", %{"id" => id, "resource" => "organizations"}, socket) do
     organization = Organizations.get_organization!(id)
-    {:ok, _} = Organizations.delete_organization(organization)
-    rows = Enum.reject(socket.assigns.rows, fn r -> r.id == organization.id end)
-    {:noreply, assign(socket, :rows, rows)}
+
+    case Organizations.delete_organization(organization) do
+      {:ok, _} ->
+        rows = Enum.reject(socket.assigns.rows, fn r -> r.id == organization.id end)
+        {:noreply, assign(socket, :rows, rows)}
+
+      {:error, :has_child_organizations} ->
+        {:noreply,
+         put_flash(socket, :error, "Delete this organization's child organizations first.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "The organization could not be deleted.")}
+    end
   end
 
   @impl true
