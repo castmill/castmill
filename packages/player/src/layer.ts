@@ -345,6 +345,12 @@ export class Layer extends EventEmitter {
     return this.widget ? this.widget.readiness$() : of(undefined);
   }
 
+  samplePlayback() {
+    return this.widget instanceof TemplateWidget
+      ? this.widget.samplePlayback()
+      : [];
+  }
+
   reportError(input: PlayerRuntimeError): void {
     this.globals?.reportError?.(input);
   }
@@ -391,7 +397,7 @@ export class Layer extends EventEmitter {
     return of([offset, 0]);
   }
 
-  show(offset: number) {
+  show(offset: number, retry = false) {
     if (
       this.widgetAspectRatio !== null &&
       !this.resizeObserver &&
@@ -401,7 +407,11 @@ export class Layer extends EventEmitter {
     }
 
     if (this.widget) {
-      return this.widget.show(this.el, offset).pipe(
+      const showing =
+        retry && this.widget instanceof TemplateWidget
+          ? this.widget.show(this.el, offset, true)
+          : this.widget.show(this.el, offset);
+      return showing.pipe(
         tap(() => this.updateWidgetDimensions()),
         catchError((err) => {
           // TODO: we should show more information about this error. Which widget? and which options?

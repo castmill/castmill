@@ -40,6 +40,8 @@ interface ResourceManagerOpts {
    * own origin.
    */
   authOrigins?: string[];
+  /** Use the original URL directly for selected media, without persisting it. */
+  bypassMediaCache?: (url: string) => boolean;
   isOnline?: () => boolean;
   needsRefresh?: () => void;
   codeRevalidationTimeoutMs?: number;
@@ -278,8 +280,7 @@ export class ResourceManager {
       return;
     }
 
-    // We must not cache data uris
-    if (url.startsWith('data:')) {
+    if (url.startsWith('data:') || this.opts.bypassMediaCache?.(url)) {
       return url;
     }
 
@@ -299,6 +300,9 @@ export class ResourceManager {
   }
 
   async refreshMedia(url: string): Promise<string | void> {
+    if (this.opts.bypassMediaCache?.(url)) {
+      return url;
+    }
     await this.cache.invalidate(url);
     return this.getMedia(url);
   }
@@ -314,8 +318,7 @@ export class ResourceManager {
    * @param url
    */
   async cacheMedia(url: string): Promise<void> {
-    // We must not cache data uris
-    if (url.startsWith('data:')) {
+    if (url.startsWith('data:') || this.opts.bypassMediaCache?.(url)) {
       return;
     }
 

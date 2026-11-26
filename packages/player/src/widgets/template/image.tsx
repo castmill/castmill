@@ -13,7 +13,7 @@ import { ComponentAnimation, applyAnimations } from './animation';
 import { BaseComponentProps } from './interfaces/base-component-props';
 import { ResourceManager } from '@castmill/cache';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
-import { prepareImage } from './image-loading';
+import { getImageMediaWithTimeout, prepareImage } from './image-loading';
 
 export interface ImageComponentOptions {
   url?: string;
@@ -91,7 +91,18 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
   let loadId = 0;
   let hasReportedReady = false;
   let preparation: ReturnType<typeof prepareImage> | undefined;
+  let pending: 'cache lookup' | 'load/decode' | undefined;
+  let pendingSince = 0;
   const loadBlock = {};
+
+  const stopObserving = props.globals.observeWidgetPlayback?.(() => {
+    if (!pending) return;
+    const description = `Image ${pending}`;
+    return {
+      label: `${description} ${Math.max(0, Date.now() - pendingSince)}ms`,
+      pending: description,
+    };
+  });
 
   const merged = createMemo(() => {
     const effectiveUrl =
@@ -110,6 +121,7 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
   });
 
   onCleanup(() => {
+    stopObserving?.();
     loadId++;
     preparation?.release();
     props.globals.setPlaybackBlocked?.(loadBlock);
@@ -135,6 +147,7 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
     const currentLoad = ++loadId;
     preparation?.release();
     preparation = undefined;
+    pending = undefined;
     props.globals.setPlaybackBlocked?.(loadBlock);
     if (!imageRef) return;
 
@@ -147,17 +160,17 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
       return;
     }
 
-    void props.resourceManager
-      .getMedia(sourceUrl)
-      .catch((error) => {
-        console.warn('Image cache lookup failed, using original URL', error);
-        return undefined;
-      })
+    pending = 'cache lookup';
+    pendingSince = Date.now();
+    void getImageMediaWithTimeout(props.resourceManager, sourceUrl)
+      .catch(() => undefined)
       .then(async (cachedUrl) => {
         if (currentLoad !== loadId || !imageRef) return;
+        pending = 'load/decode';
+        pendingSince = Date.now();
         if (!cachedUrl) {
           console.warn(
-            `Image ${sourceUrl} not found in cached medias, using original URL`
+            'Image unavailable from cache; trying the original source'
           );
         }
         imageRef.style.backgroundImage = `url(${cachedUrl || sourceUrl})`;
@@ -165,6 +178,7 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
         preparation = loading;
         await loading.ready;
         if (currentLoad !== loadId) return;
+        pending = undefined;
         loading.release();
         preparation = undefined;
         if (!hasReportedReady) {
@@ -174,9 +188,10 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
       })
       .catch((error) => {
         if (currentLoad !== loadId || !imageRef) return;
+        pending = undefined;
         preparation?.release();
         preparation = undefined;
-        console.warn(`Image ${sourceUrl} could not be loaded`, error);
+        console.warn('Image could not be loaded', error);
         props.globals.reportError?.({ category: 'media-load', error });
         props.globals.setPlaybackBlocked?.(loadBlock, {
           category: 'media-load',

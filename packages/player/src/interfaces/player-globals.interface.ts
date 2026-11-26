@@ -2,6 +2,15 @@ export interface PlayerRuntimeError {
   category: 'playback' | 'media-load' | 'runtime';
   code?: string;
   error: unknown;
+  context?: { playlistId?: string | number; layerName?: string };
+}
+
+export interface WidgetPlaybackSample {
+  label: string;
+  /** A bounded, URL-free description of unfinished work for stall reports. */
+  pending?: string;
+  /** Set only while an active operation has a known completion deadline. */
+  deadline?: number;
 }
 
 /**
@@ -49,6 +58,12 @@ export interface PlayerGlobals {
   /** Set by the owning playlist: only a sole item loops back within its slot. */
   loopPlaylistItem?: boolean;
   reportError?: (input: PlayerRuntimeError) => void;
+  /** Enable playlist stall recovery on a signage device, not in previews. */
+  recoverStalledPlayback?: boolean;
+  /** Template-local probes. Registered components must unsubscribe on cleanup. */
+  observeWidgetPlayback?: (
+    read: () => WidgetPlaybackSample | undefined
+  ) => () => void;
   /** Optional per-element integration; omitted to use the default HTML video behavior. */
   createVideoPlaybackController?: VideoPlaybackControllerFactory;
   /**

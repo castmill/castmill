@@ -356,6 +356,7 @@ export class Device extends EventEmitter {
         maxItems?: number;
       };
       cacheBackend?: CacheBackend;
+      bypassMediaCache?: (url: string) => boolean;
       viewport?: Viewport;
       transport?: new (endpoint: string) => object;
       createVideoPlaybackController?: VideoPlaybackControllerFactory;
@@ -422,6 +423,7 @@ export class Device extends EventEmitter {
   getPlayerGlobals(): PlayerGlobals {
     return {
       target: 'poster',
+      recoverStalledPlayback: true,
       reportError: (report) => this.errorReporter.report(report),
       createVideoPlaybackController: this.opts?.createVideoPlaybackController,
     };
@@ -501,11 +503,16 @@ export class Device extends EventEmitter {
     this.resourceManager = new ResourceManager(this.cache, {
       authToken: device.token,
       authOrigins: [this.baseUrl],
+      bypassMediaCache: this.opts?.bypassMediaCache,
     });
 
     await this.resourceManager.init();
 
-    this.contentQueue = new Playlist('content-queue', this.resourceManager);
+    this.contentQueue = new Playlist(
+      'content-queue',
+      this.resourceManager,
+      this.getPlayerGlobals()
+    );
 
     this.initialChannelsLoad = this.fetchChannels(device.id, 1000).then(
       (channels) => {

@@ -42,6 +42,7 @@ interface Slide {
   from?: MountedPage;
   to: MountedPage;
   tween?: GSAPTimeline;
+  started?: number;
 }
 
 const FALLBACK_PAGE_MS = 10000;
@@ -268,6 +269,7 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
       return;
     }
     active.to.hidden = false;
+    active.started = Date.now();
     active.to.el.style.visibility = '';
     const tween = gsap.timeline({
       onComplete: () => {
@@ -436,9 +438,10 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
       base = position;
       started = Date.now();
       running = true;
-      if (slide?.tween && locate(position).page === current)
+      if (slide?.tween && locate(position).page === current) {
+        slide.started = Date.now();
         slide.tween.resume();
-      else finishSlide();
+      } else finishSlide();
       sync(true);
       timer = setInterval(() => sync(), 50);
     },
@@ -508,6 +511,35 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
     stopTimer();
   });
 
+  const stopObserving = props.globals.observeWidgetPlayback?.(() => {
+    if (current < 0) return;
+    const page = mounted().find((candidate) => candidate.page === current);
+    const pending =
+      page && !page.ready
+        ? `Page ${source(current) + 1}/${count()} awaiting children`
+        : undefined;
+    if (!running && !pending) return;
+    const state = pending
+      ? 'waiting'
+      : slide?.tween
+        ? 'sliding'
+        : slide
+          ? 'preparing'
+          : 'playing';
+    const started = slide?.started;
+    return {
+      label: `Page ${source(current) + 1}/${count()} ${state} (${mounted().length} mounted)`,
+      pending,
+      deadline:
+        waitingSince !== undefined
+          ? waitingSince + 45_000
+          : started !== undefined
+            ? started + transitionSeconds() * 1000 + 5000
+            : undefined,
+    };
+  });
+  if (stopObserving) onCleanup(stopObserving);
+
   return (
     <div
       data-component="paginated-list"
@@ -525,6 +557,14 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
         <For each={mounted()}>
           {(page) => {
             const readyItems = new Set<number>();
+            const observe = props.globals.observeWidgetPlayback;
+            const pageGlobals: PlayerGlobals = observe
+              ? {
+                  ...props.globals,
+                  observeWidgetPlayback: (read) =>
+                    observe(() => (page.page === current ? read() : undefined)),
+                }
+              : props.globals;
             const onReady = (index: number) => {
               if (page.ready) return;
               readyItems.add(index);
@@ -557,7 +597,7 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
                       component={props.component}
                       timeline={page.timeline}
                       resourceManager={props.resourceManager}
-                      globals={props.globals}
+                      globals={pageGlobals}
                       onReady={() => onReady(i())}
                       onLayoutUpdate={props.onLayoutUpdate}
                     />

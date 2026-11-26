@@ -41,6 +41,7 @@ export interface DebugOverlayState {
   next?: DebugItemInfo;
   /** The playlist that is playing the item, i.e. the one in this renderer. */
   playlist?: DebugPlaylistInfo;
+  health?: string[];
 }
 
 export interface DebugPlaylistInfo {
@@ -318,6 +319,7 @@ const ITEM_COLOR = '#66bb6a';
 export class DebugOverlay {
   private el?: HTMLElement;
   private sections: SectionElements[] = [];
+  private healthLines: HTMLElement[] = [];
 
   constructor(private readonly container: HTMLElement) {
     (container as DebugContainer)[OVERLAY_PROPERTY] = this;
@@ -348,6 +350,14 @@ export class DebugOverlay {
     if (el.parentNode !== container) container.appendChild(el);
     if (el.style.display !== 'block') el.style.display = 'block';
     this.render(el, views);
+    const health = state.health ?? [];
+    while (this.healthLines.length > health.length) {
+      el.removeChild(this.healthLines.pop()!);
+    }
+    health.forEach((text, i) => {
+      const row = this.healthLines[i] ?? (this.healthLines[i] = line(el));
+      setText(row, text);
+    });
   }
 
   hide(): void {
@@ -360,6 +370,7 @@ export class DebugOverlay {
     this.el?.parentNode?.removeChild(this.el);
     this.el = undefined;
     this.sections = [];
+    this.healthLines = [];
   }
 
   private hasVisibleDescendant(): boolean {

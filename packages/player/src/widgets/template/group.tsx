@@ -110,6 +110,15 @@ export const Group: Component<GroupProps> = (props) => {
   });
 
   const readyComponents = new Set<number>();
+  const stopObserving = props.globals.observeWidgetPlayback?.(() => {
+    const remaining = children()
+      .filter((_component, index) => !readyComponents.has(index))
+      .map((component) => component.type);
+    if (!remaining.length) return;
+    const kinds = Array.from(new Set(remaining)).slice(0, 4);
+    const pending = `Group awaiting ${kinds.join(', ')}`;
+    return { label: pending, pending };
+  });
   const onReadyAfter = (index: number) => {
     if (readyComponents.has(index)) {
       props.onLayoutUpdate?.();
@@ -122,6 +131,7 @@ export const Group: Component<GroupProps> = (props) => {
   };
 
   onCleanup(() => {
+    stopObserving?.();
     cleanUpAnimations?.();
   });
 

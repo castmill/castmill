@@ -38,6 +38,7 @@ export class Image extends TimelineWidget {
   }
 
   show(el: HTMLElement, offset: number) {
+    this.listenForMessages();
     if (!this.img) {
       this.img = document.createElement('div');
     } else if (this.img.style.background) {
@@ -72,6 +73,7 @@ export class Image extends TimelineWidget {
   }
 
   unload(): void {
+    super.unload();
     if (this.img) {
       this.img.style.background = 'none';
       this.img.parentElement?.removeChild(this.img);

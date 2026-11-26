@@ -29,6 +29,7 @@ import {
   isPreviewLoadFrozen,
   PlayerGlobals,
   PlayerRuntimeError,
+  WidgetPlaybackSample,
 } from '../../interfaces/player-globals.interface';
 
 /**
@@ -83,6 +84,7 @@ export class TemplateWidget extends TimelineWidget {
   private readinessActive = true;
   private blockedSince?: number;
   private blockedTotal = 0;
+  private playbackProbes = new Set<() => WidgetPlaybackSample | undefined>();
 
   constructor(
     resourceManager: ResourceManager,
@@ -94,6 +96,10 @@ export class TemplateWidget extends TimelineWidget {
     this.globals = Object.assign({}, opts.globals, {
       setPlaybackBlocked: (source: object, block?: PlayerRuntimeError) =>
         this.setBlocked(source, block),
+      observeWidgetPlayback: (read: () => WidgetPlaybackSample | undefined) => {
+        this.playbackProbes.add(read);
+        return () => this.playbackProbes.delete(read);
+      },
       setPlaybackReadinessBlocked: (
         source: object,
         block?: PlayerRuntimeError
@@ -128,6 +134,15 @@ export class TemplateWidget extends TimelineWidget {
 
   blocked$(): Observable<PlayerRuntimeError | undefined> {
     return this.blocked;
+  }
+
+  samplePlayback(): WidgetPlaybackSample[] {
+    const samples: WidgetPlaybackSample[] = [];
+    this.playbackProbes.forEach((read) => {
+      const sample = read();
+      if (sample) samples.push(sample);
+    });
+    return samples;
   }
 
   readiness$(): Observable<PlayerRuntimeError | undefined> {
@@ -224,20 +239,21 @@ export class TemplateWidget extends TimelineWidget {
       return of('no:fonts');
     }
 
+    const fontFaces = this.fontFaces;
     return from(this.opts.fonts).pipe(
       mergeMap((font) =>
         from(this.resourceManager.getMedia(font.url)).pipe(
           mergeMap((url) => {
-            if (!this.fontFaces[font.name]) {
-              this.fontFaces[font.name] = this.loadFont(
+            if (!fontFaces[font.name]) {
+              fontFaces[font.name] = this.loadFont(
                 font.name,
                 url || font.url
               ).catch((error) => {
-                delete this.fontFaces[font.name];
+                delete fontFaces[font.name];
                 throw error;
               });
             }
-            return from(this.fontFaces[font.name]);
+            return from(fontFaces[font.name]);
           })
         )
       )
@@ -270,6 +286,7 @@ export class TemplateWidget extends TimelineWidget {
   }
 
   async unload() {
+    super.unload();
     const runtimeDuration = this.timeline.duration();
     if (runtimeDuration > 0) this.lastRuntimeDuration = runtimeDuration;
 
@@ -284,22 +301,22 @@ export class TemplateWidget extends TimelineWidget {
     // Note: there is a risk here that we remove a font that is still in use by another widget.
     // We would need to either keep track of the fonts in use or add a unique prefix to the font name.
     // Probably a global font cache would be the best solution.
+    // A watchdog retry must not reuse a pending font from the cancelled show.
+    const fontFaces = this.fontFaces;
+    this.fontFaces = {};
     const fontFaceSet = document.fonts;
-    const fontFacesNames = Object.keys(this.fontFaces);
-
-    for (let i = 0; i < fontFacesNames.length; i++) {
-      const fontFaceName = fontFacesNames[i];
-      if (fontFaceName) {
-        const fontFace = await this.fontFaces[fontFaceName];
-        if (fontFace) {
-          (fontFaceSet as any).delete(fontFace);
-        }
-        delete this.fontFaces[fontFaceName];
-      }
-    }
+    await Promise.all(
+      Object.keys(fontFaces).map((name) =>
+        fontFaces[name].then(
+          (face) => (fontFaceSet as any).delete(face),
+          // Font load failures are reported by load(); no face was added.
+          () => undefined
+        )
+      )
+    );
   }
 
-  show(el: HTMLElement, offset: number) {
+  show(el: HTMLElement, offset: number, retry = false) {
     this.setBlocked(this);
     this.readinessActive = true;
     this.reportReadiness();
@@ -311,6 +328,7 @@ export class TemplateWidget extends TimelineWidget {
     return this.load().pipe(
       switchMap(() => {
         if (!this.disposeRender || !this.ready$) {
+          this.listenForMessages();
           const ready$ = new ReplaySubject<void>(1);
           this.ready$ = ready$;
           this.disposeRender = render(
@@ -341,9 +359,10 @@ export class TemplateWidget extends TimelineWidget {
             // spent waiting for a decoder is excluded: playlists hold their
             // clock while an item is blocked.
             const blocked = this.blockedTime() - blockedAtBase;
-            const elapsed = isPreviewLoadFrozen(this.opts.globals)
-              ? 0
-              : Math.max(0, Date.now() - basetime - blocked);
+            const elapsed =
+              retry || isPreviewLoadFrozen(this.opts.globals)
+                ? 0
+                : Math.max(0, Date.now() - basetime - blocked);
             return this.seek(offset + elapsed).pipe(
               map(() => 'template-widget:shown')
             );

@@ -14,7 +14,7 @@ import { ComponentAnimation } from './animation';
 import { BaseComponentProps } from './interfaces/base-component-props';
 import { ResourceManager } from '@castmill/cache';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
-import { prepareImage } from './image-loading';
+import { getImageMediaWithTimeout, prepareImage } from './image-loading';
 import { TimelineBasic } from './timeline';
 export { preloadImages as preloadCarouselImages } from './image-loading';
 
@@ -27,7 +27,6 @@ export interface ImageCarouselComponentOptions {
 }
 
 const TRANSITION_SECONDS = 1;
-const MEDIA_CACHE_TIMEOUT_MS = 5000;
 
 interface CarouselImageUrl {
   url: string;
@@ -75,40 +74,12 @@ export function resolveCarouselImageUrls(
 ): Promise<string[]> {
   return Promise.all(
     urls.map((url) =>
-      getMediaWithTimeout(resourceManager, url).then(
+      getImageMediaWithTimeout(resourceManager, url).then(
         (cachedUrl) => cachedUrl || fallbackUrl(url),
         () => fallbackUrl(url)
       )
     )
   );
-}
-
-function getMediaWithTimeout(
-  resourceManager: Pick<ResourceManager, 'getMedia'>,
-  url: string
-): Promise<string | void> {
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    const timeout = setTimeout(() => {
-      settled = true;
-      resolve(undefined);
-    }, MEDIA_CACHE_TIMEOUT_MS);
-
-    Promise.resolve()
-      .then(() => resourceManager.getMedia(url))
-      .then(
-        (cachedUrl) => {
-          if (settled) return;
-          clearTimeout(timeout);
-          resolve(cachedUrl);
-        },
-        (error) => {
-          if (settled) return;
-          clearTimeout(timeout);
-          reject(error);
-        }
-      );
-  });
 }
 
 function fallbackUrl(url: string): string {
@@ -212,6 +183,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
   sharedImageUrls.set(props.resourceManager, sharedObjectUrls);
   interface PreparedImage {
     ready: boolean;
+    stage: 'cache lookup' | 'load/decode';
     release?: () => void;
   }
   const prepared = new Map<number, PreparedImage>();
@@ -222,6 +194,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
   let position = 0;
   let started = 0;
   let waiting = false;
+  let required: number[] = [];
   let waitingSince: number | undefined;
   let waited = 0;
   const preparing = {
@@ -272,6 +245,32 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
   };
   const timelineItem = { start: 0, child: playback };
   props.timeline.add(timelineItem);
+
+  const stopObserving = props.globals.observeWidgetPlayback?.(() => {
+    if ((!running && !waiting) || !sources.length) return;
+    const slot = ((previousImageDuration || 0) + TRANSITION_SECONDS) * 1000;
+    const time = Math.min(currentPosition(), timeline.duration() * 1000);
+    const index = Math.min(Math.floor(time / slot), sources.length - 1);
+    const canTransition =
+      index < sources.length - 1 ||
+      (props.globals.loopPlaylistItem !== false && sources.length > 1);
+    const state = waiting
+      ? ' waiting'
+      : canTransition && time - index * slot >= slot - TRANSITION_SECONDS * 1000
+        ? ' transitioning'
+        : '';
+    const pending = waiting
+      ? required
+          .map((photo) => prepared.get(photo))
+          .find((photo) => photo && !photo.ready)
+      : undefined;
+    const description = pending ? `Carousel photo ${pending.stage}` : undefined;
+    return {
+      label: `Photo ${index + 1}/${sources.length}${state} (${prepared.size} prepared)${pending ? `: ${pending.stage}` : ''}`,
+      pending: description,
+    };
+  });
+  if (stopObserving) onCleanup(stopObserving);
 
   const releaseImageUrl = (source: string, imageUrl: CarouselImageUrl) => {
     objectUrls.delete(source);
@@ -356,13 +355,14 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
 
   const prepare = (index: number) => {
     if (prepared.has(index)) return;
-    const image: PreparedImage = { ready: false };
+    const image: PreparedImage = { ready: false, stage: 'cache lookup' };
     const generation = buildId;
     prepared.set(index, image);
     void resolveCarouselImageUrls(props.resourceManager, [sources[index]])
       .then(async ([source]) => {
         if (generation !== buildId || prepared.get(index) !== image) return;
         const url = displayImageUrl(source);
+        image.stage = 'load/decode';
         images[index].style.display = '';
         images[index].style.backgroundImage = backgroundImageUrl(url);
         const loading = prepareImage(url);
@@ -392,8 +392,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
           ? 0
           : undefined;
     const transitioning = local >= slot - TRANSITION_SECONDS * 1000;
-    const required =
-      transitioning && next !== undefined ? [index, next] : [index];
+    required = transitioning && next !== undefined ? [index, next] : [index];
     if (!required.every((item) => prepared.get(item)?.ready)) {
       if (!waiting) {
         position = time;

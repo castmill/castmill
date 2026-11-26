@@ -66,6 +66,7 @@ export class Proxy extends Widget {
     childSrc: string
   ) {
     super(resourceManager);
+    this.listenForMessages();
 
     const messageHandler = (this.messageHandler = (event) => {
       let data: ProxyData;
@@ -108,6 +109,7 @@ export class Proxy extends Widget {
    * Dispose.
    */
   unload(): void {
+    super.unload();
     if (this.messageHandler) {
       this.parent.removeEventListener('message', this.messageHandler);
     }

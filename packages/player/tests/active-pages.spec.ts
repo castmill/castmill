@@ -505,11 +505,20 @@ describe('active-only paginated lists', () => {
     await clock.tickAsync(2200);
     await flush();
     expect(text()).to.equal('Post 1');
+    const [waiting] = current.samplePlayback();
+    expect(waiting.label).to.equal('Page 2/3 waiting (1 mounted)');
+    expect(waiting.deadline).to.be.greaterThan(Date.now());
 
     await clock.tickAsync(2500);
     await flush();
     expect(text()).to.equal('Post 1');
     expect(current.duration()).to.be.greaterThan(estimatedDuration + 2000);
+    expect(current.samplePlayback()[0].deadline).to.equal(waiting.deadline);
+    current.stop();
+    expect(current.samplePlayback()[0]).to.deep.include({
+      pending: 'Page 2/3 awaiting children',
+      deadline: undefined,
+    });
   });
 
   [false, true].forEach((resume) => {

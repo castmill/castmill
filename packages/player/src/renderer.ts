@@ -25,6 +25,8 @@ import { combineLatest, Observable, of } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { getLogicalSize } from './utils/logical-size';
 
+export type PlaybackPhase = 'seeking' | 'showing' | 'transitioning' | 'playing';
+
 /**
  * Viewport
  *
@@ -267,7 +269,9 @@ export class Renderer {
     layer: Layer,
     timer$: Observable<number>,
     offset: number,
-    volume: number
+    volume: number,
+    onPhase?: (phase: PlaybackPhase, expectedMs?: number) => void,
+    retry = false
   ) {
     layer.el.style.zIndex = '0';
     const prevLayer = this.currentLayer;
@@ -276,17 +280,28 @@ export class Renderer {
       prevLayer.el.style.zIndex = '1000';
     }
 
+    onPhase?.('seeking');
     return layer.seek(offset).pipe(
       switchMap(() => {
+        onPhase?.('showing');
         // We need to append BEFORE we show, so that Autofittext works properly.
         this.setPendingLayer(layer);
         this.el.appendChild(layer.el);
-        return layer.show(offset).pipe(
+        return layer.show(offset, retry).pipe(
           switchMap(() => {
             layer.el.style.visibility = 'visible';
+            const previous = this.currentLayer;
+            const transition =
+              previous && previous !== layer && layer.transition;
+            if (transition) onPhase?.('transitioning', transition.duration);
+            else onPhase?.('playing');
             return combineLatest([
               layer.play(timer$),
-              this.performTransition(layer, offset, this.currentLayer),
+              this.performTransition(layer, offset, previous).pipe(
+                tap(() => {
+                  if (transition) onPhase?.('playing');
+                })
+              ),
             ]);
           })
         );
@@ -297,6 +312,18 @@ export class Renderer {
 
   seek(offset: number) {
     return this.currentLayer?.seek(offset);
+  }
+
+  resetStalledLayer(layer: Layer) {
+    this.currentTransition?.reset();
+    delete this.currentTransition;
+    const pending = this.pendingLayer;
+    this.clearPendingLayer(pending);
+    // Keep the last visible layer mounted until the retry is ready. A
+    // single-item zone can retry its current layer in place.
+    if (layer !== this.currentLayer && layer !== pending) {
+      this.removeLayer(layer);
+    }
   }
 
   clear() {
@@ -338,10 +365,8 @@ export class Renderer {
   async clean() {
     // Note, what if we are playing when this is called?
     this.el.parentElement?.removeChild(this.el);
-    if (this.currentLayer) {
-      this.currentLayer.unload();
-      delete this.currentLayer;
-    }
+    this.clear();
+    this.debugOverlay.remove();
     /*
     this.stop();
     if (this.currentLayer) {
