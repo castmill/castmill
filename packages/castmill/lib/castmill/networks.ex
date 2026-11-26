@@ -609,6 +609,18 @@ defmodule Castmill.Networks do
   end
 
   @doc """
+  Sets the most devices the network's organizations may have together, or
+  removes the limit with `nil`. For trusted callers such as a licence
+  subscription; devices beyond a lowered limit are kept, but no new ones can
+  be registered until the network is back under it.
+  """
+  def set_device_limit(%Network{} = network, max_devices) do
+    network
+    |> Network.device_limit_changeset(max_devices)
+    |> Repo.update()
+  end
+
+  @doc """
   Adds the user to the network as a member unless they already belong to it,
   keeping any role they have there. A user may belong to several networks.
   """

@@ -2,7 +2,6 @@ defmodule CastmillWeb.OrganizationQuotaController do
   use CastmillWeb, :controller
 
   alias Castmill.Quotas
-  alias Castmill.Quotas.QuotasOrganizations
 
   action_fallback CastmillWeb.FallbackController
 
@@ -38,35 +37,6 @@ defmodule CastmillWeb.OrganizationQuotaController do
 
       quota ->
         render_json(conn, :show, quota: %{resource: id, max: quota})
-    end
-  end
-
-  def create(conn, %{"organization_id" => organization_id, "quota" => quota_params}) do
-    case Quotas.add_quota_to_organization(
-           organization_id,
-           quota_params["resource"],
-           quota_params["max"]
-         ) do
-      {:ok, quota} ->
-        conn
-        |> put_status(:created)
-        |> render_json(:show, quota: quota)
-
-      {:error, changeset} ->
-        {:error, changeset}
-    end
-  end
-
-  def update(conn, %{"organization_id" => organization_id, "id" => id, "quota" => quota_params}) do
-    case Quotas.update_quota(
-           %QuotasOrganizations{organization_id: organization_id, resource: id},
-           quota_params
-         ) do
-      {:ok, quota} ->
-        render_json(conn, :show, quota: quota)
-
-      {:error, changeset} ->
-        {:error, changeset}
     end
   end
 

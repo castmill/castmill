@@ -16,6 +16,30 @@ The Castmill Quotas system manages resource limits for organizations and network
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+## Network Device Limit
+
+Besides per-organization quotas, a network can limit the devices of all its
+organizations together: `networks.max_devices` (`nil` means no limit). It is
+checked on every device registration (`Castmill.Devices.create_device/1`),
+which locks the network row so concurrent registrations in different
+organizations cannot exceed it together.
+
+- Set it only from trusted code with `Castmill.Networks.set_device_limit/2`
+  (for example a licence subscription). It is not part of the network settings
+  changeset, so network admins cannot change it.
+- Lowering it below the current devices keeps them; no new devices can be
+  registered until the network is back under the limit.
+- Both limits apply: a registration needs room in the organization's `devices`
+  quota and under the network limit. A network can therefore share a pool of
+  devices among its organizations (high organization quotas) or assign each
+  organization its own share (organization quotas adding up to the limit).
+
+## Changing Quotas
+
+The dashboard API (`/dashboard/organizations/:id/quotas`) is read-only.
+Quotas are changed server-side only, through `Castmill.Quotas` (root admin
+tools, network tooling, SaaS add-ons).
+
 ## Core Modules
 
 ### Context Module
