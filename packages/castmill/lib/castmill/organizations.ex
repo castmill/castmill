@@ -1179,6 +1179,12 @@ defmodule Castmill.Organizations do
               Repo.rollback(:invalid_status)
 
             true ->
+              # The user may already have an account in another network (for
+              # example from before their company got its own network). Joining
+              # an organization also makes them a member of its network.
+              organization = Repo.get!(Organization, invitation.organization_id)
+              :ok = ensure_network_member(organization.network_id, user_id)
+
               case add_user(invitation.organization_id, user_id, invitation.role) do
                 {:ok, _} ->
                   case Repo.update_all(
@@ -1518,16 +1524,26 @@ defmodule Castmill.Organizations do
 
       if get_user_role(organization.id, user.id), do: Repo.rollback(:already_member)
 
-      unless Repo.get_by(Castmill.Networks.NetworksUsers,
-               network_id: organization.network_id,
-               user_id: user.id
-             ) do
-        {:ok, _} = Castmill.Networks.add_user_to_network(user.id, organization.network_id)
-      end
-
+      :ok = ensure_network_member(organization.network_id, user.id)
       {:ok, _} = add_user(organization.id, user.id, role)
       user
     end)
+  end
+
+  # Adds the user to the network as a member unless they already belong to it,
+  # keeping any role they have there.
+  defp ensure_network_member(network_id, user_id) do
+    %Castmill.Networks.NetworksUsers{}
+    |> Castmill.Networks.NetworksUsers.changeset(%{
+      network_id: network_id,
+      user_id: user_id,
+      role: :member
+    })
+    |> Repo.insert(on_conflict: :nothing, conflict_target: [:network_id, :user_id])
+    |> case do
+      {:ok, _} -> :ok
+      {:error, changeset} -> Repo.rollback(changeset)
+    end
   end
 
   defp get_or_create_member(email, name) do
