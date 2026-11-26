@@ -10,7 +10,7 @@ The **Castmill Legacy Adapter** is a bridge designed to support legacy Castmill 
 - [Features](#features)
 - [Usage](#usage)
 - [Serving from Castmill](#serving-from-castmill)
-- [Migration rollout](#migration-rollout)
+- [Serving from another origin](#serving-from-another-origin)
 - [Configuration](#configuration)
 - [Contributing](#contributing)
 - [License](#license)
@@ -88,15 +88,33 @@ base URL, so generated assets load from the same Castmill server.
 
 ---
 
-## Migration rollout
+## Serving from another origin
 
-During migration, the old Castmill player server proxies migrated players to `/legacy`
-on the new Castmill Phoenix server. This allows individual legacy players to use the new
-server while the old player domain continues to serve players that have not migrated.
+Another server, such as a reverse proxy on the domain that legacy players already load,
+can serve the adapter at its root. This lets players move to Castmill without changing
+the URL configured in their wrapper. That host must:
 
-After all players have migrated, point the old player domain at the new Phoenix server.
-The Phoenix server must then serve the same legacy adapter content for requests received
-through that domain as it does for `/legacy`.
+- serve Castmill's `/legacy` page at `/`;
+- forward `/legacy/*` and `/widget_assets/*` to Castmill, because the adapter's assets and
+  widget asset URLs are root-relative; and
+- serve `/legacy/sw.js` at `/sw.js` without its `Service-Worker-Allowed: /legacy` header.
+  Outside `/legacy`, the adapter registers that worker for scope `/`, and the worker then
+  serves the cached `/legacy/index.html` for `/` as well.
+
+Castmill's adapter page names the server's public URL (`CastmillWeb.Endpoint.url()`) in
+`<meta name="castmill-server-url">`, and the adapter uses it as its API URL outside
+`/legacy`. The worker ends with the same URL, so if the URL changes, players reinstall the
+adapter and cache the new page.
+
+The adapter calls that API from the host's origin. Castmill accepts any origin only for
+`/registrations` and `/legacy/log`; list additional paths that authenticate without
+cookies or serve public files in `config :castmill, :cors_any_origin_paths`: `/devices/`,
+and `/medias/` when Castmill stores the media itself. Media stored on another origin, such
+as a CDN, must allow the host's origin in its own CORS policy.
+
+Players keep their registration, cached content, and offline shell on the host's origin.
+Castmill cannot take over that domain yet: it answers `/` with the browser player and
+does not serve `/sw.js`.
 
 ---
 
@@ -127,8 +145,10 @@ failed environment requests prevent device-info reporting.
 The adapter allows you to configure a default base URL by setting the `VITE_BASE_URL` environment variable in a `.env.local` file. This ensures flexibility when running the adapter in different environments.
 
 When Phoenix serves the adapter from `/legacy`, the adapter uses the page origin
-as its API URL. `VITE_BASE_URL` is used by the standalone Vite development
-server.
+as its API URL. Elsewhere it uses `VITE_BASE_URL` (the standalone Vite
+development server) or, when that is unset, the server declared in the page's
+`castmill-server-url` meta tag (see
+[Serving from another origin](#serving-from-another-origin)).
 
 1. Create a `.env.local` file in the project root if it doesn’t already exist.
 2. Add the following line to specify the base URL:
@@ -433,6 +453,9 @@ Offline startup has these operational requirements:
   remain on the same HTTPS origin.
 - Reverse proxies and CDNs must preserve the
   `Service-Worker-Allowed: /legacy` response header and revalidate `sw.js`.
+  A host that serves the adapter at `/` instead serves the same worker at
+  `/sw.js` without that header (see
+  [Serving from another origin](#serving-from-another-origin)).
 - Do not move an existing player between origins without migrating or re-priming
   its state. Channel and playlist metadata and browser-backed resources are
   origin-scoped.

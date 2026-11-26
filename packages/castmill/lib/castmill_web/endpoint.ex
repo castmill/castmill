@@ -93,26 +93,26 @@ defmodule CastmillWeb.Endpoint do
   end
 
   defp send_legacy_app_shell_file(conn, file_name, service_worker?) do
-    path = Application.app_dir(:castmill, "priv/static/legacy/#{file_name}")
-
-    if File.exists?(path) do
-      conn =
+    case CastmillWeb.LegacyAdapter.file(file_name) do
+      nil ->
         conn
-        |> Plug.Conn.put_resp_content_type(MIME.from_path(path))
-        |> Plug.Conn.put_resp_header("cache-control", "no-cache")
 
-      conn =
-        if service_worker? do
-          Plug.Conn.put_resp_header(conn, "service-worker-allowed", "/legacy")
-        else
+      contents ->
+        conn =
           conn
-        end
+          |> Plug.Conn.put_resp_content_type(MIME.from_path(file_name))
+          |> Plug.Conn.put_resp_header("cache-control", "no-cache")
 
-      conn
-      |> Plug.Conn.send_file(200, path)
-      |> Plug.Conn.halt()
-    else
-      conn
+        conn =
+          if service_worker? do
+            Plug.Conn.put_resp_header(conn, "service-worker-allowed", "/legacy")
+          else
+            conn
+          end
+
+        conn
+        |> Plug.Conn.send_resp(200, contents)
+        |> Plug.Conn.halt()
     end
   end
 
@@ -163,8 +163,8 @@ defmodule CastmillWeb.Endpoint do
   ]
 
   def getAllowedOrigins(conn) do
-    # If the request is for a player endpoint, we allow all origins.
-    if Enum.member?(@player_endpoints, conn.request_path) do
+    # Player endpoints and configured :cors_any_origin_paths allow all origins.
+    if any_origin_path?(conn.request_path) do
       ["*"]
     else
       # Domains are stored without protocol, but CORS needs full origins.
@@ -179,5 +179,21 @@ defmodule CastmillWeb.Endpoint do
 
       Enum.uniq(local_player_origins ++ network_origins)
     end
+  end
+
+  # :cors_any_origin_paths adds paths that accept requests from any origin,
+  # e.g. ["/devices/"] for players served from another domain. Entries ending
+  # in "/" match path prefixes; others match exact paths. Browsers do not
+  # expose credentialed responses to the "*" origin, so only list paths that
+  # authenticate without cookies or serve public files.
+  defp any_origin_path?(path) do
+    Enum.any?(
+      @player_endpoints ++ Application.get_env(:castmill, :cors_any_origin_paths, []),
+      fn pattern ->
+        if String.ends_with?(pattern, "/"),
+          do: String.starts_with?(path, pattern),
+          else: path == pattern
+      end
+    )
   end
 end

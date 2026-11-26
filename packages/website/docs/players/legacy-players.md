@@ -26,7 +26,15 @@ The adapter's on-screen text is in English only.
 
 ## Moving players to a new server
 
-During a migration, the old player server can forward individual players to `/legacy` on the new Castmill server, so you can move players in batches. When all players have moved, point the old player domain at the new server. The new server must then serve the same adapter for requests on that domain.
+During a migration, another server, such as the old player server, can serve the adapter on the domain your players already load, so you can move players in batches without changing their wrappers. That server must:
+
+- Serve the Castmill server's `/legacy` page at `/`. The page names the Castmill server in `<meta name="castmill-server-url">`, so the adapter knows where to connect.
+- Forward `/legacy/*` and `/widget_assets/*` to the Castmill server.
+- Serve `/legacy/sw.js` at `/sw.js` without its `Service-Worker-Allowed` header, so the player can start offline at `/`.
+
+The players then call the Castmill API from that domain. Allow it on the Castmill server with the `cors_any_origin_paths` setting. List the device API, and also media if the Castmill server stores it, for example `config :castmill, :cors_any_origin_paths, ["/devices/", "/medias/"]`. If your media is stored on a CDN, its CORS policy must allow the domain too.
+
+Do not point the old player domain at the Castmill server itself yet. The server answers `/` there with the current browser player, which legacy players cannot run.
 
 A legacy webOS display and the [native webOS player](webos.md) use the same hardware ID. You can replace the wrapper with the native player later without registering the display again.
 
@@ -44,7 +52,7 @@ On Android and Electron, the adapter installs a service worker that keeps the la
 
 - The adapter served over HTTPS with a certificate the old runtime trusts. Service workers do not register over plain HTTP.
 - `/legacy`, `/legacy/index.html`, `/legacy/sw.js`, and `/legacy/assets/*` on the same HTTPS origin.
-- Reverse proxies and CDNs that keep the `Service-Worker-Allowed: /legacy` response header and revalidate `sw.js`.
+- Reverse proxies and CDNs that keep the `Service-Worker-Allowed: /legacy` response header and revalidate `sw.js`. A server that serves the adapter at `/` on another domain serves the worker at `/sw.js` instead, as described in [Moving players to a new server](#moving-players-to-a-new-server).
 
 Do not move a player to a different origin without registering it again. Cached channel data and browser storage are tied to the origin.
 

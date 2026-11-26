@@ -14,7 +14,7 @@ interface WorkerEvent {
   waitUntil?: (operation: Promise<unknown>) => void;
 }
 
-const loadWorker = () => {
+const loadWorker = (scope = 'https://player.example.com/legacy') => {
   const listeners: Record<string, (event: WorkerEvent) => void> = {};
   const shellEntries = new Map<string, Response>();
   const resourceEntries = new Map<string, Response>();
@@ -40,6 +40,7 @@ const loadWorker = () => {
   };
   const self = {
     location: { origin: 'https://player.example.com' },
+    registration: { scope },
     clients: { claim: vi.fn(async () => undefined) },
     skipWaiting: vi.fn(async () => undefined),
     addEventListener: vi.fn(
@@ -135,6 +136,61 @@ describe('createAppShellWorker', () => {
     });
 
     await expect(response).resolves.toBe(cachedIndex);
+  });
+
+  it('serves the cached index at the root scope of another host', async () => {
+    const { listeners, shellCache } = loadWorker('https://player.example.com/');
+    const cachedIndex = new Response('cached index');
+    shellCache.match.mockResolvedValueOnce(cachedIndex);
+    let response: Promise<Response> | undefined;
+
+    listeners.fetch({
+      request: new Request('https://player.example.com/', {
+        headers: { Accept: 'text/html' },
+      }),
+      respondWith: (promise: Promise<Response>) => {
+        response = promise;
+      },
+    });
+
+    await expect(response).resolves.toBe(cachedIndex);
+    expect(shellCache.match).toHaveBeenCalledWith('/legacy/index.html');
+  });
+
+  it('does not cache the page of a host that registers it at its root', async () => {
+    const { fetch, listeners, shellCache } = loadWorker(
+      'https://player.example.com/'
+    );
+    let installation: Promise<unknown> | undefined;
+
+    listeners.install({
+      waitUntil: (promise: Promise<unknown>) => {
+        installation = promise;
+      },
+    });
+
+    await installation;
+    expect(shellCache.put).toHaveBeenCalledTimes(3);
+    expect(fetch).not.toHaveBeenCalledWith('/', expect.anything());
+  });
+
+  it('leaves other pages under a root scope to the network', async () => {
+    const { listeners, shellCache } = loadWorker('https://player.example.com/');
+    let response: Promise<Response> | undefined;
+
+    listeners.fetch({
+      request: new Request('https://player.example.com/offline', {
+        headers: { Accept: 'text/html' },
+      }),
+      respondWith: (promise: Promise<Response>) => {
+        response = promise;
+      },
+    });
+
+    await expect((await response!).text()).resolves.toBe(
+      'https://player.example.com/offline'
+    );
+    expect(shellCache.match).not.toHaveBeenCalled();
   });
 
   it('preserves resource caches and only removes old shell caches', async () => {

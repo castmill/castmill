@@ -573,8 +573,21 @@ the stale player implementation embedded in `@castmill/device/dist`.
 The legacy adapter build also generates `/legacy/sw.js` from the final Vite
 output. The worker precaches one complete, content-addressed adapter release and
 activates it only after every required file is available. It controls both
-`/legacy` and `/legacy/` without reloading the currently running page. Do not
-maintain its hashed asset list manually.
+`/legacy` and `/legacy/`, and the path of its registration scope, without
+reloading the currently running page. Do not maintain its hashed asset list
+manually.
+
+Outside `/legacy` (for example `/` on a proxy that serves the adapter on another
+origin), the adapter registers `/sw.js` for scope `/` and takes its API URL from
+`VITE_BASE_URL` or the page's `castmill-server-url` meta tag. Castmill adds that
+tag, with `Endpoint.url()`, to the adapter page it serves, and ends
+`/legacy/sw.js` with the same URL so that changing it reinstalls the shell
+(`CastmillWeb.LegacyAdapter`). The worker serves the release's cached
+`/legacy/index.html` for its scope path, never a copy of the host's own page,
+which may differ per request. The host serves the worker at `/sw.js` without the
+`/legacy` scope header and forwards `/legacy/*` and `/widget_assets/*`; Castmill
+accepts its cross-origin API and media requests only for paths listed in
+`config :castmill, :cors_any_origin_paths`.
 
 Offline cold startup requires:
 

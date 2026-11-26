@@ -2,7 +2,7 @@ defmodule CastmillWeb.LegacyPlayerControllerTest do
   use CastmillWeb.ConnCase, async: false
 
   @legacy_static_path Application.app_dir(:castmill, "priv/static/legacy")
-  @index_html "<!doctype html><title>Legacy Player</title>"
+  @index_html "<!doctype html><html><head><title>Legacy Player</title></head></html>"
   @asset_contents "console.log('legacy player');"
   @worker_contents "self.addEventListener('fetch', function () {});"
 
@@ -33,11 +33,11 @@ defmodule CastmillWeb.LegacyPlayerControllerTest do
   test "serves the legacy player entry document", %{conn: conn} do
     conn = get(conn, "/legacy")
 
-    assert response(conn, 200) == @index_html
+    assert response(conn, 200) == served_index_html()
     assert get_resp_header(conn, "x-frame-options") == []
     assert get_resp_header(conn, "x-content-type-options") == ["nosniff"]
     assert get_resp_header(conn, "cache-control") == ["no-cache"]
-    assert get(conn, "/legacy/") |> response(200) == @index_html
+    assert get(conn, "/legacy/") |> response(200) == served_index_html()
   end
 
   test "serves legacy static assets and does not fall back for missing files", %{conn: conn} do
@@ -48,14 +48,16 @@ defmodule CastmillWeb.LegacyPlayerControllerTest do
   test "serves the generated entry document with revalidation", %{conn: conn} do
     conn = get(conn, "/legacy/index.html")
 
-    assert response(conn, 200) == @index_html
+    assert response(conn, 200) == served_index_html()
     assert get_resp_header(conn, "cache-control") == ["no-cache"]
   end
 
   test "serves the service worker with an explicit legacy scope", %{conn: conn} do
     conn = get(conn, "/legacy/sw.js")
 
-    assert response(conn, 200) == @worker_contents
+    assert response(conn, 200) ==
+             @worker_contents <> "\n// castmill-server-url: #{CastmillWeb.Endpoint.url()}\n"
+
     assert get_resp_header(conn, "cache-control") == ["no-cache"]
     assert get_resp_header(conn, "service-worker-allowed") == ["/legacy"]
   end
@@ -126,5 +128,12 @@ defmodule CastmillWeb.LegacyPlayerControllerTest do
     conn
     |> put_req_header("content-type", "application/json")
     |> post("/legacy/log", Jason.encode!(payload))
+  end
+
+  # Names the server for hosts that serve the page outside /legacy.
+  defp served_index_html do
+    "<!doctype html><html><head><title>Legacy Player</title>" <>
+      ~s(<meta name="castmill-server-url" content="#{CastmillWeb.Endpoint.url()}">) <>
+      "</head></html>"
   end
 end
