@@ -14,6 +14,12 @@ legacy({ targets: { chrome: '38' } });
 Modern browser validation is not sufficient. Test affected changes on a connected
 legacy Android player before considering them compatible.
 
+The shared template boundary resets `text-align: initial` so host UI centering
+cannot leak into widgets. This CSS-wide keyword works on Chrome 38 and preserves
+direction-aware defaults (left for LTR, right for RTL). Do not reset every text
+node: authored alignment on widget groups must continue to inherit to children.
+Verify default, centered and right-aligned groups inside a center-aligned host.
+
 Layout readiness waits for the initial content in every populated zone (empty
 zones are immediately ready). Keep this signal after nested media initialization:
 the dashboard uses renderer readiness to measure durations without polling a

@@ -187,7 +187,12 @@ export const Template: Component<{
       ref={(el) => (rootRef = el)}
       data-component="template"
       data-name={props.name}
-      style={props.style || { width: '100%', height: '100%' }}
+      style={{
+        // Host UI alignment must not leak into widget content. `initial` also
+        // keeps the default direction-aware on legacy Chromium (LTR/RTL).
+        'text-align': 'initial',
+        ...(props.style || { width: '100%', height: '100%' }),
+      }}
     >
       <Item
         config={props.config}

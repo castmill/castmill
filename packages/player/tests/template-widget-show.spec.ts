@@ -63,6 +63,74 @@ describe('TemplateWidget.show', () => {
       globals: { target: 'poster' },
     });
 
+  it('isolates widget alignment from the host without overriding authored alignments', async () => {
+    const root = dom.window.document.getElementById('root');
+    root.style.textAlign = 'center';
+    const widget = new TemplateWidget({ getMedia: async () => {} } as any, {
+      widget: {
+        name: 'alignment',
+        template: {
+          type: 'group',
+          name: 'content',
+          components: [
+            { type: 'text', name: 'default', opts: { text: 'Default' } },
+            ...['left', 'center', 'right'].map((alignment) => ({
+              type: 'group',
+              name: alignment,
+              style: { 'text-align': alignment },
+              components: [
+                { type: 'text', name: alignment, opts: { text: alignment } },
+              ],
+            })),
+          ],
+        },
+      } as any,
+      config: { options: {}, data: {} } as any,
+      globals: { target: 'poster' },
+      style: { width: '640px', height: '360px' },
+    });
+    try {
+      await firstValueFrom(widget.show(root, 0));
+      const boundary = root.querySelector('[data-component=template]');
+      expect(boundary.style.textAlign).to.equal('initial');
+      expect(boundary.style.width).to.equal('640px');
+      expect(boundary.style.height).to.equal('360px');
+      const plain = root.querySelector(
+        '[data-component=text][data-name=default]'
+      );
+      expect(plain.style.textAlign).to.equal('');
+      for (const alignment of ['left', 'center', 'right']) {
+        expect(
+          root.querySelector(`[data-component=group][data-name=${alignment}]`)
+            .style.textAlign
+        ).to.equal(alignment);
+      }
+    } finally {
+      await widget.unload();
+    }
+  });
+
+  it('preserves explicit template-boundary alignment', async () => {
+    const root = dom.window.document.getElementById('root');
+    const widget = new TemplateWidget({ getMedia: async () => {} } as any, {
+      widget: {
+        name: 'explicit-alignment',
+        template: { type: 'text', name: 'text', opts: { text: 'Aligned' } },
+      } as any,
+      config: { options: {}, data: {} } as any,
+      globals: { target: 'poster' },
+      style: { 'text-align': 'right' },
+    });
+    try {
+      await firstValueFrom(widget.show(root, 0));
+      expect(
+        root.querySelector('[data-component=template]').style.textAlign
+      ).to.equal('right');
+    } finally {
+      await widget.unload();
+    }
+  });
+
   it('waits for every declared font before rendering or reporting ready', async () => {
     const resolveFonts: Array<() => void> = [];
     const added: unknown[] = [];
