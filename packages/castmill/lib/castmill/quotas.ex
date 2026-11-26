@@ -263,6 +263,68 @@ defmodule Castmill.Quotas do
   end
 
   @doc """
+  Whether an organization may store `bytes` more: within its `storage`
+  quota and, when its network has one, within the network's storage limit
+  (`networks.max_storage_mb`), which all of the network's organizations
+  share. Returns `:ok`, `{:error, :quota_exceeded}` or
+  `{:error, :network_storage_exceeded}`.
+  """
+  def check_storage(organization_id, bytes) do
+    used = get_quota_used_for_organization(organization_id, :storage)
+    quota = get_quota_for_organization_bytes(organization_id, :storage)
+
+    cond do
+      used + bytes > quota ->
+        {:error, :quota_exceeded}
+
+      not network_storage_available?(organization_id, bytes) ->
+        {:error, :network_storage_exceeded}
+
+      true ->
+        :ok
+    end
+  end
+
+  defp network_storage_available?(organization_id, bytes) do
+    limit =
+      from(o in Castmill.Organizations.Organization,
+        join: n in assoc(o, :network),
+        where: o.id == ^organization_id,
+        select: {n.id, n.max_storage_mb}
+      )
+      |> Repo.one()
+
+    case limit do
+      {network_id, max_mb} when is_integer(max_mb) ->
+        get_network_storage_used(network_id) + bytes <= mb_to_bytes(max_mb)
+
+      _ ->
+        true
+    end
+  end
+
+  @doc """
+  Bytes stored by all organizations of a network: their media files and
+  copied feed media.
+  """
+  def get_network_storage_used(network_id) do
+    media_bytes =
+      from(m in Castmill.Resources.Media,
+        join: o in Castmill.Organizations.Organization,
+        on: o.id == m.organization_id,
+        join: fm in Castmill.Files.FilesMedias,
+        on: fm.media_id == m.id,
+        join: f in Castmill.Files.File,
+        on: f.id == fm.file_id,
+        where: o.network_id == ^network_id,
+        select: type(coalesce(sum(f.size), 0), :integer)
+      )
+      |> Repo.one()
+
+    media_bytes + Castmill.Feeds.Media.network_storage_used(network_id)
+  end
+
+  @doc """
     Check the amount of quota used for a given resource in a given organization.
     i.e. how many resources of a given type are used in a given organization.
 
@@ -341,14 +403,40 @@ defmodule Castmill.Quotas do
   end
 
   @doc """
+  Sets an organization's override for `resource`, or removes it with `nil`
+  so the organization's plan applies again. For trusted callers (root admin
+  tools, SaaS add-ons); the dashboard API cannot change quotas.
+  """
+  def set_organization_quota(organization_id, resource, nil) do
+    from(q in QuotasOrganizations,
+      where: q.organization_id == ^organization_id and q.resource == ^resource
+    )
+    |> Repo.delete_all()
+
+    :ok
+  end
+
+  def set_organization_quota(organization_id, resource, max) when is_integer(max) and max >= 0 do
+    add_quota_to_organization(organization_id, resource, max)
+    :ok
+  end
+
+  @doc "The resources organizations can have quotas for."
+  def organization_quota_resources, do: Ecto.Enum.values(QuotasOrganizations, :resource)
+
+  @doc """
     Add a quota for an organization.
   """
   def add_quota_to_organization(organization_id, resource, max) do
-    Repo.insert!(%QuotasOrganizations{
-      organization_id: organization_id,
-      resource: resource,
-      max: max
-    })
+    Repo.insert!(
+      %QuotasOrganizations{
+        organization_id: organization_id,
+        resource: resource,
+        max: max
+      },
+      on_conflict: {:replace, [:max, :updated_at]},
+      conflict_target: [:organization_id, :resource]
+    )
   end
 
   @doc """

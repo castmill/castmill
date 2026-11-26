@@ -946,4 +946,86 @@ defmodule Castmill.DevicesTest do
       assert Enum.sort(off_by_hour[3].weekDays) == ["FRI", "SAT", "THU", "TUE", "WED"]
     end
   end
+
+  describe "network device limit" do
+    alias Castmill.Devices
+    alias Castmill.Networks
+
+    import Castmill.NetworksFixtures
+    import Castmill.OrganizationsFixtures
+    import Castmill.DevicesFixtures
+
+    defp device_attrs(organization) do
+      %{
+        organization_id: organization.id,
+        name: "Screen",
+        last_ip: "192.168.1.2",
+        hardware_id: "hw-#{System.unique_integer([:positive])}",
+        token: "token-#{System.unique_integer([:positive])}",
+        user_agent: "some user agent",
+        timezone: "Europe/Amsterdam",
+        version: "1.0.0"
+      }
+    end
+
+    test "counts the devices of all the network's organizations together" do
+      network = network_fixture()
+      org_a = organization_fixture(%{network_id: network.id, name: "Organization A"})
+      org_b = organization_fixture(%{network_id: network.id, name: "Organization B"})
+      {:ok, _} = Networks.set_device_limit(network, 2)
+
+      assert {:ok, _} = Devices.create_device(device_attrs(org_a))
+      assert {:ok, _} = Devices.create_device(device_attrs(org_b))
+      assert {:error, :quota_exceeded} = Devices.create_device(device_attrs(org_a))
+
+      assert Devices.count_network_devices(network.id) == 2
+    end
+
+    test "does not limit networks without a limit or other networks" do
+      network = network_fixture()
+      other_network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      other_organization = organization_fixture(%{network_id: other_network.id})
+      {:ok, _} = Networks.set_device_limit(other_network, 0)
+
+      assert {:ok, _} = Devices.create_device(device_attrs(organization))
+      assert {:ok, _} = Devices.create_device(device_attrs(organization))
+      assert {:error, :quota_exceeded} = Devices.create_device(device_attrs(other_organization))
+    end
+
+    test "applies to registrations and keeps the pincode when refused" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      {:ok, _} = Networks.set_device_limit(network, 1)
+      {:ok, _} = Devices.create_device(device_attrs(organization))
+
+      {:ok, registration} = device_registration_fixture()
+
+      assert {:error, :quota_exceeded} =
+               Devices.register_device(organization.id, registration.pincode, %{name: "New"})
+
+      assert Repo.get_by(Castmill.Devices.DevicesRegistrations, pincode: registration.pincode)
+
+      {:ok, network} = Networks.set_device_limit(Repo.reload!(network), 2)
+      assert network.max_devices == 2
+
+      assert {:ok, {_device, _token}} =
+               Devices.register_device(organization.id, registration.pincode, %{name: "New"})
+    end
+
+    test "cannot be changed through the network settings" do
+      network = network_fixture()
+      changeset = Castmill.Networks.Network.changeset(network, %{"max_devices" => 1_000})
+
+      refute Map.has_key?(changeset.changes, :max_devices)
+    end
+
+    test "rejects negative limits and allows removing the limit" do
+      network = network_fixture()
+
+      assert {:error, changeset} = Networks.set_device_limit(network, -1)
+      assert %{max_devices: [_]} = errors_on(changeset)
+      assert {:ok, %{max_devices: nil}} = Networks.set_device_limit(network, nil)
+    end
+  end
 end

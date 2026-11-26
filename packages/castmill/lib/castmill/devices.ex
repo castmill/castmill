@@ -34,13 +34,26 @@ defmodule Castmill.Devices do
   def create_device(attrs \\ %{}) do
     organization_id = Map.get(attrs, "organization_id") || Map.get(attrs, :organization_id)
 
-    # Check quota before creating the device
-    with :ok <- check_device_quota(organization_id) do
-      %Device{}
-      |> Device.changeset(attrs)
-      |> Repo.insert()
+    insert = fn ->
+      # The network check comes first: when the network has a limit it locks
+      # the network row, which also serializes the organization count below.
+      with :ok <- check_network_device_limit(organization_id),
+           :ok <- check_device_quota(organization_id) do
+        %Device{} |> Device.changeset(attrs) |> Repo.insert()
+      end
+    end
+
+    # The network limit check locks the network row until the device is
+    # inserted, so it needs a transaction; registration already runs in one.
+    if Repo.in_transaction?() do
+      insert.()
     else
-      {:error, :quota_exceeded} -> {:error, :quota_exceeded}
+      Repo.transaction(fn ->
+        case insert.() do
+          {:ok, device} -> device
+          {:error, reason} -> Repo.rollback(reason)
+        end
+      end)
     end
   end
 
@@ -1048,6 +1061,52 @@ defmodule Castmill.Devices do
     else
       {:error, :quota_exceeded}
     end
+  end
+
+  # A network may limit the devices of all its organizations together (for
+  # example to its licensed screens). Locks the network row so concurrent
+  # registrations in its organizations cannot exceed the limit together.
+  defp check_network_device_limit(organization_id) do
+    network =
+      from(o in Organization,
+        join: n in assoc(o, :network),
+        where: o.id == ^organization_id,
+        select: %{id: n.id, max_devices: n.max_devices}
+      )
+      |> Repo.one()
+
+    # Lock only networks that have a limit, and with FOR NO KEY UPDATE so
+    # inserts referencing the network (organizations, users) are not blocked.
+    case network do
+      %{max_devices: max} when is_integer(max) ->
+        locked_max =
+          from(n in Castmill.Networks.Network,
+            where: n.id == ^network.id,
+            lock: "FOR NO KEY UPDATE",
+            select: n.max_devices
+          )
+          |> Repo.one()
+
+        if is_integer(locked_max) and count_network_devices(network.id) >= locked_max,
+          do: {:error, :quota_exceeded},
+          else: :ok
+
+      _ ->
+        :ok
+    end
+  end
+
+  @doc """
+  Counts the devices of all organizations in a network.
+  """
+  def count_network_devices(network_id) do
+    from(d in Device,
+      join: o in Organization,
+      on: d.organization_id == o.id,
+      where: o.network_id == ^network_id,
+      select: count(d.id)
+    )
+    |> Repo.one()
   end
 
   defp get_quota_used_for_organization(organization_id, schema_module) do

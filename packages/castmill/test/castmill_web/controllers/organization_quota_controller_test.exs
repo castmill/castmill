@@ -66,54 +66,6 @@ defmodule CastmillWeb.OrganizationQuotaControllerTest do
     end
   end
 
-  describe "create" do
-    test "creates a quota when data is valid", %{conn: conn} do
-      # Use a valid resource from the enum, for example :devices, :playlists, :medias, etc.
-      attrs = %{resource: "devices", max: 100}
-
-      conn =
-        post(conn, Routes.organization_organization_quota_path(conn, :create, @organization_id),
-          quota: attrs
-        )
-
-      assert %{
-               "organization_id" => @organization_id,
-               "resource" => "devices",
-               "max" => 100
-             } = json_response(conn, 201)["data"]
-
-      # Verify by fetching the created quota
-      conn =
-        get(
-          conn,
-          Routes.organization_organization_quota_path(conn, :show, @organization_id, "devices")
-        )
-
-      assert json_response(conn, 200)["data"]["resource"] == "devices"
-    end
-  end
-
-  describe "update" do
-    test "updates chosen quota when data is valid", %{conn: conn} do
-      quota = quota_organization_fixture(%{organization_id: @organization_id, resource: :medias})
-      update_attrs = %{max: 200}
-
-      conn =
-        patch(
-          conn,
-          Routes.organization_organization_quota_path(
-            conn,
-            :update,
-            @organization_id,
-            quota.resource
-          ),
-          quota: update_attrs
-        )
-
-      assert json_response(conn, 200)["data"]["max"] == 200
-    end
-  end
-
   describe "check_quota_usage" do
     test "returns usage data for a resource", %{conn: conn} do
       quota = quota_organization_fixture(%{organization_id: @organization_id, resource: :medias})

@@ -100,6 +100,29 @@ defmodule Castmill.QuotasTest do
       assert Quotas.has_organization_enough_quota?(organization.id, :medias, 15) == true
     end
 
+    test "add_quota_to_organization/3 overrides the same resource for several organizations" do
+      network = network_fixture()
+      org_a = organization_fixture(%{network_id: network.id, name: "Organization A"})
+      org_b = organization_fixture(%{network_id: network.id, name: "Organization B"})
+
+      Quotas.add_quota_to_organization(org_a.id, :devices, 3)
+      Quotas.add_quota_to_organization(org_b.id, :devices, 7)
+
+      assert Quotas.get_quota_for_organization(org_a.id, :devices) == 3
+      assert Quotas.get_quota_for_organization(org_b.id, :devices) == 7
+    end
+
+    test "add_quota_to_organization/3 replaces an existing override" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      Quotas.add_quota_to_organization(organization.id, :devices, 10)
+      Quotas.add_quota_to_organization(organization.id, :devices, 20)
+
+      assert Quotas.get_quota_for_organization(organization.id, :devices) == 20
+      assert length(Quotas.list_quotas(organization.id)) == 1
+    end
+
     test "list_plans/0 list plans" do
       network = network_fixture()
 

@@ -754,8 +754,14 @@ defmodule CastmillWeb.Router do
       get("/teams/:team_id/:resource_type", TeamController, :list_resources)
       put("/teams/:team_id/:resource_type/:resource_id", TeamController, :add_resource)
       delete("/teams/:team_id/:resource_type/:resource_id", TeamController, :remove_resource)
-      # Routes for organization quotas
-      resources "/quotas", OrganizationQuotaController, only: [:index, :show, :create, :update]
+      # Routes for organization quotas. Read-only: quotas limit what an
+      # organization may use, so they are only changed server-side (root
+      # tools, network tooling, licence subscriptions).
+      resources "/quotas", OrganizationQuotaController, only: [:index, :show]
+      # Retired writes: answered explicitly instead of by the generic routes.
+      post("/quotas", OrganizationQuotaController, :read_only)
+      put("/quotas/:id", OrganizationQuotaController, :read_only)
+      patch("/quotas/:id", OrganizationQuotaController, :read_only)
 
       # Tags - flexible resource organization
       get("/tags", TagController, :list_tags)
