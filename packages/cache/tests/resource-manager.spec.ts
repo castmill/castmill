@@ -462,6 +462,7 @@ describe('ResourceManager', () => {
         list: vi.fn(async () => []),
         get: vi.fn(async () => undefined),
         hasUrl: vi.fn(async () => false),
+        invalidate: vi.fn(async () => undefined),
         set,
       } as unknown as CacheBackend;
       return { cache, set };
@@ -469,6 +470,26 @@ describe('ResourceManager', () => {
 
     const headersFor = (set: Mock, url: string) =>
       set.mock.calls.find(([calledUrl]) => calledUrl === url)?.[3]?.headers;
+
+    it('uses the original URL without touching the backend for bypassed media', async () => {
+      const { cache, set } = stubCache();
+      const directUrl = 'https://images.example.com/public.jpg';
+      const cachedUrl = 'https://api.castmill.io/medias/a.jpg';
+      const manager = new ResourceManager(cache, {
+        bypassMediaCache: (url) => url === directUrl,
+      });
+
+      expect(await manager.getMedia(directUrl)).toBe(directUrl);
+      expect(await manager.refreshMedia(directUrl)).toBe(directUrl);
+      await manager.cacheMedia(directUrl);
+      expect(cache.get).not.toHaveBeenCalled();
+      expect(cache.invalidate).not.toHaveBeenCalled();
+      expect(cache.hasUrl).not.toHaveBeenCalled();
+      expect(set).not.toHaveBeenCalled();
+
+      expect(await manager.getMedia(cachedUrl)).toBe(`blob:${cachedUrl}`);
+      expect(set).toHaveBeenCalledOnce();
+    });
 
     it('sends the token only to the configured API origin', async () => {
       const { cache, set } = stubCache();

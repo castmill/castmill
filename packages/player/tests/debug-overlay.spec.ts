@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, it } from 'mocha';
 // @ts-ignore jsdom is hoisted from other workspaces without type declarations.
 import { JSDOM } from 'jsdom';
 import { Subject, of } from 'rxjs';
-import { spy } from 'sinon';
+import { spy, useFakeTimers } from 'sinon';
 
 import {
   DebugOverlay,
@@ -246,7 +246,7 @@ describe('Debug overlay', () => {
     expect(outerEl.textContent).to.contain('Playlist "content-queue"');
   });
 
-  it('reports the playing item and the next one for every playlist tick', () => {
+  it('samples the current and next items without redrawing for every tick', () => {
     const layer = (name: string, duration: number, type: string) => ({
       name,
       duration: () => duration,
@@ -260,21 +260,29 @@ describe('Debug overlay', () => {
     const update = spy();
     const hide = spy();
     const renderer = {
+      el: dom.window.document.getElementById('root'),
       debugOverlay: { update, hide },
       play: (_layer: unknown, timer$: Subject<number>) => timer$,
     };
     const timer$ = new Subject<number>();
+    const clock = useFakeTimers({ now: 0 });
     setDebugOverlay(true);
     const subscription = playlist
       .play(renderer as any, timer$, { loop: true })
       .subscribe();
 
-    timer$.next(400);
-    // The tick that ends a slot completes it; the next slot starts after it.
-    timer$.next(1500);
-    timer$.next(1600);
-    timer$.next(2999);
-    subscription.unsubscribe();
+    try {
+      timer$.next(400);
+      // The tick that ends a slot completes it; the next slot starts after it.
+      timer$.next(1500);
+      timer$.next(1600);
+      clock.tick(1000);
+      timer$.next(2999);
+      expect(update.callCount).to.equal(2);
+    } finally {
+      subscription.unsubscribe();
+      clock.restore();
+    }
 
     expect(
       update.args.map(([info]) => [
@@ -285,16 +293,15 @@ describe('Debug overlay', () => {
         info.playlist,
       ])
     ).to.deep.equal([
-      [0, 400, 'A', 'B', { name: 'test', elapsed: 400, duration: 3000 }],
+      [0, 0, 'A', 'B', { name: 'test', elapsed: 0, duration: 3000 }],
       [1, 600, 'B', 'A', { name: 'test', elapsed: 1600, duration: 3000 }],
-      [1, 1999, 'B', 'A', { name: 'test', elapsed: 2999, duration: 3000 }],
     ]);
     expect(update.firstCall.args[0].current).to.deep.include({
       duration: 1000,
       itemDuration: 1000,
       type: 'image',
     });
-    expect(hide.called).to.equal(false);
+    expect(hide.calledOnce).to.equal(true);
   });
 
   it('hides the overlay instead of updating it while disabled', () => {

@@ -387,6 +387,8 @@ const LayoutContainer: Component<{
   let timelineItem: TimelineItem;
   let showingSubscription: Subscription;
   let seekingSubscription: Subscription;
+  let seekToPlaySubscription: Subscription | undefined;
+  let unsubscribePlaying: (() => void) | undefined;
 
   const playlist = Playlist.fromJSON(
     props.container.playlist,
@@ -399,6 +401,8 @@ const LayoutContainer: Component<{
     detachPlaylist?.();
     showingSubscription?.unsubscribe();
     seekingSubscription?.unsubscribe();
+    seekToPlaySubscription?.unsubscribe();
+    unsubscribePlaying?.();
     if (timelineItem) props.timeline.remove(timelineItem);
     playlist.layers.forEach((item) => item.unload());
     renderer?.clean();
@@ -443,15 +447,16 @@ const LayoutContainer: Component<{
       let seekTarget: number = 0;
 
       // Helper to unsubscribe from playback subscriptions
-      const unsubscribePlaying = () => {
+      const stopPlayback = () => {
         playing$?.unsubscribe();
         timerSubscription?.unsubscribe();
       };
+      unsubscribePlaying = stopPlayback;
 
       // Helper to start/restart playback from a given time (synchronous, assumes seek is done)
       const startPlaybackImmediate = (startTime: number = 0) => {
         // Clean up previous playback
-        unsubscribePlaying();
+        stopPlayback();
 
         // Wrap at the current playlist duration: item durations measured
         // during playback (e.g. auto-timed lists) move the loop boundary.
@@ -467,6 +472,20 @@ const LayoutContainer: Component<{
         });
       };
 
+      const seekToPlay = (offset: number) => {
+        seekToPlaySubscription?.unsubscribe();
+        seekToPlaySubscription = playlist
+          .seek(offset)
+          .pipe(take(1))
+          .subscribe({
+            next: () => {
+              if (isPlaying) startPlaybackImmediate(offset);
+            },
+            error: (err) =>
+              console.error('[LayoutContainer] playlist.seek error:', err),
+          });
+      };
+
       const originalSeek = timeline.seek.bind(timeline);
       (timeline as any).seek = (time: number) => {
         // Track that we're seeking and to what position
@@ -476,7 +495,8 @@ const LayoutContainer: Component<{
         // Stop current playback before seeking - this is critical!
         // Without this, nested widgets' timelines may still be in "playing" state
         // and will throw "Cannot seek while playing"
-        unsubscribePlaying();
+        stopPlayback();
+        seekToPlaySubscription?.unsubscribe();
 
         // When seeking (e.g., during loop restart), prepare playlist for the new position
         seekingSubscription?.unsubscribe();
@@ -509,10 +529,7 @@ const LayoutContainer: Component<{
             if (pendingPlayOffset !== null) {
               const offset = pendingPlayOffset;
               pendingPlayOffset = null;
-              playlist.time = offset;
-              playlist.seek(offset).subscribe(() => {
-                startPlaybackImmediate(offset);
-              });
+              seekToPlay(offset);
             }
           },
           error: (err) => {
@@ -533,10 +550,8 @@ const LayoutContainer: Component<{
 
         if (isReady) {
           // Seek first, then start playback
-          playlist.time = offset;
-          playlist.seek(offset).subscribe(() => {
-            startPlaybackImmediate(offset);
-          });
+          stopPlayback();
+          seekToPlay(offset);
         } else {
           // Defer playback until show completes
           pendingPlayOffset = offset;
@@ -548,8 +563,8 @@ const LayoutContainer: Component<{
       (timeline as any).pause = () => {
         isPlaying = false;
         pendingPlayOffset = null;
-        playing$?.unsubscribe();
-        timerSubscription?.unsubscribe();
+        seekToPlaySubscription?.unsubscribe();
+        stopPlayback();
         originalPause();
       };
 

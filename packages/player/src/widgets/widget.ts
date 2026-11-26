@@ -20,17 +20,21 @@ const getParentOrigin = (): string => {
 };
 
 export abstract class Widget extends EventEmitter {
-  protected messageHandler?: (ev: MessageEvent) => void;
+  private parentMessageHandler?: (ev: MessageEvent) => void;
 
   constructor(
     protected resourceManager: ResourceManager,
     opts?: {}
   ) {
     super();
+  }
 
-    if (window.parent) {
+  protected listenForMessages() {
+    if (!this.parentMessageHandler && window.parent) {
       const parentOrigin = getParentOrigin();
-      const messageHandler = (this.messageHandler = (ev: MessageEvent) => {
+      const messageHandler = (this.parentMessageHandler = (
+        ev: MessageEvent
+      ) => {
         if (ev.source !== window.parent || ev.origin !== parentOrigin) {
           return;
         }
@@ -81,7 +85,12 @@ export abstract class Widget extends EventEmitter {
    * Unload.
    * Load the widget removing all resources.
    */
-  unload() {}
+  unload() {
+    if (this.parentMessageHandler) {
+      window.removeEventListener('message', this.parentMessageHandler, false);
+      this.parentMessageHandler = undefined;
+    }
+  }
 
   /**
    * Return mimetype for this widget
@@ -98,6 +107,7 @@ export abstract class Widget extends EventEmitter {
   stop() {}
 
   show(el: HTMLElement, offset: number): Observable<string> {
+    this.listenForMessages();
     return of('shown');
   }
 

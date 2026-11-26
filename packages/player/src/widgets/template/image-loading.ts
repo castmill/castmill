@@ -1,3 +1,23 @@
+import type { ResourceManager } from '@castmill/cache';
+
+const IMAGE_CACHE_TIMEOUT_MS = 5000;
+
+export async function getImageMediaWithTimeout(
+  resourceManager: Pick<ResourceManager, 'getMedia'>,
+  url: string
+): Promise<string | void> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<void>((resolve) => {
+    timer = setTimeout(resolve, IMAGE_CACHE_TIMEOUT_MS);
+  });
+  try {
+    // Let the cache finish in the background without holding up playback.
+    return await Promise.race([resourceManager.getMedia(url), deadline]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function prepareImage(
   url: string,
   createImage: () => HTMLImageElement = () => new Image()

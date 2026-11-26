@@ -4,6 +4,7 @@ import { ComboBox, Button } from '@castmill/ui-common';
 import { BsLayoutWtf, BsPlayCircle, BsBoxArrowUpRight } from 'solid-icons/bs';
 import { ResourcesService } from '../../../playlists/services/resources.service';
 import { PlaylistsService } from '../../../playlists/services/playlists.service';
+import { LayoutsService } from '../../../layouts/services/layouts.service';
 import './layout-ref-editor.scss';
 
 // Layout interface matching backend response
@@ -69,15 +70,18 @@ export const LayoutRefEditor: Component<LayoutRefEditorProps> = (props) => {
       setIsLoading(true);
       try {
         // Fetch the layout details
-        const response = await ResourcesService.fetch<JsonLayout>(
+        const layout = await LayoutsService.getLayout(
           props.baseUrl,
           props.organizationId,
-          'layouts',
-          { page: 1, page_size: 1, filters: { id: String(value.layoutId) } }
+          value.layoutId
         );
-        if (response.data.length > 0) {
-          setSelectedLayout(response.data[0]);
-        }
+        setSelectedLayout({
+          ...layout,
+          id: value.layoutId,
+          description: layout.description ?? undefined,
+          aspect_ratio: value.aspectRatio,
+          zones: value.zones,
+        });
         // Restore zone-playlist assignments
         if (value.zonePlaylistMap) {
           setZonePlaylistMap(value.zonePlaylistMap);

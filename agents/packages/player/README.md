@@ -4,6 +4,39 @@
 
 The `@castmill/player` package is the core media player logic for the Castmill Digital Signage Platform. It handles playlist playback, widget rendering, and timeline management.
 
+## Playback health and recovery
+
+The debug overlay refreshes at most once a second per playlist. Each active
+layout area owns its own summary: item/skip/restart counts over the lifetime
+of the playlist instance, seek/show/transition state and peak timings, largest
+clock tick gap, and the rendered subtree's DOM, video and image counts.
+Active-only lists and photo carousels show their current position, wait or
+transition state, and mounted/prepared counts. These are resource proxies, not
+memory figures, and include preloads where present.
+
+Device playback retries an item from its beginning in its own renderer after
+45 seconds of stalled seek/show or page readiness, or after the expected
+transition duration plus five seconds of grace. It can also retry playback
+that did not complete within five seconds of the end of its slot. A retry
+cancels the original subscriptions, but keeps the last visible layer mounted
+until the replacement is ready. If the stalled item is itself visible, the
+watchdog builds a fresh layer rather than reusing its pending widget work.
+Only the affected zone's clock waits during
+retry preparation, so a slow retry cannot consume the item's slot. There are
+at least two minutes between retries of the same live playlist, even when an
+earlier attempt never became ready. Preview playback does not retry. Existing decoder block/skip
+behavior takes precedence. A stopped JavaScript event loop cannot recover
+itself; a delayed watchdog callback is not itself treated as a stall.
+
+For a three-zone broker-widget soak on Android, enable the overlay in the
+playback frame with `castmillDebugOverlay(true)`. Record the zone and page/photo
+index when movement slows and compare the peak tick gap, preparation/transition
+time, and mounted/prepared counts with the first few cycles. Collect Android
+PSS, native heap and EGL totals periodically with `adb shell dumpsys meminfo
+<package>`, and compare with a second run with the overlay off. Rising retained
+memory across repeated cycles is more useful than a single high sample. Check
+the device Events tab for `playlist-stall-restart` and its playlist/item context.
+
 ## Key Components
 
 ### Timeline System (`src/widgets/template/timeline.ts`)
@@ -65,8 +98,9 @@ timeline items with `start: 0` to allow parallel playback rather than sequential
 
 `image-carousel` resolves its image URLs in order and assigns all backgrounds
 up front, keeping them assigned across transitions so the browser can load
-incoming images early. Cache resolution has a five-second timeout; failures are
-logged and images that cannot be cached fall back to their original URL.
+incoming images early. Both regular images and carousel photos wait up to five
+seconds for cache resolution before trying the original URL. The cache can
+finish in the background; a late result does not replace the displayed image.
 `opts.transition` is `"slide"` (default) or `"fade"`. The playlist editor sets
 `PlayerGlobals.freezePreviewDuringLoad` to wait up to five seconds for image
 loads and keep a paused preview at its requested position. Playlist previews

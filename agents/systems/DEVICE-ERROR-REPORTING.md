@@ -38,6 +38,15 @@ The dashboard displays these reports in the existing device **Events** tab.
 Repeated matching errors are one grouped event with an occurrence count and
 first/last observed timestamps.
 
+The player reports watchdog recovery attempts as `playback` events with code
+`playlist-stall-restart`. Before tearing down the stalled renderer it captures
+up to six distinct pending operations, such as image cache lookup, image
+load/decode, or a page waiting for its children. Reports include only operation
+labels, page indexes and component types, not media URLs or dynamic timing
+values. The local console includes the phase age; the event context carries the
+playlist ID when known and the item name. Routine health samples are local to
+the debug overlay; they are not sent to Events.
+
 ## Data flow
 
 1. `@castmill/player` reports playback failures, including rejected template-video

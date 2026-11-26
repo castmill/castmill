@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, it } from 'mocha';
 // @ts-ignore jsdom is hoisted from other workspaces without type declarations.
 import { JSDOM } from 'jsdom';
 import { firstValueFrom, Subject } from 'rxjs';
-import { useFakeTimers } from 'sinon';
+import { spy, useFakeTimers } from 'sinon';
 
 import { TemplateWidget, Layer, Renderer } from '../dist/index.js';
 
@@ -62,6 +62,206 @@ describe('TemplateWidget.show', () => {
       config: { options: {}, data: {} } as any,
       globals: { target: 'poster' },
     });
+
+  it('registers one message listener only while a template widget is mounted', async () => {
+    const win: Window = dom.window;
+    const add = spy(win, 'addEventListener');
+    const remove = spy(win, 'removeEventListener');
+    const root = dom.window.document.getElementById('root');
+    const widget = new TemplateWidget({} as any, {
+      widget: {
+        name: 'text',
+        template: { type: 'text', opts: { text: 'Ready' } },
+      } as any,
+      config: { options: {}, data: {} } as any,
+      globals: { target: 'poster' },
+    });
+    const messageHandlers = (calls: unknown[][]) =>
+      calls
+        .filter(([type]) => type === 'message')
+        .map(([, handler]) => handler);
+    try {
+      expect(messageHandlers(add.args)).to.have.length(0);
+      await firstValueFrom(widget.show(root, 0));
+      await firstValueFrom(widget.show(root, 0));
+      expect(messageHandlers(add.args)).to.have.length(1);
+      await widget.unload();
+      await firstValueFrom(widget.show(root, 0));
+      await widget.unload();
+      expect(messageHandlers(add.args)).to.have.length(2);
+      expect(messageHandlers(remove.args)).to.deep.equal(
+        messageHandlers(add.args)
+      );
+    } finally {
+      await widget.unload();
+      add.restore();
+      remove.restore();
+    }
+  });
+
+  it('distinguishes a pending image cache lookup from image load/decode without logging the URL', async () => {
+    let finishLookup!: (url: string) => void;
+    const getMedia = () =>
+      new Promise<string>((resolve) => {
+        finishLookup = resolve;
+      });
+    let finishLoad: (() => void) | undefined;
+    globals.Image = class {
+      onload: (() => void) | null = null;
+      set src(url: string) {
+        if (url) finishLoad = () => this.onload?.();
+      }
+    };
+    const secretUrl = 'https://example.com/photo.png?token=private';
+    const widget = new TemplateWidget({ getMedia } as any, {
+      widget: {
+        name: 'photo',
+        template: { type: 'image', opts: { url: secretUrl } },
+      } as any,
+      config: { options: {}, data: {} } as any,
+      globals: { target: 'poster' },
+    });
+    const subscription = widget
+      .show(dom.window.document.getElementById('root'), 0)
+      .subscribe();
+    try {
+      expect(widget.samplePlayback()[0]).to.deep.include({
+        pending: 'Image cache lookup',
+      });
+      finishLookup(secretUrl);
+      await flush();
+      expect(widget.samplePlayback()[0]).to.deep.include({
+        pending: 'Image load/decode',
+      });
+      expect(JSON.stringify(widget.samplePlayback())).not.to.contain(secretUrl);
+      finishLoad?.();
+      await flush();
+      expect(widget.samplePlayback()).to.deep.equal([]);
+    } finally {
+      subscription.unsubscribe();
+      await widget.unload();
+    }
+  });
+
+  it('reports an image ready from its original source after five seconds of waiting for the cache', async () => {
+    const sourceUrl = 'https://example.com/original.png';
+    const cachedUrl = 'https://example.com/cached.png';
+    let finishLookup!: (url: string) => void;
+    const getMedia = () =>
+      new Promise<string>((resolve) => {
+        finishLookup = resolve;
+      });
+    const loadedUrls: string[] = [];
+    globals.Image = class {
+      onload: (() => void) | null = null;
+      set src(url: string) {
+        if (!url) return;
+        loadedUrls.push(url);
+        this.onload?.();
+      }
+    };
+    const widget = new TemplateWidget({ getMedia } as any, {
+      widget: {
+        name: 'photo',
+        template: { type: 'image', opts: { url: sourceUrl } },
+      } as any,
+      config: { options: {}, data: {} } as any,
+      globals: { target: 'poster' },
+    });
+    const clock = useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const onReady = spy();
+    const root = dom.window.document.getElementById('root');
+    const subscription = widget.show(root, 0).subscribe(onReady);
+    try {
+      await clock.tickAsync(4999);
+      expect(onReady.called).to.equal(false);
+      expect(loadedUrls).to.deep.equal([]);
+
+      await clock.tickAsync(1);
+      expect(onReady.calledOnce).to.equal(true);
+      expect(loadedUrls).to.deep.equal([sourceUrl]);
+      expect(widget.samplePlayback()).to.deep.equal([]);
+
+      finishLookup(cachedUrl);
+      await clock.tickAsync(0);
+      expect(loadedUrls).to.deep.equal([sourceUrl]);
+      expect(
+        root.querySelector('[data-component=image]').style.backgroundImage
+      ).to.contain(sourceUrl);
+    } finally {
+      subscription.unsubscribe();
+      await widget.unload();
+      clock.restore();
+    }
+  });
+
+  it('isolates widget alignment from the host without overriding authored alignments', async () => {
+    const root = dom.window.document.getElementById('root');
+    root.style.textAlign = 'center';
+    const widget = new TemplateWidget({ getMedia: async () => {} } as any, {
+      widget: {
+        name: 'alignment',
+        template: {
+          type: 'group',
+          name: 'content',
+          components: [
+            { type: 'text', name: 'default', opts: { text: 'Default' } },
+            ...['left', 'center', 'right'].map((alignment) => ({
+              type: 'group',
+              name: alignment,
+              style: { 'text-align': alignment },
+              components: [
+                { type: 'text', name: alignment, opts: { text: alignment } },
+              ],
+            })),
+          ],
+        },
+      } as any,
+      config: { options: {}, data: {} } as any,
+      globals: { target: 'poster' },
+      style: { width: '640px', height: '360px' },
+    });
+    try {
+      await firstValueFrom(widget.show(root, 0));
+      const boundary = root.querySelector('[data-component=template]');
+      expect(boundary.style.textAlign).to.equal('initial');
+      expect(boundary.style.width).to.equal('640px');
+      expect(boundary.style.height).to.equal('360px');
+      const plain = root.querySelector(
+        '[data-component=text][data-name=default]'
+      );
+      expect(plain.style.textAlign).to.equal('');
+      for (const alignment of ['left', 'center', 'right']) {
+        expect(
+          root.querySelector(`[data-component=group][data-name=${alignment}]`)
+            .style.textAlign
+        ).to.equal(alignment);
+      }
+    } finally {
+      await widget.unload();
+    }
+  });
+
+  it('preserves explicit template-boundary alignment', async () => {
+    const root = dom.window.document.getElementById('root');
+    const widget = new TemplateWidget({ getMedia: async () => {} } as any, {
+      widget: {
+        name: 'explicit-alignment',
+        template: { type: 'text', name: 'text', opts: { text: 'Aligned' } },
+      } as any,
+      config: { options: {}, data: {} } as any,
+      globals: { target: 'poster' },
+      style: { 'text-align': 'right' },
+    });
+    try {
+      await firstValueFrom(widget.show(root, 0));
+      expect(
+        root.querySelector('[data-component=template]').style.textAlign
+      ).to.equal('right');
+    } finally {
+      await widget.unload();
+    }
+  });
 
   it('waits for every declared font before rendering or reporting ready', async () => {
     const resolveFonts: Array<() => void> = [];
@@ -150,6 +350,55 @@ describe('TemplateWidget.show', () => {
       console.error = error;
       showing.unsubscribe();
       blocking.unsubscribe();
+      await widget.unload();
+    }
+  });
+
+  it('retries a pending font without letting old cleanup remove the new face', async () => {
+    const loads: Array<() => void> = [];
+    const active = new Set<unknown>();
+    const faces: unknown[] = [];
+    globals.FontFace = class {
+      load() {
+        faces.push(this);
+        return new Promise((resolve) => loads.push(() => resolve(this)));
+      }
+    };
+    Object.defineProperty(dom.window.document, 'fonts', { value: active });
+    const widget = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: {
+          name: 'font-retry',
+          template: { type: 'text', opts: { text: 'Ready' } },
+        } as any,
+        fonts: [{ name: 'custom', url: '/custom.woff' }],
+        config: { options: {}, data: {} } as any,
+        globals: { target: 'poster' },
+      }
+    );
+    const root = dom.window.document.getElementById('root');
+    const initial = widget.show(root, 0).subscribe();
+    await flush();
+    initial.unsubscribe();
+    const cleanup = widget.unload();
+    let ready = false;
+    const retry = widget.show(root, 0).subscribe(() => {
+      ready = true;
+    });
+    try {
+      await flush();
+      expect(loads).to.have.length(2);
+      loads[1]();
+      await flush();
+      expect(ready).to.equal(true);
+      loads[0]();
+      await cleanup;
+      expect([...active]).to.deep.equal([faces[1]]);
+    } finally {
+      retry.unsubscribe();
+      loads.forEach((resolve) => resolve());
+      await cleanup;
       await widget.unload();
     }
   });

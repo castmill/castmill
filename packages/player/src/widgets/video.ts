@@ -32,6 +32,7 @@ export class Video extends Widget {
   }
 
   show(el: HTMLElement, offset: number) {
+    this.listenForMessages();
     return this.load().pipe(
       switchMap(() => {
         el.appendChild(this.video!);
@@ -96,6 +97,7 @@ export class Video extends Widget {
 
   // TODO: A correct unload should wait for a load before it tries to unload.
   unload(): void {
+    super.unload();
     if (this.video) {
       this.video.src = '';
       this.video.parentElement?.removeChild(this.video);

@@ -95,6 +95,7 @@ export class TextWidget extends TimelineWidget {
   }
 
   show(el: HTMLElement, offset: number) {
+    this.listenForMessages();
     this.offset = offset;
 
     if (this.div?.parentElement) {
@@ -116,6 +117,7 @@ export class TextWidget extends TimelineWidget {
   }
 
   unload(): void {
+    super.unload();
     if (this.div) {
       this.div.parentElement?.removeChild(this.div);
     }

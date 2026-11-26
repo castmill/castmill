@@ -99,8 +99,26 @@ describe('PlayerFrame playback controller selection', () => {
             cacheBackend: expect.any(MemoryCache),
           }
         : userAgent === 'Android 5.1'
-          ? { reportUnexpectedExit: true }
+          ? {
+              reportUnexpectedExit: true,
+              bypassMediaCache: expect.any(Function),
+            }
           : undefined
+    );
+  });
+
+  it('uses the browser media cache only for the public broker origin on Android', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Android 5.1');
+    render(() => <PlayerFrame />);
+    await waitFor(() => expect(mountDevice).toHaveBeenCalledOnce());
+
+    const bypass = vi.mocked(Device).mock.calls[0][2]?.bypassMediaCache;
+    expect(bypass?.('https://broker.images.castmill.io/e/1?w=1920')).toBe(true);
+    expect(bypass?.('https://broker.images.castmill.io.example.com/e/1')).toBe(
+      false
+    );
+    expect(bypass?.('https://api.castmill.io/medias/protected.jpg')).toBe(
+      false
     );
   });
 

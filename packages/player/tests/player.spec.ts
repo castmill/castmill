@@ -501,7 +501,8 @@ describe('Widget messaging', () => {
 
       class TestWidget extends Widget {}
 
-      new TestWidget({} as any);
+      const widget = new TestWidget({} as any);
+      widget.show({} as HTMLElement, 0);
 
       messageHandler?.({
         data: JSON.stringify({ counter: 1, method: 'show', args: [] }),
@@ -543,7 +544,8 @@ describe('Widget messaging', () => {
 
       class TestWidget extends Widget {}
 
-      new TestWidget({} as any);
+      const widget = new TestWidget({} as any);
+      widget.show({} as HTMLElement, 0);
 
       messageHandler?.({
         data: JSON.stringify({ counter: 1, method: 'show', args: [] }),
@@ -583,7 +585,8 @@ describe('Widget messaging', () => {
 
       class TestWidget extends Widget {}
 
-      new TestWidget({} as any);
+      const widget = new TestWidget({} as any);
+      widget.show({} as HTMLElement, 0);
 
       messageHandler?.({
         data: JSON.stringify({ counter: 1, method: 'show', args: [] }),
@@ -600,6 +603,31 @@ describe('Widget messaging', () => {
 });
 
 describe('Renderer.clear', () => {
+  it('does not unload the visible layer when a single-item zone retries it', async () => {
+    const layer = {
+      el: { style: {}, parentElement: { removeChild: spy() } },
+      unload: spy(),
+      seek: () => of([0, 1000]),
+      show: () => of('shown'),
+      play: () => NEVER,
+    };
+    const renderer = new Renderer({ appendChild: spy() } as any);
+    await firstValueFrom(renderer.show(layer as any, 0));
+
+    layer.show = () => NEVER;
+    renderer.resetStalledLayer(layer as any);
+    const retry = renderer.play(layer as any, NEVER, 0, 100).subscribe();
+    try {
+      expect(renderer.getCurrentLayer()).to.equal(layer);
+      expect(layer.el.style).to.have.property('visibility', 'visible');
+      expect(layer.unload.called).to.equal(false);
+      expect(layer.el.parentElement.removeChild.called).to.equal(false);
+    } finally {
+      retry.unsubscribe();
+      renderer.clear();
+    }
+  });
+
   it('unloads and removes the current layer', () => {
     const removeChild = spy();
     const unload = spy();

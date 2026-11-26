@@ -14,6 +14,12 @@ legacy({ targets: { chrome: '38' } });
 Modern browser validation is not sufficient. Test affected changes on a connected
 legacy Android player before considering them compatible.
 
+The shared template boundary resets `text-align: initial` so host UI centering
+cannot leak into widgets. This CSS-wide keyword works on Chrome 38 and preserves
+direction-aware defaults (left for LTR, right for RTL). Do not reset every text
+node: authored alignment on widget groups must continue to inherit to children.
+Verify default, centered and right-aligned groups inside a center-aligned host.
+
 Layout readiness waits for the initial content in every populated zone (empty
 zones are immediately ready). Keep this signal after nested media initialization:
 the dashboard uses renderer readiness to measure durations without polling a
@@ -145,10 +151,15 @@ Put revisions in the data URL's MIME parameters, never a `#fragment`: Crosswalk
 The fetch polyfill upgrades older fragment-versioned cache URLs while reading
 them so existing offline data remains usable.
 Keep its 30-second timeout, HTTP failure/206 rejection, and Range-request guard.
-Fonts (`otf`, `ttf`, `woff`, `woff2`, `eot`) and media from
-`broker.images.castmill.io` bypass the native downloader as well: the broker
-omits HEAD lengths and ignores ranges, which can also produce corrupted native
-files without a download error. Use full authenticated binary XHR GETs and
+The legacy Android adapter renders public `https://broker.images.castmill.io`
+images directly using Crosswalk's HTTP cache. It bypasses both the native
+downloader (the broker omits HEAD lengths and ignores ranges) and the IndexedDB
+media cache (to avoid repeated writes and evictions). It does not guarantee
+offline copies for those images. Previous IndexedDB entries are not removed
+by the bypass and can age out through normal cache eviction.
+
+Fonts (`otf`, `ttf`, `woff`, `woff2`, `eot`) still bypass the native downloader.
+Use full authenticated binary XHR GETs and
 versioned base64 data URLs, preserving the response MIME type (or inferring it
 from a recognized extension for missing/octet-stream types). Other recognized
 images use the same fallback after a native download error, except `CacheFull`,

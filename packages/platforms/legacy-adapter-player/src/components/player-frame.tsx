@@ -91,6 +91,17 @@ const getLegacyStorage = (platform: LegacyPlatform): StorageIntegration => {
   }
 };
 
+const isBrokerImage = (url: string): boolean => {
+  try {
+    return (
+      new URL(url, window.location.href).origin ===
+      'https://broker.images.castmill.io'
+    );
+  } catch {
+    return false;
+  }
+};
+
 export const startLegacyPerformanceDiagnostics = (): (() => void) => {
   const started = performance.now();
   let lastFrame = started;
@@ -224,7 +235,7 @@ export const PlayerFrame: Component = () => {
             cacheBackend: memoryCache,
           }
         : platform === 'android'
-          ? { reportUnexpectedExit: true }
+          ? { reportUnexpectedExit: true, bypassMediaCache: isBrokerImage }
           : undefined
     );
     const configuredServerUrl = getLegacyBaseUrl(

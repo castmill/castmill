@@ -28,6 +28,7 @@ export class TextScroll extends Widget {
   }
 
   show(el: HTMLElement, offset: number) {
+    this.listenForMessages();
     if (!this.scroll) {
       this.scroll = new Scroll(el, this.text);
     }
@@ -54,6 +55,7 @@ export class TextScroll extends Widget {
   */
 
   unload() {
+    super.unload();
     if (this.canvas) {
       document.removeChild(this.canvas);
     }

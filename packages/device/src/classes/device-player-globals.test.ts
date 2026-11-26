@@ -20,6 +20,7 @@ describe('Device player globals', () => {
     const globals = create(factory).getPlayerGlobals();
 
     expect(globals.target).toBe('poster');
+    expect(globals.recoverStalledPlayback).toBe(true);
     expect(globals.createVideoPlaybackController).toBe(factory);
   });
 
@@ -33,18 +34,21 @@ describe('Device player globals', () => {
     const report = vi
       .spyOn(DeviceErrorReporter.prototype, 'report')
       .mockImplementation(() => {});
-    const error = new Error('Video playback blocked');
+    const error = 'Restarting stalled playlist item (showing)';
+    const context = { playlistId: 41, layerName: 'Listing' };
 
     create().getPlayerGlobals().reportError!({
       category: 'playback',
-      code: 'video-decoder-limit',
+      code: 'playlist-stall-restart',
       error,
+      context,
     });
 
     expect(report).toHaveBeenCalledWith({
       category: 'playback',
-      code: 'video-decoder-limit',
+      code: 'playlist-stall-restart',
       error,
+      context,
     });
   });
 });
