@@ -93,26 +93,26 @@ defmodule CastmillWeb.Endpoint do
   end
 
   defp send_legacy_app_shell_file(conn, file_name, service_worker?) do
-    path = Application.app_dir(:castmill, "priv/static/legacy/#{file_name}")
-
-    if File.exists?(path) do
-      conn =
+    case CastmillWeb.LegacyAdapter.file(file_name) do
+      nil ->
         conn
-        |> Plug.Conn.put_resp_content_type(MIME.from_path(path))
-        |> Plug.Conn.put_resp_header("cache-control", "no-cache")
 
-      conn =
-        if service_worker? do
-          Plug.Conn.put_resp_header(conn, "service-worker-allowed", "/legacy")
-        else
+      contents ->
+        conn =
           conn
-        end
+          |> Plug.Conn.put_resp_content_type(MIME.from_path(file_name))
+          |> Plug.Conn.put_resp_header("cache-control", "no-cache")
 
-      conn
-      |> Plug.Conn.send_file(200, path)
-      |> Plug.Conn.halt()
-    else
-      conn
+        conn =
+          if service_worker? do
+            Plug.Conn.put_resp_header(conn, "service-worker-allowed", "/legacy")
+          else
+            conn
+          end
+
+        conn
+        |> Plug.Conn.send_resp(200, contents)
+        |> Plug.Conn.halt()
     end
   end
 

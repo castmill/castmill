@@ -28,13 +28,13 @@ The adapter's on-screen text is in English only.
 
 During a migration, another server, such as the old player server, can serve the adapter on the domain your players already load, so you can move players in batches without changing their wrappers. That server must:
 
-- Serve the adapter page from `/legacy` at `/`, with `<meta name="castmill-server-url" content="https://castmill.example.com">` naming your Castmill server.
+- Serve the Castmill server's `/legacy` page at `/`. The page names the Castmill server in `<meta name="castmill-server-url">`, so the adapter knows where to connect.
 - Forward `/legacy/*` and `/widget_assets/*` to the Castmill server.
 - Serve `/legacy/sw.js` at `/sw.js` without its `Service-Worker-Allowed` header, so the player can start offline at `/`.
 
-The players then call the Castmill API from that domain. Allow it on the Castmill server by listing the device API in the `cors_any_origin_paths` setting, for example `config :castmill, :cors_any_origin_paths, ["/devices/"]`. If your media is stored on a CDN, its CORS policy must allow the domain too.
+The players then call the Castmill API from that domain. Allow it on the Castmill server with the `cors_any_origin_paths` setting. List the device API, and also media if the Castmill server stores it, for example `config :castmill, :cors_any_origin_paths, ["/devices/", "/medias/"]`. If your media is stored on a CDN, its CORS policy must allow the domain too.
 
-If you later point the old player domain at the new server, the new server must serve the same URLs for requests on that domain.
+Do not point the old player domain at the Castmill server itself yet. The server answers `/` there with the current browser player, which legacy players cannot run.
 
 A legacy webOS display and the [native webOS player](webos.md) use the same hardware ID. You can replace the wrapper with the native player later without registering the display again.
 

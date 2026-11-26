@@ -408,10 +408,15 @@ manually.
 
 Outside `/legacy` (for example `/` on a proxy that serves the adapter on another
 origin), the adapter registers `/sw.js` for scope `/` and takes its API URL from
-`VITE_BASE_URL` or the page's `castmill-server-url` meta tag. That host serves
-the same worker at `/sw.js` without the `/legacy` scope header and forwards
-`/legacy/*` and `/widget_assets/*`; Castmill accepts its cross-origin device API
-calls only for paths listed in `config :castmill, :cors_any_origin_paths`.
+`VITE_BASE_URL` or the page's `castmill-server-url` meta tag. Castmill adds that
+tag, with `Endpoint.url()`, to the adapter page it serves, and ends
+`/legacy/sw.js` with the same URL so that changing it reinstalls the shell
+(`CastmillWeb.LegacyAdapter`). The worker serves the release's cached
+`/legacy/index.html` for its scope path, never a copy of the host's own page,
+which may differ per request. The host serves the worker at `/sw.js` without the
+`/legacy` scope header and forwards `/legacy/*` and `/widget_assets/*`; Castmill
+accepts its cross-origin API and media requests only for paths listed in
+`config :castmill, :cors_any_origin_paths`.
 
 Offline cold startup requires:
 

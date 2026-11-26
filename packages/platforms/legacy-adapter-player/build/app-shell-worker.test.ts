@@ -116,7 +116,7 @@ describe('createAppShellWorker', () => {
     });
 
     await installation;
-    expect(shellCache.put).toHaveBeenCalledTimes(4);
+    expect(shellCache.put).toHaveBeenCalledTimes(3);
     expect(workerGlobal.skipWaiting).toHaveBeenCalledOnce();
   });
 
@@ -154,17 +154,13 @@ describe('createAppShellWorker', () => {
     });
 
     await expect(response).resolves.toBe(cachedIndex);
-    expect(shellCache.match).toHaveBeenCalledWith('/');
+    expect(shellCache.match).toHaveBeenCalledWith('/legacy/index.html');
   });
 
-  it('preserves the configured scope page after install for an offline root reload', async () => {
-    const { fetch, listeners } = loadWorker('https://player.example.com/');
-    const configuredIndex =
-      '<meta name="castmill-server-url" content="https://api.example.com">';
-    fetch.mockImplementation(async (request) => {
-      const url = typeof request === 'string' ? request : request.url;
-      return new Response(url === '/' ? configuredIndex : url);
-    });
+  it('does not cache the page of a host that registers it at its root', async () => {
+    const { fetch, listeners, shellCache } = loadWorker(
+      'https://player.example.com/'
+    );
     let installation: Promise<unknown> | undefined;
 
     listeners.install({
@@ -172,22 +168,10 @@ describe('createAppShellWorker', () => {
         installation = promise;
       },
     });
+
     await installation;
-
-    const fetchCallCount = fetch.mock.calls.length;
-    let response: Promise<Response> | undefined;
-    listeners.fetch({
-      request: new Request('https://player.example.com/', {
-        headers: { Accept: 'text/html' },
-      }),
-      respondWith: (promise: Promise<Response>) => {
-        response = promise;
-      },
-    });
-
-    await expect((await response!).text()).resolves.toBe(configuredIndex);
-    expect(fetch).toHaveBeenCalledTimes(fetchCallCount);
-    expect(fetch).toHaveBeenCalledWith('/', { credentials: 'same-origin' });
+    expect(shellCache.put).toHaveBeenCalledTimes(3);
+    expect(fetch).not.toHaveBeenCalledWith('/', expect.anything());
   });
 
   it('leaves other pages under a root scope to the network', async () => {

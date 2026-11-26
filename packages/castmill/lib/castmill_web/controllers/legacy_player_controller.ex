@@ -7,17 +7,17 @@ defmodule CastmillWeb.LegacyPlayerController do
   @max_log_entries 50
 
   def index(conn, _params) do
-    index_path = Application.app_dir(:castmill, "priv/static/legacy/index.html")
+    case CastmillWeb.LegacyAdapter.file("index.html") do
+      nil ->
+        conn
+        |> put_resp_content_type("text/html")
+        |> send_resp(404, "Legacy player not available")
 
-    if File.exists?(index_path) do
-      conn
-      |> put_resp_content_type("text/html")
-      |> put_resp_header("cache-control", "no-cache")
-      |> send_file(200, index_path)
-    else
-      conn
-      |> put_resp_content_type("text/html")
-      |> send_resp(404, "Legacy player not available")
+      html ->
+        conn
+        |> put_resp_content_type("text/html")
+        |> put_resp_header("cache-control", "no-cache")
+        |> send_resp(200, html)
     end
   end
 

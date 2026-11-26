@@ -94,23 +94,27 @@ Another server, such as a reverse proxy on the domain that legacy players alread
 can serve the adapter at its root. This lets players move to Castmill without changing
 the URL configured in their wrapper. That host must:
 
-- serve the adapter page from `/legacy` at `/` and declare the Castmill server in it with
-  `<meta name="castmill-server-url" content="https://castmill.example.com">`;
+- serve Castmill's `/legacy` page at `/`;
 - forward `/legacy/*` and `/widget_assets/*` to Castmill, because the adapter's assets and
   widget asset URLs are root-relative; and
 - serve `/legacy/sw.js` at `/sw.js` without its `Service-Worker-Allowed: /legacy` header.
   Outside `/legacy`, the adapter registers that worker for scope `/`, and the worker then
-  serves the cached page for `/` as well.
+  serves the cached `/legacy/index.html` for `/` as well.
 
-The adapter calls the declared server's API from the host's origin. Castmill accepts any
-origin only for `/registrations` and `/legacy/log`; list additional paths that
-authenticate without cookies or serve public files, such as `/devices/`, in
-`config :castmill, :cors_any_origin_paths`. Media stored on another origin, such as a
-CDN, must allow the host's origin in its own CORS policy.
+Castmill's adapter page names the server's public URL (`CastmillWeb.Endpoint.url()`) in
+`<meta name="castmill-server-url">`, and the adapter uses it as its API URL outside
+`/legacy`. The worker ends with the same URL, so if the URL changes, players reinstall the
+adapter and cache the new page.
+
+The adapter calls that API from the host's origin. Castmill accepts any origin only for
+`/registrations` and `/legacy/log`; list additional paths that authenticate without
+cookies or serve public files in `config :castmill, :cors_any_origin_paths`: `/devices/`,
+and `/medias/` when Castmill stores the media itself. Media stored on another origin, such
+as a CDN, must allow the host's origin in its own CORS policy.
 
 Players keep their registration, cached content, and offline shell on the host's origin.
-If that domain is later pointed at Castmill directly, Castmill must serve the same URLs
-there.
+Castmill cannot take over that domain yet: it answers `/` with the browser player and
+does not serve `/sw.js`.
 
 ---
 
