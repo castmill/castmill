@@ -25,6 +25,8 @@ import { createEffect, createMemo, createSignal, Show } from 'solid-js';
 import { User } from '../../interfaces/user.interface';
 import { OrganizationsService } from '../../services/organizations.service';
 import { OrganizationInviteForm } from './organization-invite-form';
+import { QuotaIndicator } from '../../components/quota-indicator';
+import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 import { OrganizationRole } from '../../types/organization-role.type';
 import { useI18n } from '../../i18n';
 import { getUser } from '../../components/auth';
@@ -281,10 +283,27 @@ export const OrganizationMembersView = (props: {
     tableViewRef = ref;
   };
 
+  // The organization's users quota (members); invitations need room in it.
+  const [usersQuota, setUsersQuota] = createSignal<ResourceQuota | null>(null);
+  const membersFull = () => {
+    const quota = usersQuota();
+    return !!quota && quota.used >= quota.total;
+  };
+
+  const loadUsersQuota = async () => {
+    try {
+      const usage = await QuotasService.getQuotaUsage(props.organizationId);
+      setUsersQuota(usage?.users || null);
+    } catch {
+      setUsersQuota(null);
+    }
+  };
+
   const refreshData = () => {
     if (tableViewRef) {
       tableViewRef.reloadData();
     }
+    loadUsersQuota();
   };
 
   createEffect(() => {
@@ -430,7 +449,9 @@ export const OrganizationMembersView = (props: {
                       ? t('organization.errors.invalidRole')
                       : error.message === 'invitation_busy'
                         ? t('organization.errors.invitationBusy', { email })
-                        : error.message;
+                        : error.message === 'quota_exceeded'
+                          ? t('organization.errors.membersQuotaExceeded')
+                          : error.message;
 
                   toast.error(normalizedMessage);
                   return;
@@ -477,14 +498,32 @@ export const OrganizationMembersView = (props: {
         toolbar={{
           searchPlaceholder: t('common.search'),
           mainAction: (
-            <PermissionButton
-              resource="organizations"
-              action="create"
-              label={() => t('organization.inviteMember')}
-              onClick={addMember}
-              icon={BsCheckLg}
-              color="primary"
-            />
+            <div class={styles['invite-action']}>
+              <Show when={usersQuota()}>
+                {(quota) => (
+                  <QuotaIndicator
+                    used={quota().used}
+                    total={quota().total}
+                    resourceName={t('usage.resources.users')}
+                    compact
+                  />
+                )}
+              </Show>
+              <PermissionButton
+                resource="organizations"
+                action="create"
+                label={() => t('organization.inviteMember')}
+                onClick={addMember}
+                icon={BsCheckLg}
+                color="primary"
+                forceDisabled={membersFull()}
+                title={
+                  membersFull()
+                    ? t('organization.errors.membersQuotaExceeded')
+                    : undefined
+                }
+              />
+            </div>
           ),
         }}
         selectionHint={t('common.selectionHint')}

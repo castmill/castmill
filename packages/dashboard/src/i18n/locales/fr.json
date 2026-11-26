@@ -935,7 +935,8 @@
       "resendInvitationFailed": "Impossible de renvoyer l'invitation",
       "removeInvitationFailed": "Impossible de retirer l'invitation",
       "invitationEmailNotSent": "L'invitation de {{email}} a un nouveau lien, mais l'e-mail n'a pas pu être envoyé. Renvoyez-la à nouveau.",
-      "invitationBusy": "Une invitation à {{email}} est en cours d'envoi. Réessayez dans un instant."
+      "invitationBusy": "Une invitation à {{email}} est en cours d'envoi. Réessayez dans un instant.",
+      "membersQuotaExceeded": "Votre organisation n'a plus de place pour de nouveaux membres. Passez à une offre supérieure pour inviter des personnes."
     },
     "messages": {
       "memberRemoved": "Le membre {{name}} a été supprimé avec succès",

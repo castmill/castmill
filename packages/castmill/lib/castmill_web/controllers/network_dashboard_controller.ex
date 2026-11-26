@@ -697,6 +697,11 @@ defmodule CastmillWeb.NetworkDashboardController do
         |> put_status(:conflict)
         |> json(%{error: "User has already been invited to this organization"})
 
+      {:error, :quota_exceeded} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "The organization has no room for more members"})
+
       {:error, :busy} ->
         conn
         |> put_status(:conflict)

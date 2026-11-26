@@ -918,7 +918,8 @@
       "resendInvitationFailed": "Det gick inte att skicka inbjudan igen",
       "removeInvitationFailed": "Det gick inte att ta bort inbjudan",
       "invitationEmailNotSent": "Inbjudan till {{email}} har en ny länk, men mejlet kunde inte skickas. Skicka den igen.",
-      "invitationBusy": "En inbjudan till {{email}} skickas just nu. Försök igen om en stund."
+      "invitationBusy": "En inbjudan till {{email}} skickas just nu. Försök igen om en stund.",
+      "membersQuotaExceeded": "Din organisation har inte plats för fler medlemmar. Uppgradera din plan för att bjuda in fler."
     },
     "messages": {
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",

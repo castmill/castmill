@@ -4,6 +4,7 @@ import { I18nProvider } from '../../i18n';
 import { OrganizationMembersView } from './organization-members-view';
 import { OrganizationsService } from '../../services/organizations.service';
 import { getUser } from '../../components/auth';
+import { QuotasService } from '../../services/quotas.service';
 
 const toastSpies = {
   success: vi.fn(),
@@ -19,6 +20,12 @@ vi.mock('../../services/organizations.service', () => ({
     removeMemberFromOrganization: vi.fn(),
     inviteUser: vi.fn(),
     getAll: vi.fn(),
+  },
+}));
+
+vi.mock('../../services/quotas.service', () => ({
+  QuotasService: {
+    getQuotaUsage: vi.fn().mockResolvedValue({}),
   },
 }));
 
@@ -274,6 +281,31 @@ describe('OrganizationMembersView - leave organization', () => {
 
     expect(leaveButton).not.toBeDisabled();
     expect(await screen.findByRole('combobox', { name: 'Role' })).toBeTruthy();
+  });
+
+  it('disables inviting when the organization has no room for more members', async () => {
+    vi.mocked(QuotasService.getQuotaUsage).mockResolvedValue({
+      users: { used: 1, total: 1 },
+    });
+    vi.mocked(OrganizationsService.fetchMembers).mockResolvedValue({
+      count: 1,
+      data: [
+        {
+          user: { id: 'user-1', name: 'Alice', email: 'admin@example.com' },
+          user_id: 'user-1',
+          role: 'admin',
+        },
+      ],
+    });
+
+    renderComponent();
+
+    await waitFor(() => {
+      const invite = screen
+        .getAllByRole('button', { name: /invite member/i })
+        .at(-1)!;
+      expect(invite).toBeDisabled();
+    });
   });
 
   it('disables the leave button when user is the last admin', async () => {

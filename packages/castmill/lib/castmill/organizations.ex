@@ -715,11 +715,38 @@ defmodule Castmill.Organizations do
   def invite_user(organization_id, email, role),
     do: do_invite_user(organization_id, email, role)
 
+  # Whether `extra` more people fit in the organization's `users` quota
+  # (AI agents do not count as people).
+  defp members_room?(organization_id, extra) do
+    members =
+      Castmill.Quotas.get_quota_used_for_organization(organization_id, OrganizationsUsers)
+
+    members + extra <= Castmill.Quotas.get_quota_for_organization(organization_id, :users)
+  end
+
+  defp count_pending_invitations(organization_id) do
+    now = DateTime.utc_now()
+
+    from(i in OrganizationsInvitation,
+      where:
+        i.organization_id == ^organization_id and i.status == "invited" and
+          (is_nil(i.expires_at) or i.expires_at > ^now),
+      select: count(i.id)
+    )
+    |> Repo.one()
+  end
+
   defp do_invite_user(organization_id, email, role) do
     token = generate_invitation_token()
     normalized_role = normalize_role_value(role, :member)
 
     Ecto.Multi.new()
+    # 0) The organization's `users` quota counts members and pending invitations
+    |> Ecto.Multi.run(:check_quota, fn _repo, _changes ->
+      if members_room?(organization_id, count_pending_invitations(organization_id) + 1),
+        do: {:ok, :room},
+        else: {:error, :quota_exceeded}
+    end)
     # 1) Check if the user is already in the organization
     |> Ecto.Multi.run(:check_membership, fn _repo, _changes ->
       if user_in_organization?(organization_id, email) do
@@ -772,6 +799,10 @@ defmodule Castmill.Organizations do
         dispatch_invitation(invitation, notification)
 
         {:ok, invitation.token}
+
+      # The organization's users quota is full (members + pending invitations)
+      {:error, :check_quota, :quota_exceeded, _changes} ->
+        {:error, :quota_exceeded}
 
       # If membership check failed:
       {:error, :check_membership, :already_member, _changes} ->
@@ -1177,6 +1208,9 @@ defmodule Castmill.Organizations do
 
             invitation.status != "invited" ->
               Repo.rollback(:invalid_status)
+
+            not members_room?(invitation.organization_id, 1) ->
+              Repo.rollback(:quota_exceeded)
 
             true ->
               # The user may already have an account in another network (for
