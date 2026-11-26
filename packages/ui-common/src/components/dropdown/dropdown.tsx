@@ -123,12 +123,25 @@ export const Dropdown: Component<DropdownProps> = (props) => {
           aria-label={props.label}
         >
           {props.placeholder && (
-            <option value="" disabled hidden>
+            <option
+              value=""
+              disabled
+              hidden
+              selected={selectedValue() === null}
+            >
               {props.placeholder}
             </option>
           )}
+          {/* Mark the selected option itself: when the items are replaced
+              (e.g. reloaded), the select would otherwise show the first
+              option while the selected value is unchanged. */}
           {props.items.map((item) => (
-            <option value={item.value}>{item.name}</option>
+            <option
+              value={item.value}
+              selected={item.value === selectedValue()}
+            >
+              {item.name}
+            </option>
           ))}
         </select>
         <Show when={shouldShowClear() && !props.disabled}>

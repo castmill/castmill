@@ -2,6 +2,7 @@
 
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@solidjs/testing-library';
+import { createSignal } from 'solid-js';
 import { Dropdown } from './dropdown';
 
 afterEach(() => {
@@ -56,5 +57,44 @@ describe('Dropdown Component', () => {
     expect(handleChange).toHaveBeenCalledWith('2', 'Option 2');
   });
 
-  // Add more tests here to cover other scenarios or edge cases
+  it('keeps showing the selected value when the items are reloaded', () => {
+    const [items, setItems] = createSignal(sampleProps.items);
+
+    render(() => (
+      <Dropdown
+        label="Organizations"
+        items={items()}
+        value="2"
+        onSelectChange={vi.fn()}
+      />
+    ));
+
+    const select = screen.getByRole('combobox') as HTMLSelectElement;
+    expect(select.value).toBe('2');
+
+    // E.g. the organizations are fetched again: same values, new objects.
+    setItems(sampleProps.items.map((item) => ({ ...item })));
+
+    expect(select.value).toBe('2');
+  });
+
+  it('follows a new value after the items are reloaded', () => {
+    const [items, setItems] = createSignal(sampleProps.items);
+    const [value, setValue] = createSignal('1');
+
+    render(() => (
+      <Dropdown
+        label="Organizations"
+        items={items()}
+        value={value()}
+        onSelectChange={vi.fn()}
+      />
+    ));
+
+    const select = screen.getByRole('combobox') as HTMLSelectElement;
+    setItems(sampleProps.items.map((item) => ({ ...item })));
+    setValue('3');
+
+    expect(select.value).toBe('3');
+  });
 });
