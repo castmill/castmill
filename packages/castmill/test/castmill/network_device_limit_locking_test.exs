@@ -99,4 +99,37 @@ defmodule Castmill.NetworkDeviceLimitLockingTest do
     assert Enum.count(results, &(&1 == {:error, :quota_exceeded})) == 1
     assert Devices.count_network_devices(network.id) == 1
   end
+
+  test "registrations in one organization are serialized on its quota", %{
+    network: network,
+    org_a: org_a
+  } do
+    # Without a network limit only the organization's quota applies.
+    {:ok, _} = Networks.set_device_limit(network, nil)
+    Quotas.add_quota_to_organization(org_a.id, :devices, 1)
+
+    # Hold the organization row in another session (as a plan reducing its
+    # screens does) so both registrations queue up behind it.
+    {:ok, holder} =
+      Repo.config()
+      |> Keyword.take([:hostname, :port, :username, :password, :database])
+      |> Postgrex.start_link()
+
+    Postgrex.query!(holder, "BEGIN", [])
+
+    Postgrex.query!(
+      holder,
+      "SELECT id FROM organizations WHERE id = $1 FOR NO KEY UPDATE",
+      [Ecto.UUID.dump!(org_a.id)]
+    )
+
+    tasks = [register_in_own_session(org_a), register_in_own_session(org_a)]
+    await_lock_waiters(2)
+    Postgrex.query!(holder, "COMMIT", [])
+
+    results = Task.await_many(tasks, 10_000)
+
+    assert Enum.count(results, &match?({:ok, _}, &1)) == 1
+    assert Enum.count(results, &(&1 == {:error, :quota_exceeded})) == 1
+  end
 end

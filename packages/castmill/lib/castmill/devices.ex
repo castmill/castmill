@@ -1052,7 +1052,19 @@ defmodule Castmill.Devices do
   end
 
   # Quota enforcement helper functions
+  # Locks the organization row until the device is inserted, so concurrent
+  # registrations in one organization cannot exceed its quota together.
+  # Code that lowers the quota below the devices in use (for example a paid
+  # plan reducing its screens) takes the same lock before counting them.
+  # FOR NO KEY UPDATE does not block inserts that reference the organization.
   defp check_device_quota(organization_id) do
+    from(o in Organization,
+      where: o.id == ^organization_id,
+      lock: "FOR NO KEY UPDATE",
+      select: o.id
+    )
+    |> Repo.one()
+
     current_count = get_quota_used_for_organization(organization_id, Device)
     max_quota = Castmill.Quotas.get_quota_for_organization(organization_id, :devices)
 
