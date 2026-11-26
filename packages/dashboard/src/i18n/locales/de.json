@@ -918,7 +918,24 @@
     "leaveLastOrganizationWarningTitle": "Ihre letzte Organisation verlassen?",
     "leaveLastOrganizationWarningMessage": "Dies ist Ihre einzige Organisation. Wenn Sie sie verlassen, wird Ihr Konto gelöscht und Sie verlieren den gesamten Zugriff auf Castmill. Sie müssen einen Administrator kontaktieren, um erneut eingeladen zu werden. Sind Sie sicher, dass Sie fortfahren möchten?",
     "resend": "Erneut senden",
-    "resendInvitation": "Einladung erneut senden"
+    "resendInvitation": "Einladung erneut senden",
+    "delete": {
+      "title": "Organisation löschen",
+      "description": "Löscht diese Organisation und alles darin endgültig. Das kann nicht rückgängig gemacht werden.",
+      "action": "Organisation löschen",
+      "confirmTitle": "{{name}} löschen?",
+      "confirmDescription": "Die Organisation wird dauerhaft gelöscht. Das kann weder rückgängig gemacht noch wiederhergestellt werden.",
+      "consequenceContent": "Alle Medien, Playlists, Kanäle, Layouts, Feeds und sonstigen Inhalte werden gelöscht und ihre Dateien aus dem Speicher entfernt.",
+      "consequenceDevices": "Ihre Bildschirme werden abgemeldet und zeigen ihre Inhalte nicht mehr an.",
+      "consequenceMembers": "Die Mitglieder verlieren den Zugriff; ihre Konten und anderen Organisationen bleiben unberührt.",
+      "typeName": "Geben Sie {{name}} zur Bestätigung ein",
+      "confirmAction": "Endgültig löschen",
+      "deleting": "Wird gelöscht…",
+      "deleted": "{{name}} wurde gelöscht.",
+      "errorChildren": "Diese Organisation hat untergeordnete Organisationen. Löschen Sie diese zuerst.",
+      "errorName": "Der eingegebene Name stimmt nicht mit dem Namen der Organisation überein.",
+      "errorGeneric": "Die Organisation konnte nicht gelöscht werden. Bitte versuchen Sie es erneut."
+    }
   },
   "login": {
     "title": "Anmelden",
@@ -1726,6 +1743,10 @@
           "descriptionSelf": "Sie wurden aus dem Team {{team_name}} entfernt",
           "titleOthers": "Teammitglied entfernt",
           "descriptionOthers": "{{user_name}} wurde aus dem Team {{team_name}} entfernt"
+        },
+        "organizationDeleted": {
+          "title": "Organisation gelöscht",
+          "description": "Die Organisation '{{organization_name}}' wurde mit ihren Inhalten und Bildschirmen gelöscht."
         }
       }
     }

@@ -553,24 +553,33 @@ defmodule Castmill.Devices do
     # If the device is offline or the message fails, it will detect the deletion
     # on next connection attempt when credentials are rejected
     case result do
-      {:ok, deleted_device} ->
-        Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{deleted_device.id}", %{
-          command: "device_removed"
-        })
-
-        # Notify organization users about device removal
-        Events.notify_device_removal(
-          deleted_device.name,
-          deleted_device.organization_id,
-          deleted_device.id,
-          Keyword.take(opts, [:actor_id])
-        )
-
-      {:error, _} ->
-        :ok
+      {:ok, deleted_device} -> announce_removal(deleted_device, opts)
+      {:error, _} -> :ok
     end
 
     result
+  end
+
+  @doc """
+  Tells a deleted device's player to reset and notifies the organization's
+  users. Call it once the deletion is committed.
+  """
+  def announce_removal(%Device{} = device, opts \\ []) do
+    broadcast_removal(device)
+
+    Events.notify_device_removal(
+      device.name,
+      device.organization_id,
+      device.id,
+      Keyword.take(opts, [:actor_id])
+    )
+  end
+
+  @doc "Tells a removed device's player to reset."
+  def broadcast_removal(%Device{} = device) do
+    Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device.id}", %{
+      command: "device_removed"
+    })
   end
 
   @doc """

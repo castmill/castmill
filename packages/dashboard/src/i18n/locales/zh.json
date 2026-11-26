@@ -981,7 +981,24 @@
       "removeInvitationsMessage": "您确定要移除以下邀请吗？"
     },
     "resend": "重新发送",
-    "resendInvitation": "重新发送邀请"
+    "resendInvitation": "重新发送邀请",
+    "delete": {
+      "title": "删除组织",
+      "description": "永久删除此组织及其中的所有内容。此操作无法撤消。",
+      "action": "删除组织",
+      "confirmTitle": "删除 {{name}}？",
+      "confirmDescription": "这将永久删除该组织，且无法撤消或恢复。",
+      "consequenceContent": "其所有媒体、播放列表、频道、布局、数据源及其他内容都将被删除，文件也会从存储中移除。",
+      "consequenceDevices": "其屏幕将被注销，不再播放其内容。",
+      "consequenceMembers": "其成员将失去访问权限；他们的账户和其他组织不受影响。",
+      "typeName": "输入 {{name}} 以确认",
+      "confirmAction": "永久删除",
+      "deleting": "正在删除…",
+      "deleted": "已删除 {{name}}。",
+      "errorChildren": "此组织有子组织。请先删除子组织。",
+      "errorName": "您输入的名称与组织名称不一致。",
+      "errorGeneric": "无法删除该组织，请重试。"
+    }
   },
   "playlists": {
     "title": "播放列表",
@@ -1731,6 +1748,10 @@
           "descriptionSelf": "您已从团队 {{team_name}} 中移除",
           "titleOthers": "团队成员已移除",
           "descriptionOthers": "{{user_name}} 已从团队 {{team_name}} 中移除"
+        },
+        "organizationDeleted": {
+          "title": "组织已删除",
+          "description": "组织“{{organization_name}}”及其内容和屏幕已被删除。"
         }
       }
     }

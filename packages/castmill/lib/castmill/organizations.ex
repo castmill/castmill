@@ -237,19 +237,161 @@ defmodule Castmill.Organizations do
   end
 
   @doc """
-  Deletes a organization.
+  Deletes an organization and everything in it, for good:
 
-  ## Examples
+    * its devices are removed first, and their players are told to reset
+      once the deletion is committed;
+    * its copied feed media and their stored files are deleted (files other
+      records still use are kept);
+    * the organization and all its resources are deleted (database cascade),
+      with its agents' users;
+    * once committed, its former members are notified, its media files are
+      deleted from storage and the `:organization_deleted` hook runs (e.g.
+      to cancel a subscription).
 
-      iex> delete_organization(organization)
-      {:ok, %Organization{}}
-
-      iex> delete_organization(organization)
-      {:error, %Ecto.Changeset{}}
-
+  Organizations with child organizations are refused
+  (`{:error, :has_child_organizations}`): delete the children first.
+  `opts` may give the `:actor_id` for device removal notifications.
   """
-  def delete_organization(%Organization{} = organization) do
-    Repo.delete(organization)
+  def delete_organization(%Organization{} = organization, opts \\ []),
+    do: delete_organization(organization, opts, 3)
+
+  defp delete_organization(%Organization{id: id} = organization, opts, attempts) do
+    Repo.transaction(fn ->
+      # Feed media downloads store their object and record its key under the
+      # feed's lock (`Feeds.Media`): lock the feeds so no download records a
+      # key after the stored objects are collected. A download finishing
+      # afterwards finds its media gone and deletes its own object.
+      feed_ids = lock_feeds(id)
+
+      # Lock the organization so no child organization, file, device or feed
+      # can be added while it is checked and its contents are collected.
+      Repo.one(from(o in Organization, where: o.id == ^id, lock: "FOR UPDATE")) ||
+        Repo.rollback(:not_found)
+
+      # A feed created before the organization was locked is not locked yet.
+      # Feed writers lock the feed and then reference the organization, so
+      # waiting for it now could deadlock: start again instead, locking it
+      # first.
+      if Repo.exists?(
+           from(f in Castmill.Feeds.Feed,
+             where: f.organization_id == ^id and f.id not in ^feed_ids
+           )
+         ),
+         do: Repo.rollback(:feeds_changed)
+
+      if Repo.exists?(from(o in Organization, where: o.organization_id == ^id)),
+        do: Repo.rollback(:has_child_organizations)
+
+      devices = Repo.all(from(d in Castmill.Devices.Device, where: d.organization_id == ^id))
+      members = member_ids(id)
+      cleanups = stored_objects(id)
+
+      Enum.each(devices, &Repo.delete!/1)
+
+      # Feed media records are kept (unlinked) when an organization goes;
+      # delete them, their stored objects are recorded above.
+      Repo.delete_all(from(m in Castmill.Feeds.FeedMedia, where: m.organization_id == ^id))
+
+      # Agent users belong to exactly one organization, remove them too
+      from(u in Castmill.Accounts.User,
+        join: a in Castmill.Agents.Agent,
+        on: a.user_id == u.id,
+        where: a.organization_id == ^id
+      )
+      |> Repo.delete_all()
+
+      case Repo.delete(organization) do
+        {:ok, deleted} -> {deleted, devices, members, Castmill.StorageCleanups.record(cleanups)}
+        {:error, changeset} -> Repo.rollback(changeset)
+      end
+    end)
+    |> case do
+      {:ok, {deleted, devices, members, cleanup_ids}} ->
+        # Players reset now that their devices are gone.
+        Enum.each(devices, &Castmill.Devices.broadcast_removal/1)
+
+        # Organization notifications cannot reference the deleted
+        # organization: each former member is told directly instead.
+        Enum.each(
+          members,
+          &Castmill.Notifications.Events.notify_organization_deleted(
+            &1,
+            organization.name,
+            length(devices),
+            Keyword.get(opts, :actor_id)
+          )
+        )
+
+        # Delete the stored objects now; anything that fails stays recorded
+        # and is retried by the daily maintenance job.
+        Castmill.StorageCleanups.run_soon(cleanup_ids)
+
+        Castmill.Hooks.trigger_hook(:organization_deleted, %{
+          organization_id: id,
+          network_id: organization.network_id
+        })
+
+        {:ok, deleted}
+
+      {:error, :feeds_changed} when attempts > 1 ->
+        delete_organization(organization, opts, attempts - 1)
+
+      error ->
+        error
+    end
+  end
+
+  defp lock_feeds(organization_id) do
+    from(f in Castmill.Feeds.Feed,
+      where: f.organization_id == ^organization_id,
+      order_by: f.id,
+      lock: "FOR UPDATE",
+      select: f.id
+    )
+    |> Repo.all()
+  end
+
+  # Members to notify (agents' users are deleted with the organization).
+  defp member_ids(organization_id) do
+    from(ou in OrganizationsUsers,
+      left_join: a in Castmill.Agents.Agent,
+      on: a.user_id == ou.user_id and a.organization_id == ^organization_id,
+      where: ou.organization_id == ^organization_id and is_nil(a.id),
+      select: ou.user_id
+    )
+    |> Repo.all()
+  end
+
+  # The stored objects an organization owns: its media files, copied feed
+  # media and its own widgets' assets.
+  defp stored_objects(organization_id) do
+    files =
+      from(f in Castmill.Files.File,
+        where: f.organization_id == ^organization_id,
+        select: f.uri
+      )
+      |> Repo.all()
+      |> Enum.map(&{"file", %{"uri" => &1, "organization_id" => organization_id}})
+
+    feed_media =
+      from(m in Castmill.Feeds.FeedMedia,
+        where: m.organization_id == ^organization_id and not is_nil(m.storage_key),
+        distinct: true,
+        select: m.storage_key
+      )
+      |> Repo.all()
+      |> Enum.map(&{"feed_media", %{"key" => &1}})
+
+    widget_assets =
+      from(w in Castmill.Widgets.Widget,
+        where: w.organization_id == ^organization_id,
+        select: w.slug
+      )
+      |> Repo.all()
+      |> Enum.map(&{"widget_assets", %{"slug" => &1}})
+
+    files ++ feed_media ++ widget_assets
   end
 
   @doc """

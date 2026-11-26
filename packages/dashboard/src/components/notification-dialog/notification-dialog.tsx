@@ -357,6 +357,7 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
       case 'device_registration':
         return '📱';
       case 'device_removal':
+      case 'organization_deleted':
         return '🗑️';
       case 'media_transcoded':
       case 'media_uploaded':

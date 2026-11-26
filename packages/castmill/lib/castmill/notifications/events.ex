@@ -48,6 +48,22 @@ defmodule Castmill.Notifications.Events do
   end
 
   @doc """
+  Tells a former member that an organization was deleted. A user
+  notification: the organization no longer exists to reference.
+  """
+  def notify_organization_deleted(user_id, organization_name, device_count, actor_id \\ nil) do
+    Notifications.create_user_notification(%{
+      user_id: user_id,
+      title_key: "organizations.notifications.types.organizationDeleted.title",
+      description_key: "organizations.notifications.types.organizationDeleted.description",
+      type: "organization_deleted",
+      actor_id: actor_id,
+      actor_type: if(actor_id, do: "user", else: "system"),
+      metadata: %{organization_name: organization_name, device_count: device_count}
+    })
+  end
+
+  @doc """
   Sends a notification when a user is invited to a team.
 
   ## Parameters

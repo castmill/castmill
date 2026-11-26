@@ -1857,6 +1857,9 @@ defmodule Castmill.Resources do
     end
   end
 
+  @doc "Deletes a file's stored object (local disk or S3)."
+  def delete_stored_file(%Castmill.Files.File{} = file), do: delete_file_from_storage(file)
+
   defp delete_file_from_storage(%Castmill.Files.File{uri: uri, organization_id: organization_id}) do
     case Application.get_env(:castmill, :file_storage) do
       :local ->

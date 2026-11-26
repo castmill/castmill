@@ -16,6 +16,10 @@ defmodule Castmill.Workers.FeedMediaCleanup do
   def process(%BullMQ.Job{}) do
     result = Media.cleanup()
     Logger.info("[FeedMediaCleanup] #{inspect(result)}")
+
+    # Retry stored objects left by deletions (e.g. of organizations)
+    storage = Castmill.StorageCleanups.run()
+    Logger.info("[FeedMediaCleanup] storage cleanups: #{inspect(storage)}")
     :ok
   end
 

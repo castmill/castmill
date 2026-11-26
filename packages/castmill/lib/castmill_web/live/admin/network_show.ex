@@ -508,9 +508,18 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
 
   def handle_event("delete", %{"id" => id, "resource" => "organizations"}, socket) do
     organization = Organizations.get_organization!(id)
-    {:ok, _} = Organizations.delete_organization(organization)
 
-    {:noreply, stream_delete(socket, :rows, organization)}
+    case Organizations.delete_organization(organization) do
+      {:ok, _} ->
+        {:noreply, stream_delete(socket, :rows, organization)}
+
+      {:error, :has_child_organizations} ->
+        {:noreply,
+         put_flash(socket, :error, "Delete this organization's child organizations first.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "The organization could not be deleted.")}
+    end
   end
 
   def handle_event("delete", %{"id" => id, "resource" => "invitations"}, socket) do
