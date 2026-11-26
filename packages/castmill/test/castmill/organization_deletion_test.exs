@@ -59,6 +59,8 @@ defmodule Castmill.OrganizationDeletionTest do
     device = device_fixture(%{organization_id: organization.id})
     Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device.id}")
     path = stored_file(organization)
+    member = user_fixture(%{network_id: network.id})
+    {:ok, _} = Organizations.add_user(organization.id, member.id, :member)
 
     test_pid = self()
 
@@ -83,6 +85,19 @@ defmodule Castmill.OrganizationDeletionTest do
     org_id = organization.id
     network_id = network.id
     assert_receive {:organization_deleted, %{organization_id: ^org_id, network_id: ^network_id}}
+
+    # Former members are told directly: the organization cannot be referenced.
+    name = organization.name
+
+    assert [
+             %{
+               type: "organization_deleted",
+               metadata: %{"organization_name" => ^name, "device_count" => 1}
+             }
+           ] =
+             Repo.all(
+               from(n in Castmill.Notifications.Notification, where: n.user_id == ^member.id)
+             )
   end
 
   test "refuses organizations with child organizations", %{

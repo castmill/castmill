@@ -1757,6 +1757,10 @@
           "descriptionSelf": "You have been removed from team {{team_name}}",
           "titleOthers": "Team Member Removed",
           "descriptionOthers": "{{user_name}} has been removed from team {{team_name}}"
+        },
+        "organizationDeleted": {
+          "title": "Organization deleted",
+          "description": "Organization '{{organization_name}}' was deleted with its content and screens."
         }
       }
     }

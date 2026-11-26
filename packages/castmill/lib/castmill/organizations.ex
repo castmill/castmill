@@ -239,13 +239,15 @@ defmodule Castmill.Organizations do
   @doc """
   Deletes an organization and everything in it, for good:
 
-    * its devices are removed first, so their players are told and reset;
+    * its devices are removed first, and their players are told to reset
+      once the deletion is committed;
     * its copied feed media and their stored files are deleted (files other
       records still use are kept);
     * the organization and all its resources are deleted (database cascade),
       with its agents' users;
-    * once committed, its media files are deleted from storage and the
-      `:organization_deleted` hook runs (e.g. to cancel a subscription).
+    * once committed, its former members are notified, its media files are
+      deleted from storage and the `:organization_deleted` hook runs (e.g.
+      to cancel a subscription).
 
   Organizations with child organizations are refused
   (`{:error, :has_child_organizations}`): delete the children first.
@@ -253,15 +255,25 @@ defmodule Castmill.Organizations do
   """
   def delete_organization(%Organization{id: id} = organization, opts \\ []) do
     Repo.transaction(fn ->
-      # Lock the organization so no child organization, file or device can be
-      # added while it is checked and its contents are collected.
+      # Feed media downloads store their object and record its key under the
+      # feed's lock (`Feeds.Media`): lock the feeds so no download records a
+      # key after the stored objects are collected. A download finishing
+      # afterwards finds its media gone and deletes its own object.
+      lock_feeds(id)
+
+      # Lock the organization so no child organization, file, device or feed
+      # can be added while it is checked and its contents are collected.
       Repo.one(from(o in Organization, where: o.id == ^id, lock: "FOR UPDATE")) ||
         Repo.rollback(:not_found)
+
+      # Feeds created before the organization was locked.
+      lock_feeds(id)
 
       if Repo.exists?(from(o in Organization, where: o.organization_id == ^id)),
         do: Repo.rollback(:has_child_organizations)
 
       devices = Repo.all(from(d in Castmill.Devices.Device, where: d.organization_id == ^id))
+      members = member_ids(id)
       cleanups = stored_objects(id)
 
       Enum.each(devices, &Repo.delete!/1)
@@ -279,15 +291,25 @@ defmodule Castmill.Organizations do
       |> Repo.delete_all()
 
       case Repo.delete(organization) do
-        {:ok, deleted} -> {deleted, devices, Castmill.StorageCleanups.record(cleanups)}
+        {:ok, deleted} -> {deleted, devices, members, Castmill.StorageCleanups.record(cleanups)}
         {:error, changeset} -> Repo.rollback(changeset)
       end
     end)
     |> case do
-      {:ok, {deleted, devices, cleanup_ids}} ->
+      {:ok, {deleted, devices, members, cleanup_ids}} ->
+        # Players reset now that their devices are gone.
+        Enum.each(devices, &Castmill.Devices.broadcast_removal/1)
+
+        # Organization notifications cannot reference the deleted
+        # organization: each former member is told directly instead.
         Enum.each(
-          devices,
-          &Castmill.Devices.announce_removal(&1, Keyword.take(opts, [:actor_id]))
+          members,
+          &Castmill.Notifications.Events.notify_organization_deleted(
+            &1,
+            organization.name,
+            length(devices),
+            Keyword.get(opts, :actor_id)
+          )
         )
 
         # Delete the stored objects now; anything that fails stays recorded
@@ -304,6 +326,27 @@ defmodule Castmill.Organizations do
       error ->
         error
     end
+  end
+
+  defp lock_feeds(organization_id) do
+    from(f in Castmill.Feeds.Feed,
+      where: f.organization_id == ^organization_id,
+      order_by: f.id,
+      lock: "FOR UPDATE",
+      select: f.id
+    )
+    |> Repo.all()
+  end
+
+  # Members to notify (agents' users are deleted with the organization).
+  defp member_ids(organization_id) do
+    from(ou in OrganizationsUsers,
+      left_join: a in Castmill.Agents.Agent,
+      on: a.user_id == ou.user_id and a.organization_id == ^organization_id,
+      where: ou.organization_id == ^organization_id and is_nil(a.id),
+      select: ou.user_id
+    )
+    |> Repo.all()
   end
 
   # The stored objects an organization owns: its media files, copied feed

@@ -1747,6 +1747,10 @@
           "descriptionSelf": "تمت إزالتك من الفريق {{team_name}}",
           "titleOthers": "تمت إزالة عضو الفريق",
           "descriptionOthers": "تمت إزالة {{user_name}} من الفريق {{team_name}}"
+        },
+        "organizationDeleted": {
+          "title": "تم حذف المؤسسة",
+          "description": "تم حذف المؤسسة '{{organization_name}}' مع محتواها وشاشاتها."
         }
       }
     }

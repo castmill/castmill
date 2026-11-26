@@ -1747,6 +1747,10 @@
           "descriptionSelf": "您已从团队 {{team_name}} 中移除",
           "titleOthers": "团队成员已移除",
           "descriptionOthers": "{{user_name}} 已从团队 {{team_name}} 中移除"
+        },
+        "organizationDeleted": {
+          "title": "组织已删除",
+          "description": "组织“{{organization_name}}”及其内容和屏幕已被删除。"
         }
       }
     }

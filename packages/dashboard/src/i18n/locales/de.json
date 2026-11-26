@@ -1742,6 +1742,10 @@
           "descriptionSelf": "Sie wurden aus dem Team {{team_name}} entfernt",
           "titleOthers": "Teammitglied entfernt",
           "descriptionOthers": "{{user_name}} wurde aus dem Team {{team_name}} entfernt"
+        },
+        "organizationDeleted": {
+          "title": "Organisation gelöscht",
+          "description": "Die Organisation '{{organization_name}}' wurde mit ihren Inhalten und Bildschirmen gelöscht."
         }
       }
     }

@@ -1748,6 +1748,10 @@
           "descriptionSelf": "チーム{{team_name}}から削除されました",
           "titleOthers": "チームメンバーが削除されました",
           "descriptionOthers": "{{user_name}}がチーム{{team_name}}から削除されました"
+        },
+        "organizationDeleted": {
+          "title": "組織が削除されました",
+          "description": "組織「{{organization_name}}」はそのコンテンツと画面とともに削除されました。"
         }
       }
     }

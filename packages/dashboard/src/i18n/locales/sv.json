@@ -1742,6 +1742,10 @@
           "descriptionSelf": "Du har tagits bort från teamet {{team_name}}",
           "titleOthers": "Teammedlem borttagen",
           "descriptionOthers": "{{user_name}} har tagits bort från teamet {{team_name}}"
+        },
+        "organizationDeleted": {
+          "title": "Organisation borttagen",
+          "description": "Organisationen '{{organization_name}}' togs bort tillsammans med dess innehåll och skärmar."
         }
       }
     }

@@ -552,9 +552,7 @@ defmodule Castmill.Devices do
   users. Call it once the deletion is committed.
   """
   def announce_removal(%Device{} = device, opts \\ []) do
-    Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device.id}", %{
-      command: "device_removed"
-    })
+    broadcast_removal(device)
 
     Events.notify_device_removal(
       device.name,
@@ -562,6 +560,13 @@ defmodule Castmill.Devices do
       device.id,
       Keyword.take(opts, [:actor_id])
     )
+  end
+
+  @doc "Tells a removed device's player to reset."
+  def broadcast_removal(%Device{} = device) do
+    Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device.id}", %{
+      command: "device_removed"
+    })
   end
 
   @doc """

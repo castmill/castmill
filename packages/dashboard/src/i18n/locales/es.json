@@ -1748,6 +1748,10 @@
           "descriptionSelf": "Has sido eliminado del equipo {{team_name}}",
           "titleOthers": "Miembro del equipo eliminado",
           "descriptionOthers": "{{user_name}} ha sido eliminado del equipo {{team_name}}"
+        },
+        "organizationDeleted": {
+          "title": "Organización eliminada",
+          "description": "La organización '{{organization_name}}' se eliminó junto con su contenido y sus pantallas."
         }
       }
     }

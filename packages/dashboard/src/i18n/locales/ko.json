@@ -1747,6 +1747,10 @@
           "descriptionSelf": "{{team_name}} 팀에서 제거되었습니다",
           "titleOthers": "팀 멤버 제거됨",
           "descriptionOthers": "{{user_name}}님이 {{team_name}} 팀에서 제거되었습니다"
+        },
+        "organizationDeleted": {
+          "title": "조직 삭제됨",
+          "description": "조직 '{{organization_name}}'이(가) 콘텐츠 및 화면과 함께 삭제되었습니다."
         }
       }
     }
