@@ -73,6 +73,54 @@ defmodule CastmillWeb.UserAuthorizationTest do
     assert Accounts.get_user(actor.id).name == "New name"
   end
 
+  test "users keep every account action on their own account", %{
+    conn: conn,
+    network: network,
+    actor: actor
+  } do
+    base = "/dashboard/users/#{actor.id}"
+
+    # Add a passkey through the challenge flow.
+    %{"challenge" => challenge, "challenge_token" => token} =
+      json_response(post(conn, "#{base}/credentials/challenge", %{}), 200)
+
+    client_data =
+      Jason.encode!(%{
+        "type" => "webauthn.create",
+        "challenge" => challenge,
+        "origin" => network.domain
+      })
+
+    assert %{"credential" => %{"id" => credential_id}} =
+             conn
+             |> post("#{base}/credentials", %{
+               "credential_id" => "my-key",
+               "public_key_spki" => Base.encode64("key"),
+               "client_data_json" => client_data,
+               "challenge_token" => token
+             })
+             |> json_response(201)
+
+    assert json_response(
+             put(conn, "#{base}/credentials/#{credential_id}", %{"name" => "Laptop"}),
+             200
+           )
+
+    assert %{"credentials" => [%{"id" => ^credential_id, "name" => "Laptop"}]} =
+             json_response(get(conn, "#{base}/credentials"), 200)
+
+    assert response(delete(conn, "#{base}/credentials/#{credential_id}"), 204)
+    assert Accounts.list_user_credentials(actor.id) == []
+
+    assert json_response(
+             post(conn, "#{base}/send-email-verification", %{"email" => "new@example.com"}),
+             200
+           )
+
+    assert response(delete(conn, base), 204)
+    refute Accounts.get_user(actor.id)
+  end
+
   test "members cannot change roles; organization admins can", %{
     conn: conn,
     network: network,
