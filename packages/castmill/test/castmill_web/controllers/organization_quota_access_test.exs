@@ -32,26 +32,37 @@ defmodule CastmillWeb.OrganizationQuotaAccessTest do
     before = Quotas.get_quota_for_organization(organization.id, "devices")
     path = "/dashboard/organizations/#{organization.id}/quotas"
 
-    assert refused?(fn ->
-             post(conn, path, %{"quota" => %{"resource" => "devices", "max" => 1_000}})
-           end)
+    for {method, url} <- [{:post, path}, {:put, "#{path}/devices"}, {:patch, "#{path}/devices"}] do
+      conn =
+        dispatch(conn, @endpoint, method, url, %{
+          "quota" => %{"resource" => "devices", "max" => 1_000}
+        })
 
-    assert refused?(fn -> put(conn, "#{path}/devices", %{"quota" => %{"max" => 1_000}}) end)
+      assert %{"error" => "Quotas are read-only"} = json_response(conn, 405)
+      assert get_resp_header(conn, "allow") == ["GET"]
+    end
 
     assert Quotas.get_quota_for_organization(organization.id, "devices") == before
   end
 
-  # No quota route matches, so the request ends in an error status (from
-  # whichever generic route catches it).
-  defp refused?(request) do
-    status =
-      try do
-        request.().status
-      rescue
-        error -> Plug.Exception.status(error)
-      end
+  test "organization admins cannot move their organization to another network", %{
+    conn: conn,
+    organization: organization
+  } do
+    other_network = network_fixture()
 
-    status >= 400
+    conn =
+      put(conn, "/dashboard/organizations/#{organization.id}", %{
+        "name" => "Renamed organization",
+        "network_id" => other_network.id,
+        "organization_id" => Ecto.UUID.generate()
+      })
+
+    assert json_response(conn, 200)
+    organization = Castmill.Organizations.get_organization!(organization.id)
+    assert organization.name == "Renamed organization"
+    assert organization.network_id != other_network.id
+    assert is_nil(organization.organization_id)
   end
 
   test "quotas can still be read", %{conn: conn, organization: organization} do

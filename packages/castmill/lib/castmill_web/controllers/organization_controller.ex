@@ -247,8 +247,19 @@ defmodule CastmillWeb.OrganizationController do
     render(conn, :show, organization: organization)
   end
 
+  # Organization admins change these from the dashboard. Moving an
+  # organization (network or parent organization) is only for trusted
+  # callers (root tools, the token-authenticated API): it would escape the
+  # network's limits.
+  @dashboard_update_fields ~w(name logo_media_id default_role visibility_mode)
+
   def update(conn, %{"id" => id} = params) do
     organization = Organizations.get_organization!(id)
+
+    params =
+      if String.starts_with?(conn.request_path, "/dashboard/"),
+        do: Map.take(params, @dashboard_update_fields),
+        else: params
 
     with {:ok, %Organization{} = organization} <-
            Organizations.update_organization(organization, params) do

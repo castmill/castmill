@@ -75,13 +75,22 @@ defmodule CastmillWeb.UploadController do
       |> halt()
     else
       # Check the organization's storage quota and its network's storage limit
-      if Castmill.Quotas.check_storage(organization_id, file_size) != :ok do
+      storage_error =
+        case Castmill.Quotas.check_storage(organization_id, file_size) do
+          :ok ->
+            nil
+
+          {:error, :network_storage_exceeded} ->
+            "Uploading this file would exceed your network's storage limit"
+
+          {:error, _} ->
+            "Uploading this file would exceed your storage quota limit"
+        end
+
+      if storage_error do
         conn
         |> put_status(:forbidden)
-        |> json(%{
-          error: "Storage quota exceeded",
-          message: "Uploading this file would exceed your storage quota limit"
-        })
+        |> json(%{error: "Storage quota exceeded", message: storage_error})
         |> halt()
       else
         case upload_file(path, filename) do

@@ -102,6 +102,12 @@ defmodule CastmillWeb.Live.Admin.DeviceForm do
          socket
          |> put_flash(:error, "Invalid pincode. Please try again.")
          |> push_patch(to: socket.assigns.patch)}
+
+      {:error, :quota_exceeded} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Device quota exceeded for this organization or its network.")
+         |> push_patch(to: socket.assigns.patch)}
     end
   end
 

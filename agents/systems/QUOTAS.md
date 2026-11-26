@@ -46,9 +46,19 @@ limit); `Castmill.Quotas.get_network_storage_used/1` returns the bytes in use.
 
 ## Changing Quotas
 
-The dashboard API (`/dashboard/organizations/:id/quotas`) is read-only.
-Quotas are changed server-side only, through `Castmill.Quotas` (root admin
-tools, network tooling, SaaS add-ons).
+The dashboard API (`/dashboard/organizations/:id/quotas`) is read-only; its
+retired write routes answer 405. Quotas are changed server-side only:
+
+- Phoenix Admin: an organization's **Quotas** tab sets or removes overrides
+  (`Castmill.Quotas.set_organization_quota/3`), and a network's **Limits** tab
+  sets its device and storage limits.
+- Code: `Castmill.Quotas` and `Castmill.Networks.set_device_limit/2` /
+  `set_storage_limit/2` (network tooling, SaaS add-ons).
+
+The dashboard cannot move an organization to another network or parent
+organization (only `name`, `logo_media_id`, `default_role` and
+`visibility_mode` are accepted there), so organizations cannot leave their
+network's limits.
 
 ## Core Modules
 

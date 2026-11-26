@@ -78,8 +78,15 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
           icon: "hero-cog-solid",
           href: "widgets",
           form: nil
+        },
+        %{
+          name: "Quotas",
+          icon: "hero-adjustments-horizontal-solid",
+          href: "quotas",
+          form: nil
         }
       ])
+      |> assign(:quota_rows, [])
       |> assign(:selected_tab, nil)
 
     {:ok, socket}
@@ -107,7 +114,37 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
           if Map.has_key?(assigns, :base_resource_url), do: @base_resource_url, else: nil
         }
         actions={tab_actions(@selected_tab)}
-      />
+      >
+        <:resource_content :if={@selected_tab == "quotas"}>
+          <p class="py-2 text-sm text-gray-400">
+            An override replaces this organization's plan for that resource. Leave it empty to use
+            the plan. Storage and upload sizes are in MB.
+          </p>
+          <.table id="organization-quotas" rows={@quota_rows}>
+            <:col :let={row} label="Resource"><%= row.resource %></:col>
+            <:col :let={row} label="Current limit"><%= row.effective %></:col>
+            <:col :let={row} label="Override">
+              <form
+                id={"quota-#{row.resource}"}
+                phx-submit="save_quota"
+                class="flex items-center gap-2"
+              >
+                <input type="hidden" name="resource" value={row.resource} />
+                <input
+                  type="number"
+                  name="max"
+                  min="0"
+                  value={row.override}
+                  placeholder="Plan"
+                  aria-label={"Override for #{row.resource}"}
+                  class="w-28 rounded-md text-gray-900"
+                />
+                <.button>Save</.button>
+              </form>
+            </:col>
+          </.table>
+        </:resource_content>
+      </.show_details>
     </div>
     """
   end
@@ -124,6 +161,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
       |> assign(:base_resource_url, ~p"/admin/#{resource}")
       |> assign(:selected_tab, selected_tab)
       |> assign(:resource_cols, cols)
+      |> assign(:quota_rows, if(selected_tab == "quotas", do: quota_rows(id), else: []))
 
     socket =
       if Map.has_key?(Map.get(socket.assigns, :streams, %{}), :rows) do
@@ -155,6 +193,23 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   end
 
   def handle_event("search", _params, socket), do: {:noreply, socket}
+
+  def handle_event("save_quota", %{"resource" => resource, "max" => max}, socket) do
+    organization_id = socket.assigns.resource.id
+
+    with %{} = row <- Enum.find(socket.assigns.quota_rows, &(&1.resource == resource)),
+         {:ok, value} <- parse_quota(max),
+         :ok <- Castmill.Quotas.set_organization_quota(organization_id, row.key, value) do
+      {:noreply,
+       socket
+       |> put_flash(:info, "Quota for #{resource} saved.")
+       |> assign(:quota_rows, quota_rows(organization_id))}
+    else
+      _ ->
+        {:noreply,
+         put_flash(socket, :error, "Enter a whole number of 0 or more, or leave it empty.")}
+    end
+  end
 
   def handle_event("delete", %{"id" => id, "resource" => "teams"}, socket) do
     team = Teams.get_team(id)
@@ -383,6 +438,36 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   end
 
   # Row actions this page handles (see the "delete" handle_event clauses).
+  defp parse_quota(value) do
+    case String.trim(value || "") do
+      "" ->
+        {:ok, nil}
+
+      text ->
+        case Integer.parse(text) do
+          {n, ""} when n >= 0 -> {:ok, n}
+          _ -> :error
+        end
+    end
+  end
+
+  defp quota_rows(organization_id) do
+    overrides =
+      organization_id
+      |> Castmill.Quotas.list_quotas()
+      |> Map.new(&{&1.resource, &1.max})
+
+    for resource <- Castmill.Quotas.organization_quota_resources() do
+      %{
+        id: to_string(resource),
+        key: resource,
+        resource: to_string(resource),
+        effective: Castmill.Quotas.get_quota_for_organization(organization_id, resource),
+        override: Map.get(overrides, resource)
+      }
+    end
+  end
+
   defp tab_actions("organizations"), do: [:edit]
   defp tab_actions("teams"), do: [:delete]
   defp tab_actions("users"), do: [:edit, :delete]

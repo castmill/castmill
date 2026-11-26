@@ -758,6 +758,10 @@ defmodule CastmillWeb.Router do
       # organization may use, so they are only changed server-side (root
       # tools, network tooling, licence subscriptions).
       resources "/quotas", OrganizationQuotaController, only: [:index, :show]
+      # Retired writes: answered explicitly instead of by the generic routes.
+      post("/quotas", OrganizationQuotaController, :read_only)
+      put("/quotas/:id", OrganizationQuotaController, :read_only)
+      patch("/quotas/:id", OrganizationQuotaController, :read_only)
 
       # Tags - flexible resource organization
       get("/tags", TagController, :list_tags)

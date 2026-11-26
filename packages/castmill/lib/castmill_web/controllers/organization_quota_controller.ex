@@ -40,6 +40,14 @@ defmodule CastmillWeb.OrganizationQuotaController do
     end
   end
 
+  @doc "Quotas are read-only through the dashboard API."
+  def read_only(conn, _params) do
+    conn
+    |> put_resp_header("allow", "GET")
+    |> put_status(:method_not_allowed)
+    |> json(%{error: "Quotas are read-only"})
+  end
+
   def check_quota_usage(conn, %{"organization_id" => organization_id, "resource" => resource_str}) do
     schema_module = Map.fetch!(@resource_map, resource_str)
 

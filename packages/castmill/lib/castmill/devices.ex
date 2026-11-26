@@ -35,8 +35,10 @@ defmodule Castmill.Devices do
     organization_id = Map.get(attrs, "organization_id") || Map.get(attrs, :organization_id)
 
     insert = fn ->
-      with :ok <- check_device_quota(organization_id),
-           :ok <- check_network_device_limit(organization_id) do
+      # The network check comes first: when the network has a limit it locks
+      # the network row, which also serializes the organization count below.
+      with :ok <- check_network_device_limit(organization_id),
+           :ok <- check_device_quota(organization_id) do
         %Device{} |> Device.changeset(attrs) |> Repo.insert()
       end
     end
@@ -1065,24 +1067,29 @@ defmodule Castmill.Devices do
   # example to its licensed screens). Locks the network row so concurrent
   # registrations in its organizations cannot exceed the limit together.
   defp check_network_device_limit(organization_id) do
-    network_id =
-      from(o in Organization, where: o.id == ^organization_id, select: o.network_id)
+    network =
+      from(o in Organization,
+        join: n in assoc(o, :network),
+        where: o.id == ^organization_id,
+        select: %{id: n.id, max_devices: n.max_devices}
+      )
       |> Repo.one()
 
-    network =
-      network_id &&
-        from(n in Castmill.Networks.Network,
-          where: n.id == ^network_id,
-          lock: "FOR UPDATE",
-          select: %{id: n.id, max_devices: n.max_devices}
-        )
-        |> Repo.one()
-
+    # Lock only networks that have a limit, and with FOR NO KEY UPDATE so
+    # inserts referencing the network (organizations, users) are not blocked.
     case network do
       %{max_devices: max} when is_integer(max) ->
-        if count_network_devices(network.id) < max,
-          do: :ok,
-          else: {:error, :quota_exceeded}
+        locked_max =
+          from(n in Castmill.Networks.Network,
+            where: n.id == ^network.id,
+            lock: "FOR NO KEY UPDATE",
+            select: n.max_devices
+          )
+          |> Repo.one()
+
+        if is_integer(locked_max) and count_network_devices(network.id) >= locked_max,
+          do: {:error, :quota_exceeded},
+          else: :ok
 
       _ ->
         :ok

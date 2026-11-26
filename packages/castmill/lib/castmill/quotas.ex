@@ -403,14 +403,40 @@ defmodule Castmill.Quotas do
   end
 
   @doc """
+  Sets an organization's override for `resource`, or removes it with `nil`
+  so the organization's plan applies again. For trusted callers (root admin
+  tools, SaaS add-ons); the dashboard API cannot change quotas.
+  """
+  def set_organization_quota(organization_id, resource, nil) do
+    from(q in QuotasOrganizations,
+      where: q.organization_id == ^organization_id and q.resource == ^resource
+    )
+    |> Repo.delete_all()
+
+    :ok
+  end
+
+  def set_organization_quota(organization_id, resource, max) when is_integer(max) and max >= 0 do
+    add_quota_to_organization(organization_id, resource, max)
+    :ok
+  end
+
+  @doc "The resources organizations can have quotas for."
+  def organization_quota_resources, do: Ecto.Enum.values(QuotasOrganizations, :resource)
+
+  @doc """
     Add a quota for an organization.
   """
   def add_quota_to_organization(organization_id, resource, max) do
-    Repo.insert!(%QuotasOrganizations{
-      organization_id: organization_id,
-      resource: resource,
-      max: max
-    })
+    Repo.insert!(
+      %QuotasOrganizations{
+        organization_id: organization_id,
+        resource: resource,
+        max: max
+      },
+      on_conflict: {:replace, [:max, :updated_at]},
+      conflict_target: [:organization_id, :resource]
+    )
   end
 
   @doc """

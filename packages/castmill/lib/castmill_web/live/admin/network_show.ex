@@ -99,8 +99,15 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
           icon: "hero-puzzle-piece-solid",
           href: "integrations",
           form: nil
+        },
+        %{
+          name: "Limits",
+          icon: "hero-scale-solid",
+          href: "limits",
+          form: nil
         }
       ])
+      |> assign(:limits, nil)
       |> assign(:selected_tab, nil)
       |> assign(:selected_integration, nil)
       |> assign(:setup_link, nil)
@@ -160,6 +167,43 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
             </.link>
             tab and choose New on its Users tab.
           </:tab_hint>
+          <:resource_content :if={@selected_tab == "limits" && @limits}>
+            <form id="network-limits-form" phx-submit="save_limits" class="space-y-4 py-4">
+              <p class="text-sm text-gray-300">
+                Limits for all of this network's organizations together. Leave a field empty for no
+                limit. A licence subscription may also set them.
+              </p>
+              <div>
+                <label for="network-max-devices" class="block text-sm font-semibold">
+                  Devices (<%= @limits.devices %> registered)
+                </label>
+                <input
+                  id="network-max-devices"
+                  name="max_devices"
+                  type="number"
+                  min="0"
+                  value={@resource.max_devices}
+                  placeholder="No limit"
+                  class="mt-2 rounded-md text-gray-900"
+                />
+              </div>
+              <div>
+                <label for="network-max-storage" class="block text-sm font-semibold">
+                  Storage in MB (<%= @limits.storage_mb %> MB used)
+                </label>
+                <input
+                  id="network-max-storage"
+                  name="max_storage_mb"
+                  type="number"
+                  min="0"
+                  value={@resource.max_storage_mb}
+                  placeholder="No limit"
+                  class="mt-2 rounded-md text-gray-900"
+                />
+              </div>
+              <.button>Save limits</.button>
+            </form>
+          </:resource_content>
           <:resource_content :if={@selected_tab == "admins"}>
             <form id="network-admin-form" phx-submit="add_network_admin" class="py-4">
               <p class="mb-2 text-sm text-gray-300">
@@ -342,7 +386,8 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
      |> assign(:base_resource_url, base_resource_url)
      |> reset_stream(:rows, rows)
      |> assign(:selected_tab, resource)
-     |> assign(:resource_cols, cols)}
+     |> assign(:resource_cols, cols)
+     |> assign(:limits, if(resource == "limits", do: network_usage(id)))}
   end
 
   def handle_params(%{"id" => id}, _, socket) do
@@ -441,6 +486,25 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
   end
 
   def handle_event("search", _params, socket), do: {:noreply, socket}
+
+  def handle_event("save_limits", params, socket) do
+    network = socket.assigns.resource
+
+    with {:ok, max_devices} <- parse_limit(params["max_devices"]),
+         {:ok, max_storage_mb} <- parse_limit(params["max_storage_mb"]),
+         {:ok, network} <- Networks.set_device_limit(network, max_devices),
+         {:ok, network} <- Networks.set_storage_limit(network, max_storage_mb) do
+      {:noreply,
+       socket
+       |> assign(:resource, network)
+       |> assign(:limits, network_usage(network.id))
+       |> put_flash(:info, "Network limits saved.")}
+    else
+      _ ->
+        {:noreply,
+         put_flash(socket, :error, "Limits must be whole numbers of 0 or more, or empty.")}
+    end
+  end
 
   def handle_event("delete", %{"id" => id, "resource" => "organizations"}, socket) do
     organization = Organizations.get_organization!(id)
@@ -828,6 +892,26 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
   end
 
   # Row actions this page handles (see the "delete" handle_event clauses).
+  defp parse_limit(value) do
+    case String.trim(value || "") do
+      "" ->
+        {:ok, nil}
+
+      text ->
+        case Integer.parse(text) do
+          {n, ""} when n >= 0 -> {:ok, n}
+          _ -> :error
+        end
+    end
+  end
+
+  defp network_usage(network_id) do
+    %{
+      devices: Castmill.Devices.count_network_devices(network_id),
+      storage_mb: div(Castmill.Quotas.get_network_storage_used(network_id), 1024 * 1024)
+    }
+  end
+
   defp tab_actions("organizations"), do: [:edit, :delete]
   defp tab_actions("invitations"), do: [:delete]
   defp tab_actions("users"), do: [:edit]
