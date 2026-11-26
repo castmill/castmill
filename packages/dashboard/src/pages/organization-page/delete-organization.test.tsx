@@ -93,6 +93,47 @@ describe('DeleteOrganization', () => {
     );
   });
 
+  it('leaves the deleted organization even if reloading fails', async () => {
+    vi.mocked(OrganizationsService.deleteOrganization).mockResolvedValue(
+      undefined
+    );
+    vi.mocked(OrganizationsService.getAll).mockRejectedValue(
+      new Error('offline')
+    );
+
+    const { input, confirm } = openDialog();
+    fireEvent.input(input, { target: { value: 'Corner Shop' } });
+    fireEvent.click(confirm());
+
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith('/', { replace: true })
+    );
+    expect(setStore).toHaveBeenCalledWith(
+      'organizations',
+      expect.objectContaining({ selectedId: null })
+    );
+    expect(mockToast.error).not.toHaveBeenCalled();
+  });
+
+  it('cannot be dismissed while deleting', async () => {
+    let finish: () => void = () => {};
+    vi.mocked(OrganizationsService.deleteOrganization).mockReturnValue(
+      new Promise<void>((resolve) => (finish = resolve))
+    );
+    vi.mocked(OrganizationsService.getAll).mockResolvedValue([]);
+
+    const { input, confirm } = openDialog();
+    fireEvent.input(input, { target: { value: 'Corner Shop' } });
+    fireEvent.click(confirm());
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(
+      screen.getByText('organization.delete.deleting')
+    ).toBeInTheDocument();
+    finish();
+    await waitFor(() => expect(navigate).toHaveBeenCalled());
+  });
+
   it('explains why the server refused', async () => {
     vi.mocked(OrganizationsService.deleteOrganization).mockRejectedValue(
       Object.assign(new Error('refused'), { code: 'has_child_organizations' })

@@ -415,11 +415,6 @@ defmodule Castmill.Feeds.Media do
     purge_where(dynamic([m], is_nil(m.feed_id) or is_nil(m.organization_id)), nil)
   end
 
-  @doc "Deletes all of an organization's media records and the files no other record uses."
-  def purge_organization(organization_id) do
-    purge_where(dynamic([m], m.organization_id == ^organization_id), nil)
-  end
-
   def purge_orphans(organization_id) do
     purge_where(dynamic([m], is_nil(m.feed_id) and m.organization_id == ^organization_id), nil)
   end

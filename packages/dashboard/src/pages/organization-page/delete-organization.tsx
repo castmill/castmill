@@ -12,6 +12,7 @@ import { getUser } from '../../components/auth';
 import { OrganizationsService } from '../../services/organizations.service';
 import { setStore } from '../../store';
 import { useI18n } from '../../i18n';
+import { Organization } from '../../interfaces/organization';
 import styles from './delete-organization.module.scss';
 
 interface DeleteOrganizationProps {
@@ -37,7 +38,6 @@ export const DeleteOrganization: Component<DeleteOrganizationProps> = (
   const nameMatches = () => typedName() === props.organizationName;
 
   const close = () => {
-    if (deleting()) return;
     setOpen(false);
     setTypedName('');
   };
@@ -53,6 +53,39 @@ export const DeleteOrganization: Component<DeleteOrganizationProps> = (
     }
   };
 
+  // After the organization is gone: reload the user's organizations and
+  // leave its pages. If reloading fails, still drop the deleted organization.
+  const leaveDeletedOrganization = async () => {
+    const user = getUser();
+    let organizations: Organization[] | null = null;
+    try {
+      organizations = user?.id
+        ? await OrganizationsService.getAll(user.id)
+        : [];
+    } catch {
+      organizations = null;
+    }
+
+    if (organizations) {
+      setStore('organizations', 'data', organizations);
+    } else {
+      // Could not reload: at least drop the deleted organization.
+      setStore('organizations', 'data', (data) =>
+        data.filter((organization) => organization.id !== props.organizationId)
+      );
+    }
+
+    setStore('organizations', {
+      loaded: true,
+      loading: false,
+      selectedId: null,
+      selectedName: '',
+    });
+
+    const next = organizations?.[0];
+    navigate(next ? `/org/${next.id}` : '/', { replace: true });
+  };
+
   const handleDelete = async () => {
     if (!nameMatches() || deleting()) return;
     setDeleting(true);
@@ -62,32 +95,18 @@ export const DeleteOrganization: Component<DeleteOrganizationProps> = (
         props.organizationId,
         typedName()
       );
-      toast.success(
-        t('organization.delete.deleted', { name: props.organizationName })
-      );
-
-      const user = getUser();
-      const organizations = user?.id
-        ? await OrganizationsService.getAll(user.id)
-        : [];
-
-      setStore('organizations', {
-        data: organizations,
-        loaded: true,
-        loading: false,
-        selectedId: null,
-        selectedName: '',
-      });
-
-      setDeleting(false);
-      setOpen(false);
-      navigate(organizations[0] ? `/org/${organizations[0].id}` : '/', {
-        replace: true,
-      });
     } catch (error) {
       setDeleting(false);
       toast.error(errorMessage(error));
+      return;
     }
+
+    toast.success(
+      t('organization.delete.deleted', { name: props.organizationName })
+    );
+    setDeleting(false);
+    setOpen(false);
+    await leaveDeletedOrganization();
   };
 
   return (
@@ -110,6 +129,7 @@ export const DeleteOrganization: Component<DeleteOrganizationProps> = (
             name: props.organizationName,
           })}
           description={t('organization.delete.confirmDescription')}
+          onCloseRequest={() => !deleting()}
           onClose={close}
         >
           <form

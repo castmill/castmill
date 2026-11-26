@@ -74,3 +74,6 @@ config :castmill, :async_background_tasks, false
 
 # No Castmill OS release imports from GitHub in tests.
 config :castmill, Castmill.OsUpdates, import_interval: nil
+
+# Delete stored objects of deleted records inline, in the test's sandbox.
+config :castmill, :storage_cleanups_inline, true

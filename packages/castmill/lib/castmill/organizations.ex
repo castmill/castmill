@@ -251,24 +251,25 @@ defmodule Castmill.Organizations do
   (`{:error, :has_child_organizations}`): delete the children first.
   `opts` may give the `:actor_id` for device removal notifications.
   """
-  def delete_organization(%Organization{} = organization, opts \\ []) do
-    if Repo.exists?(from(o in Organization, where: o.organization_id == ^organization.id)) do
-      {:error, :has_child_organizations}
-    else
-      do_delete_organization(organization, opts)
-    end
-  end
-
-  defp do_delete_organization(%Organization{id: id} = organization, opts) do
-    files = Repo.all(from(f in Castmill.Files.File, where: f.organization_id == ^id))
-
-    from(d in Castmill.Devices.Device, where: d.organization_id == ^id)
-    |> Repo.all()
-    |> Enum.each(&Castmill.Devices.delete_device(&1, Keyword.take(opts, [:actor_id])))
-
-    Castmill.Feeds.Media.purge_organization(id)
-
+  def delete_organization(%Organization{id: id} = organization, opts \\ []) do
     Repo.transaction(fn ->
+      # Lock the organization so no child organization, file or device can be
+      # added while it is checked and its contents are collected.
+      Repo.one(from(o in Organization, where: o.id == ^id, lock: "FOR UPDATE")) ||
+        Repo.rollback(:not_found)
+
+      if Repo.exists?(from(o in Organization, where: o.organization_id == ^id)),
+        do: Repo.rollback(:has_child_organizations)
+
+      devices = Repo.all(from(d in Castmill.Devices.Device, where: d.organization_id == ^id))
+      cleanups = stored_objects(id)
+
+      Enum.each(devices, &Repo.delete!/1)
+
+      # Feed media records are kept (unlinked) when an organization goes;
+      # delete them, their stored objects are recorded above.
+      Repo.delete_all(from(m in Castmill.Feeds.FeedMedia, where: m.organization_id == ^id))
+
       # Agent users belong to exactly one organization, remove them too
       from(u in Castmill.Accounts.User,
         join: a in Castmill.Agents.Agent,
@@ -278,13 +279,20 @@ defmodule Castmill.Organizations do
       |> Repo.delete_all()
 
       case Repo.delete(organization) do
-        {:ok, deleted} -> deleted
+        {:ok, deleted} -> {deleted, devices, Castmill.StorageCleanups.record(cleanups)}
         {:error, changeset} -> Repo.rollback(changeset)
       end
     end)
     |> case do
-      {:ok, deleted} ->
-        Task.start(fn -> Enum.each(files, &delete_stored_file/1) end)
+      {:ok, {deleted, devices, cleanup_ids}} ->
+        Enum.each(
+          devices,
+          &Castmill.Devices.announce_removal(&1, Keyword.take(opts, [:actor_id]))
+        )
+
+        # Delete the stored objects now; anything that fails stays recorded
+        # and is retried by the daily maintenance job.
+        Castmill.StorageCleanups.run_soon(cleanup_ids)
 
         Castmill.Hooks.trigger_hook(:organization_deleted, %{
           organization_id: id,
@@ -298,17 +306,35 @@ defmodule Castmill.Organizations do
     end
   end
 
-  defp delete_stored_file(file) do
-    case Castmill.Resources.delete_stored_file(file) do
-      {:error, reason} ->
-        Logger.error("[Organizations] Deleting stored file #{file.id} failed: #{inspect(reason)}")
+  # The stored objects an organization owns: its media files, copied feed
+  # media and its own widgets' assets.
+  defp stored_objects(organization_id) do
+    files =
+      from(f in Castmill.Files.File,
+        where: f.organization_id == ^organization_id,
+        select: f.uri
+      )
+      |> Repo.all()
+      |> Enum.map(&{"file", %{"uri" => &1, "organization_id" => organization_id}})
 
-      _ ->
-        :ok
-    end
-  rescue
-    error ->
-      Logger.error("[Organizations] Deleting stored file #{file.id} failed: #{inspect(error)}")
+    feed_media =
+      from(m in Castmill.Feeds.FeedMedia,
+        where: m.organization_id == ^organization_id and not is_nil(m.storage_key),
+        distinct: true,
+        select: m.storage_key
+      )
+      |> Repo.all()
+      |> Enum.map(&{"feed_media", %{"key" => &1}})
+
+    widget_assets =
+      from(w in Castmill.Widgets.Widget,
+        where: w.organization_id == ^organization_id,
+        select: w.slug
+      )
+      |> Repo.all()
+      |> Enum.map(&{"widget_assets", %{"slug" => &1}})
+
+    files ++ feed_media ++ widget_assets
   end
 
   @doc """
