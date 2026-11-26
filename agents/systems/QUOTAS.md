@@ -33,6 +33,11 @@ organizations cannot exceed it together.
   quota and under the network limit. A network can therefore share a pool of
   devices among its organizations (high organization quotas) or assign each
   organization its own share (organization quotas adding up to the limit).
+- The organization `devices` quota check locks the organization row
+  (`FOR NO KEY UPDATE`) until the device is inserted. Code that lowers an
+  organization's `devices` quota and refuses to go below the devices in use
+  (for example castmill-saas paid screens) must take the same lock before
+  counting the devices, so no registration slips in against the old quota.
 
 ## Network Storage Limit
 
