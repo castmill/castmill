@@ -97,4 +97,27 @@ defmodule CastmillWeb.UserAuthorizationTest do
     assert response(promote.(conn, member), 204)
     assert Organizations.is_admin?(organization.id, member.id)
   end
+
+  test "an organization admin cannot change another user's profile with role parameters", %{
+    conn: conn,
+    network: network,
+    actor: actor,
+    other: other
+  } do
+    organization = organization_fixture(%{network_id: network.id})
+    {:ok, _} = Organizations.add_user(organization.id, actor.id, :admin)
+
+    # `user` makes it a profile update, whatever else the request contains.
+    conn =
+      put(conn, "/dashboard/users/#{other.id}", %{
+        "user" => %{"name" => "Renamed", "email" => "attacker@example.com"},
+        "access" => "member",
+        "organization_id" => organization.id
+      })
+
+    assert json_response(conn, 403) == %{"error" => "forbidden"}
+    assert %{name: name, email: email} = Accounts.get_user(other.id)
+    refute name == "Renamed"
+    refute email == "attacker@example.com"
+  end
 end

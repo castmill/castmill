@@ -301,8 +301,13 @@ defmodule CastmillWeb.UserController do
     if String.starts_with?(conn.request_path, "/dashboard/") do
       actor_id = CastmillWeb.CurrentUser.id(conn)
 
+      # Same order as the `update/2` clauses: a request with `user` updates
+      # the profile (even if it also has `access`), so only its owner may.
       allowed? =
         case {action_name(conn), conn.params} do
+          {:update, %{"id" => user_id, "user" => _}} ->
+            is_binary(actor_id) and actor_id == user_id
+
           {:update, %{"access" => _, "organization_id" => organization_id}} ->
             is_binary(actor_id) and Organizations.is_admin?(organization_id, actor_id)
 
