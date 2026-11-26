@@ -891,9 +891,12 @@ defmodule Castmill.Accounts do
   end
 
   ## Addons
-  def list_addons(_user_id) do
-    # Use the supervisor to get all addons (internal and external)
-    Castmill.Addons.Supervisor.list_component_infos()
+  @doc """
+  The add-ons shown to `user` on the dashboard of `network_id` (the network
+  of the domain in use): all add-ons except those hiding themselves there.
+  """
+  def list_addons(%User{} = user, network_id) do
+    Castmill.Addons.Supervisor.list_component_infos(%{user: user, network_id: network_id})
   end
 
   defp validate_signup(signup_id, email) do

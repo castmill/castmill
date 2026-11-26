@@ -19,7 +19,7 @@ defmodule CastmillWeb.AddonsController do
     else
       conn
       |> put_status(:ok)
-      |> json(Accounts.list_addons(user.id))
+      |> json(Accounts.list_addons(user, conn.assigns[:network_id]))
     end
   end
 end
