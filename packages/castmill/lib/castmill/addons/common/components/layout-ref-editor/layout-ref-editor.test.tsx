@@ -1,4 +1,10 @@
-import { cleanup, render, screen, waitFor } from '@solidjs/testing-library';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@solidjs/testing-library';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { LayoutRefValue } from '@castmill/player';
 import { authFetch } from '../../services/auth-fetch';
@@ -31,14 +37,14 @@ const value: LayoutRefValue = {
 };
 
 describe('LayoutRefEditor restoration', () => {
-  it('loads the saved layout by ID rather than selecting the first listed layout', async () => {
+  it('loads metadata by ID and preserves the saved geometry when editing assignments', async () => {
     vi.mocked(authFetch).mockImplementation(async (url) => {
       const layout = {
         id: 42,
         name: 'Landscape 3 Zones',
         description: null,
-        aspect_ratio: '16:9',
-        zones: { zones },
+        aspect_ratio: '9:16',
+        zones: { zones: [{ ...zones[0], id: 'new-zone', name: 'New zone' }] },
       };
       return new Response(
         JSON.stringify(
@@ -76,6 +82,7 @@ describe('LayoutRefEditor restoration', () => {
       expect.objectContaining({ method: 'GET' })
     );
     expect(screen.queryByText('2layout')).toBeNull();
+    expect(screen.queryByText('New zone')).toBeNull();
     expect(container.querySelectorAll('.layout-ref-editor__zone')).toHaveLength(
       3
     );
@@ -84,6 +91,9 @@ describe('LayoutRefEditor restoration', () => {
     ).toHaveLength(3);
     expect(screen.getAllByText('Third zone playlist')).toHaveLength(2);
     expect(onChange).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'common.remove' }));
+    expect(onChange).toHaveBeenCalledWith({ ...value, zonePlaylistMap: {} });
   });
 
   it('reports a failed saved-layout lookup without selecting another layout or changing the value', async () => {

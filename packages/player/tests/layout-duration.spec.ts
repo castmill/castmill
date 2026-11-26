@@ -2,7 +2,8 @@ import { expect } from 'chai';
 import { afterEach, beforeEach, describe, it } from 'mocha';
 // @ts-ignore jsdom is hoisted from other workspaces without type declarations.
 import { JSDOM } from 'jsdom';
-import { NEVER } from 'rxjs';
+import { NEVER, Subject } from 'rxjs';
+import { switchMap, take } from 'rxjs/operators';
 import { SinonFakeTimers, spy, stub, useFakeTimers } from 'sinon';
 import {
   Layer,
@@ -11,6 +12,7 @@ import {
   Playlist,
   Renderer,
   setDebugOverlay,
+  TemplateComponentType,
 } from '../dist/index.js';
 
 const fakePlaylist = (duration: () => number) => ({ duration }) as any;
@@ -465,6 +467,89 @@ describe('Layout widget duration before rendering', () => {
       player.clear();
       intercept.restore();
       monitor.restore();
+    }
+  });
+
+  it('replaces a visible item whose refreshed page is stuck without blanking it', async () => {
+    clock = useFakeTimers({
+      now: 0,
+      toFake: ['setInterval', 'clearInterval', 'Date'],
+    });
+    const reportError = spy();
+    const playlist = Playlist.fromJSON(
+      {
+        id: 41,
+        name: 'Zone',
+        status: 'live',
+        items: [
+          {
+            id: 1,
+            name: 'item',
+            duration: 300_000,
+            offset: 0,
+            slack: 0,
+            widget: {
+              id: 1,
+              name: 'text',
+              template: {
+                name: 'text',
+                type: TemplateComponentType.Text,
+                opts: { text: 'Page' },
+              },
+            },
+            config: { widget_id: 1, options: {}, data: {} },
+          },
+        ],
+      },
+      resources,
+      { target: 'poster', recoverStalledPlayback: true, reportError }
+    );
+    const [outgoing] = playlist.layers;
+    const renderer = new Renderer(dom.window.document.getElementById('root'));
+    const ticks = new Subject<number>();
+    const playback = playlist.play(renderer, ticks, { loop: true }).subscribe();
+    try {
+      expect(renderer.getCurrentLayer()).to.equal(outgoing);
+      stub(outgoing, 'samplePlayback').returns([
+        { label: 'Page 1/1 waiting', deadline: 45_000 },
+      ]);
+      stub(outgoing, 'seek').returns(NEVER);
+      const ready = new Subject<void>();
+      const show = Layer.prototype.show;
+      const prepare = stub(Layer.prototype, 'show').callsFake(function (
+        this: Layer,
+        offset: number,
+        retry?: boolean
+      ) {
+        return ready.pipe(
+          take(1),
+          switchMap(() => show.call(this, offset, retry))
+        );
+      });
+      try {
+        await clock.tickAsync(45_000);
+
+        const [replacement] = playlist.layers;
+        expect(replacement).not.to.equal(outgoing);
+        expect(reportError.firstCall.args[0]).to.deep.include({
+          code: 'playlist-stall-restart',
+          context: { playlistId: 41, layerName: 'item' },
+        });
+        expect(renderer.getCurrentLayer()).to.equal(outgoing);
+        expect(outgoing.el.isConnected).to.equal(true);
+        expect(outgoing.el.style.visibility).to.equal('visible');
+        expect(replacement.el.style.visibility).to.equal('hidden');
+
+        ready.next();
+        expect(renderer.getCurrentLayer()).to.equal(replacement);
+        expect(outgoing.el.isConnected).to.equal(false);
+        expect(replacement.el.style.visibility).to.equal('visible');
+      } finally {
+        prepare.restore();
+      }
+    } finally {
+      playback.unsubscribe();
+      renderer.clear();
     }
   });
 

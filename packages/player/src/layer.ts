@@ -87,6 +87,7 @@ export class Layer extends EventEmitter {
   private resizeObserver: ResizeObserver | null = null;
   private resizeListener: (() => void) | null = null;
   private globals?: PlayerGlobals;
+  private retryFactory?: () => Layer;
 
   /**
    * Gets the effective aspect ratio for a widget.
@@ -155,6 +156,7 @@ export class Layer extends EventEmitter {
       media: findMediaName(json.config?.options),
     };
     layer.forwardErrors(globals);
+    layer.retryFactory = () => Layer.fromJSON(json, resourceManager, globals);
 
     return layer;
   }
@@ -353,6 +355,12 @@ export class Layer extends EventEmitter {
 
   reportError(input: PlayerRuntimeError): void {
     this.globals?.reportError?.(input);
+  }
+
+  createRetryLayer(): Layer | undefined {
+    const layer = this.retryFactory?.();
+    layer?.setDurationHint(this.duration());
+    return layer;
   }
 
   public unload() {

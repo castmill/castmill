@@ -19,7 +19,9 @@ Device playback retries an item from its beginning in its own renderer after
 transition duration plus five seconds of grace. It can also retry playback
 that did not complete within five seconds of the end of its slot. A retry
 cancels the original subscriptions, but keeps the last visible layer mounted
-until the replacement is ready. Only the affected zone's clock waits during
+until the replacement is ready. If the stalled item is itself visible, the
+watchdog builds a fresh layer rather than reusing its pending widget work.
+Only the affected zone's clock waits during
 retry preparation, so a slow retry cannot consume the item's slot. There are
 at least two minutes between retries of the same live playlist, even when an
 earlier attempt never became ready. Preview playback does not retry. Existing decoder block/skip

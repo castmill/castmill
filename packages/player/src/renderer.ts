@@ -319,8 +319,7 @@ export class Renderer {
     delete this.currentTransition;
     const pending = this.pendingLayer;
     this.clearPendingLayer(pending);
-    // Keep the last visible layer mounted until the retry is ready. A
-    // single-item zone can retry its current layer in place.
+    // Keep the last visible layer mounted until the retry is ready.
     if (layer !== this.currentLayer && layer !== pending) {
       this.removeLayer(layer);
     }

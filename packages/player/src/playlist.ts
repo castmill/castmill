@@ -218,10 +218,10 @@ export class Playlist extends EventEmitter {
           return start();
         },
         get duration() {
-          return layer.duration();
+          return this.layer.duration();
         },
         get end() {
-          return start() + layer.duration();
+          return start() + this.layer.duration();
         },
         layer,
       };
@@ -355,7 +355,7 @@ export class Playlist extends EventEmitter {
       let skipTimer: ReturnType<typeof setTimeout> | undefined;
       let waiting = false;
       let playing: Subscription | undefined;
-      const layer = element.layer;
+      let layer = element.layer;
       let phase: PlaybackPhase = 'seeking';
       let phaseStarted = Date.now();
       let preparationStarted = phaseStarted;
@@ -442,15 +442,20 @@ export class Playlist extends EventEmitter {
       // Keeps the clock running while the item waits to be shown, so holds
       // and skips start from the current time.
       const ticking = timer$.subscribe();
-      const blocked = layer.blocked$().subscribe(onBlocked);
-      const readiness =
-        holdOnReadiness || recover || renderer.debugOverlay
-          ? (layer.readiness$?.() ?? of(undefined)).subscribe((value) => {
+      const watchLayer = () => {
+        const subscriptions = layer.blocked$().subscribe(onBlocked);
+        if (holdOnReadiness || recover || renderer.debugOverlay) {
+          subscriptions.add(
+            (layer.readiness$?.() ?? of(undefined)).subscribe((value) => {
               if (readinessBlock && !value) suspendedAt = Date.now();
               readinessBlock = value;
               updateClock();
             })
-          : undefined;
+          );
+        }
+        return subscriptions;
+      };
+      let layerSubscriptions = watchLayer();
       const start = (offset: number, retry = false) =>
         this.playLayer(
           renderer,
@@ -565,6 +570,16 @@ export class Playlist extends EventEmitter {
         clock.jumpTo(element.start);
         preparingRetry = true;
         updateClock();
+        if (layer === renderer.getCurrentLayer()) {
+          const replacement = layer.createRetryLayer();
+          if (replacement) {
+            layerSubscriptions.unsubscribe();
+            const index = this.layers.indexOf(layer);
+            if (index !== -1) this.layers[index] = replacement;
+            layer = element.layer = replacement;
+            layerSubscriptions = watchLayer();
+          }
+        }
         slotEnded = undefined;
         preparationStarted = now;
         setPhase('seeking');
@@ -586,8 +601,7 @@ export class Playlist extends EventEmitter {
       return () => {
         clearInterval(healthTimer);
         stopTimer();
-        blocked.unsubscribe();
-        readiness?.unsubscribe();
+        layerSubscriptions.unsubscribe();
         playing?.unsubscribe();
         ticking.unsubscribe();
         clock.release();

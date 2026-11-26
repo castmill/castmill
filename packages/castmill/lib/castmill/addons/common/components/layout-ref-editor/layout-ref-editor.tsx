@@ -79,6 +79,8 @@ export const LayoutRefEditor: Component<LayoutRefEditorProps> = (props) => {
           ...layout,
           id: value.layoutId,
           description: layout.description ?? undefined,
+          aspect_ratio: value.aspectRatio,
+          zones: value.zones,
         });
         // Restore zone-playlist assignments
         if (value.zonePlaylistMap) {
