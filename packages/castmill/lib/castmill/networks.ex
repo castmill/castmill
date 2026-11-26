@@ -609,6 +609,30 @@ defmodule Castmill.Networks do
   end
 
   @doc """
+  Adds the user to the network as a member unless they already belong to it,
+  keeping any role they have there. A user may belong to several networks.
+  """
+  def ensure_member(network_id, user_id) do
+    %NetworksUsers{}
+    |> NetworksUsers.changeset(%{network_id: network_id, user_id: user_id, role: :member})
+    |> Repo.insert(on_conflict: :nothing, conflict_target: [:network_id, :user_id])
+  end
+
+  @doc """
+  Returns true if the user also belongs to a network other than `network_id`.
+
+  Blocking and deleting act on the whole account, so a network's admins may
+  only do that to users who belong to their network alone.
+  """
+  def belongs_to_other_network?(user_id, network_id) do
+    Repo.exists?(
+      from(nu in NetworksUsers,
+        where: nu.user_id == ^user_id and nu.network_id != ^network_id
+      )
+    )
+  end
+
+  @doc """
   Removes a user from a network.
   """
   def remove_user_from_network(user_id, network_id) do
@@ -819,6 +843,7 @@ defmodule Castmill.Networks do
     with {:ok, invitation} <- validate_network_invitation(token),
          {:ok, user} <- validate_invitation_user(invitation, user_id),
          {:ok, organization} <- create_invitation_organization(invitation),
+         {:ok, _} <- ensure_member(invitation.network_id, user.id),
          {:ok, _} <- add_user_to_organization(organization, user) do
       # Mark invitation as accepted
       case Repo.update(NetworkInvitation.changeset(invitation, %{status: "accepted"})) do

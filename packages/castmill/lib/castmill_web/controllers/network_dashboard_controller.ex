@@ -751,6 +751,14 @@ defmodule CastmillWeb.NetworkDashboardController do
     end
   end
 
+  # Blocking and deleting act on the whole account, shared by all of the
+  # user's networks, so they are refused for users in other networks too.
+  defp other_network_user(user_id, network_id) do
+    if Networks.belongs_to_other_network?(user_id, network_id),
+      do: {:error, :other_network},
+      else: false
+  end
+
   defp fetch_network_user(network_id, user_id) do
     with {:ok, user_id} <- Ecto.UUID.cast(user_id),
          %Castmill.Accounts.User{} = user <- Castmill.Accounts.get_user(user_id),
@@ -793,6 +801,7 @@ defmodule CastmillWeb.NetworkDashboardController do
     with {:ok, network_id} <- get_admin_network_id(conn),
          target_user when not is_nil(target_user) <- Accounts.get_user(user_id),
          true <- Networks.is_network_member?(target_user.id, network_id),
+         false <- other_network_user(target_user.id, network_id),
          false <- target_user.id == user.id,
          false <- Networks.is_network_admin?(target_user.id, network_id),
          {:ok, updated_user} <- block_user_in_db(target_user, reason) do
@@ -820,6 +829,11 @@ defmodule CastmillWeb.NetworkDashboardController do
         |> put_status(:forbidden)
         |> json(%{error: "Cannot block network administrators"})
 
+      {:error, :other_network} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "Cannot block a user who also belongs to another network"})
+
       {:error, :not_admin} ->
         conn
         |> put_status(:forbidden)
@@ -842,6 +856,7 @@ defmodule CastmillWeb.NetworkDashboardController do
     with {:ok, network_id} <- get_admin_network_id(conn),
          target_user when not is_nil(target_user) <- Accounts.get_user(user_id),
          true <- Networks.is_network_member?(target_user.id, network_id),
+         false <- other_network_user(target_user.id, network_id),
          {:ok, updated_user} <- unblock_user_in_db(target_user) do
       conn
       |> put_status(:ok)
@@ -860,6 +875,11 @@ defmodule CastmillWeb.NetworkDashboardController do
         conn
         |> put_status(:forbidden)
         |> json(%{error: "User does not belong to your network"})
+
+      {:error, :other_network} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "Cannot unblock a user who also belongs to another network"})
 
       {:error, :not_admin} ->
         conn
@@ -885,6 +905,7 @@ defmodule CastmillWeb.NetworkDashboardController do
     with {:ok, network_id} <- get_admin_network_id(conn),
          target_user when not is_nil(target_user) <- Accounts.get_user(user_id),
          true <- Networks.is_network_member?(target_user.id, network_id),
+         false <- other_network_user(target_user.id, network_id),
          false <- target_user.id == user.id,
          false <- Networks.is_network_admin?(target_user.id, network_id),
          {:ok, _} <- Accounts.delete_user(target_user.id) do
@@ -907,6 +928,11 @@ defmodule CastmillWeb.NetworkDashboardController do
         conn
         |> put_status(:forbidden)
         |> json(%{error: "Cannot delete network administrators"})
+
+      {:error, :other_network} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "Cannot delete a user who also belongs to another network"})
 
       {:error, :not_admin} ->
         conn

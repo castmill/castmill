@@ -439,4 +439,32 @@ defmodule Castmill.NetworksTest do
     def mock_raising_source, do: raise(RuntimeError, "boom")
     def mock_nonlist_source, do: :not_a_list
   end
+
+  describe "accept_network_invitation_transactional/2" do
+    import Castmill.OrganizationsFixtures
+    import Castmill.NetworksFixtures
+
+    test "adds a user from another network to the inviting network" do
+      network = network_fixture()
+      other_network = network_fixture()
+      user = user_fixture(%{network_id: other_network.id})
+
+      {:ok, invitation} =
+        %Castmill.Networks.NetworkInvitation{}
+        |> Castmill.Networks.NetworkInvitation.changeset(%{
+          email: user.email,
+          organization_name: "Invited Org #{System.unique_integer([:positive])}",
+          network_id: network.id,
+          token: "token-#{System.unique_integer([:positive])}"
+        })
+        |> Castmill.Repo.insert()
+
+      assert {:ok, organization} =
+               Networks.accept_network_invitation_transactional(invitation.token, user.id)
+
+      assert organization.network_id == network.id
+      assert %{role: :member} = Networks.get_network_membership(user.id, network.id)
+      assert %{role: :member} = Networks.get_network_membership(user.id, other_network.id)
+    end
+  end
 end
