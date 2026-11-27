@@ -91,8 +91,8 @@ defmodule Castmill.Networks.Network do
     |> validate_required(required)
     |> validate_format(:email, ~r/@/, message: "must be a valid email address")
     # Shown as links on the login page and in the footer: web addresses only.
-    |> validate_format(:privacy_policy_url, ~r{\Ahttps?://}i, message: "must be an http(s) URL")
-    |> validate_format(:terms_url, ~r{\Ahttps?://}i, message: "must be an http(s) URL")
+    |> validate_web_url(:privacy_policy_url)
+    |> validate_web_url(:terms_url)
     |> validate_format(
       :domain,
       ~r/^[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?)*(:\d+)?$/,
@@ -100,6 +100,20 @@ defmodule Castmill.Networks.Network do
     )
     |> unique_constraint(:name)
     |> unique_constraint(:domain)
+  end
+
+  # An http(s) URL with a host (nil clears the link).
+  defp validate_web_url(changeset, field) do
+    validate_change(changeset, field, fn ^field, value ->
+      case URI.parse(value) do
+        %URI{scheme: scheme, host: host}
+        when scheme in ["http", "https"] and is_binary(host) and host != "" ->
+          []
+
+        _ ->
+          [{field, "must be an http(s) URL"}]
+      end
+    end)
   end
 
   def base_query() do

@@ -210,11 +210,10 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       admin = create_network_admin(network)
       conn = authenticate_conn(conn, admin, network)
 
-      for field <- ["privacy_policy_url", "terms_url"] do
+      for field <- ["privacy_policy_url", "terms_url"],
+          value <- ["javascript:alert(1)", "https://", "https://#terms", "ftp://example.com"] do
         conn
-        |> put("/dashboard/network/settings", %{
-          "network" => %{field => "javascript:alert(1)"}
-        })
+        |> put("/dashboard/network/settings", %{"network" => %{field => value}})
         |> json_response(422)
       end
 
