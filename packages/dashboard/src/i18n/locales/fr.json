@@ -203,6 +203,9 @@
     "deleteAccountError": "Échec de la suppression du compte. Veuillez réessayer.",
     "soleAdministratorError": "Impossible de supprimer le compte. Vous êtes le seul administrateur de '{{orgName}}' qui a d'autres membres. Veuillez d'abord promouvoir un autre utilisateur en tant qu'administrateur.",
     "soleAdministratorErrorGeneric": "Impossible de supprimer le compte. Vous êtes le seul administrateur d'une ou plusieurs organisations ayant d'autres membres. Veuillez d'abord promouvoir un autre utilisateur en tant qu'administrateur.",
+    "childOrganizationsError": "Impossible de supprimer le compte. Vous êtes le seul membre de « {{orgName}} », qui a des organisations enfants. Supprimez d'abord ses organisations enfants.",
+    "rootAdminDeletionError": "Impossible de supprimer le compte. Vous êtes administrateur racine ; les administrateurs racine sont gérés dans la configuration du serveur.",
+    "lastNetworkAdminError": "Impossible de supprimer le compte. Vous êtes le dernier administrateur du réseau « {{networkName}} ». Nommez d'abord un autre utilisateur administrateur du réseau.",
     "deleteAccountWarningWithSignalAPI": "Cela supprimera définitivement votre compte et supprimera toutes les clés d'accès de nos serveurs. Votre navigateur prend en charge la suppression automatique des clés d'accès.",
     "deleteAccountPasskeyInfo": "Après la suppression, si vous essayez de vous connecter avec une ancienne clé d'accès, cela échouera. Pour éviter toute confusion, veuillez supprimer manuellement les clés d'accès de ce compte dans les paramètres de votre appareil.",
     "deleteAccountPasskeyInfoWithSignalAPI": "Après la suppression, les clés d'accès seront automatiquement supprimées de votre appareil. Si vous essayez de vous connecter plus tard, vous devrez créer un nouveau compte."

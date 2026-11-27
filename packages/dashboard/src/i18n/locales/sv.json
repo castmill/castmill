@@ -198,6 +198,9 @@
     "deleteAccountError": "Det gick inte att radera kontot. Försök igen.",
     "soleAdministratorError": "Kan inte radera kontot. Du är den enda administratören för '{{orgName}}' som har andra medlemmar. Befordra en annan användare till administratör först.",
     "soleAdministratorErrorGeneric": "Kan inte radera kontot. Du är den enda administratören för en eller flera organisationer med andra medlemmar. Befordra en annan användare till administratör först.",
+    "childOrganizationsError": "Kan inte radera kontot. Du är den enda medlemmen i '{{orgName}}', som har underorganisationer. Radera dess underorganisationer först.",
+    "rootAdminDeletionError": "Kan inte radera kontot. Du är rotadministratör; rotadministratörer hanteras i serverkonfigurationen.",
+    "lastNetworkAdminError": "Kan inte radera kontot. Du är den sista administratören för nätverket '{{networkName}}'. Gör först en annan användare till nätverksadministratör.",
     "deleteAccountWarningWithSignalAPI": "Detta kommer permanent ta bort ditt konto och ta bort alla nycklar från våra servrar. Din webbläsare stöder automatisk borttagning av nycklar.",
     "deleteAccountPasskeyInfo": "Efter borttagning kommer försök att logga in med en gammal nyckel att misslyckas. För att undvika förvirring, vänligen ta bort detta kontos nycklar manuellt från din enhets inställningar.",
     "deleteAccountPasskeyInfoWithSignalAPI": "Efter borttagning kommer nycklar automatiskt att tas bort från din enhet. Om du försöker logga in senare måste du skapa ett nytt konto."

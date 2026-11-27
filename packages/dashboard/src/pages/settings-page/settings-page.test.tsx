@@ -16,8 +16,9 @@ vi.mock('../../components/auth', () => ({
   authFetch: vi.fn(),
 }));
 
-// Mock the user service
-vi.mock('../../services/user.service', () => ({
+// Mock the user service (its error classes stay real)
+vi.mock('../../services/user.service', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../services/user.service')>()),
   UserService: {
     updateProfile: vi.fn(),
     deleteAccount: vi.fn(),
@@ -504,6 +505,48 @@ describe('SettingsPage', () => {
       await waitFor(() => {
         expect(UserService.deleteAccount).toHaveBeenCalledWith('1');
       });
+    });
+
+    it('explains that an organization with child organizations blocks the deletion', async () => {
+      const { ChildOrganizationsError } =
+        await import('../../services/user.service');
+      (UserService.deleteAccount as any).mockRejectedValue(
+        new ChildOrganizationsError('Parent Org')
+      );
+
+      renderWithProviders(() => <SettingsPage />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Delete Account' }));
+      fireEvent.click(
+        await screen.findByRole('button', { name: 'Yes, Delete Account' })
+      );
+
+      expect(
+        await screen.findByText(
+          "Cannot delete account. You are the only member of 'Parent Org', which has child organizations. Delete its child organizations first."
+        )
+      ).toBeInTheDocument();
+    });
+
+    it('explains that the last network admin cannot delete their account', async () => {
+      const { AccountDeletionRefusedError } =
+        await import('../../services/user.service');
+      (UserService.deleteAccount as any).mockRejectedValue(
+        new AccountDeletionRefusedError('last_network_admin', 'Castmill')
+      );
+
+      renderWithProviders(() => <SettingsPage />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Delete Account' }));
+      fireEvent.click(
+        await screen.findByRole('button', { name: 'Yes, Delete Account' })
+      );
+
+      expect(
+        await screen.findByText(
+          "Cannot delete account. You are the last administrator of the network 'Castmill'. Make another user a network administrator first."
+        )
+      ).toBeInTheDocument();
     });
 
     it('uses Signal API to delete passkeys when supported', async () => {

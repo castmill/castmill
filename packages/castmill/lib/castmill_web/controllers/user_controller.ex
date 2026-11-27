@@ -133,6 +133,21 @@ defmodule CastmillWeb.UserController do
           organization_name: org_name
         })
 
+      {:error, {:has_child_organizations, org_name}} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "has_child_organizations", organization_name: org_name})
+
+      {:error, {:last_network_admin, network_name}} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "last_network_admin", network_name: network_name})
+
+      {:error, :root_admin} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "root_admin"})
+
       {:error, message} when is_binary(message) ->
         conn
         |> put_status(:unprocessable_entity)

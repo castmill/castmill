@@ -14,6 +14,28 @@ export class SoleAdministratorError extends Error {
   }
 }
 
+/** The account is the only member of an organization with child organizations. */
+export class ChildOrganizationsError extends Error {
+  constructor(public organizationName?: string) {
+    super('Cannot delete account - organization has child organizations');
+    this.name = 'ChildOrganizationsError';
+  }
+}
+
+/**
+ * The account keeps the platform or a network running: it is a root admin,
+ * or the last admin of a network (`networkName`).
+ */
+export class AccountDeletionRefusedError extends Error {
+  constructor(
+    public reason: 'root_admin' | 'last_network_admin',
+    public networkName?: string
+  ) {
+    super(`Cannot delete account - ${reason}`);
+    this.name = 'AccountDeletionRefusedError';
+  }
+}
+
 export const UserService = {
   /**
    * Update current user's profile information
@@ -87,6 +109,20 @@ export const UserService = {
           );
         }
 
+        if (errorData.error === 'has_child_organizations') {
+          throw new ChildOrganizationsError(errorData.organization_name);
+        }
+
+        if (
+          errorData.error === 'root_admin' ||
+          errorData.error === 'last_network_admin'
+        ) {
+          throw new AccountDeletionRefusedError(
+            errorData.error,
+            errorData.network_name
+          );
+        }
+
         // Handle other error types
         if (errorData.error) {
           throw new HttpError(errorData.error, response.status);
@@ -100,6 +136,8 @@ export const UserService = {
         // If it's already our custom error, re-throw it
         if (
           error instanceof SoleAdministratorError ||
+          error instanceof ChildOrganizationsError ||
+          error instanceof AccountDeletionRefusedError ||
           error instanceof HttpError
         ) {
           throw error;

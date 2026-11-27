@@ -203,6 +203,9 @@
     "deleteAccountError": "删除账户失败。请重试。",
     "soleAdministratorError": "无法删除账户。您是 '{{orgName}}' 的唯一管理员，该组织还有其他成员。请先将另一个用户提升为管理员。",
     "soleAdministratorErrorGeneric": "无法删除账户。您是一个或多个有其他成员的组织的唯一管理员。请先将另一个用户提升为管理员。",
+    "childOrganizationsError": "无法删除账户。您是“{{orgName}}”的唯一成员，该组织有子组织。请先删除其子组织。",
+    "rootAdminDeletionError": "无法删除账户。您是根管理员；根管理员在服务器配置中管理。",
+    "lastNetworkAdminError": "无法删除账户。您是网络“{{networkName}}”的最后一位管理员。请先将另一位用户设为网络管理员。",
     "deleteAccountWarningWithSignalAPI": "这将永久删除您的账户并从我们的服务器中删除所有密钥。您的浏览器支持自动删除密钥。",
     "deleteAccountPasskeyInfo": "删除后，如果您尝试使用旧密钥登录，将会失败。为避免混淆，请从您的设备设置中手动删除此账户的密钥。",
     "deleteAccountPasskeyInfoWithSignalAPI": "删除后，密钥将自动从您的设备中删除。如果您以后尝试登录，则需要创建新账户。"
