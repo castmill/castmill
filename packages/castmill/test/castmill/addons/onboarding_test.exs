@@ -34,7 +34,7 @@ defmodule Castmill.Addons.OnboardingTest do
 
       # Assert that the hook was triggered
       # Use Swoosh test helpers to assert an email was sent
-      assert_email_sent(subject: "Welcome to Castmill™!")
+      assert_email_sent(subject: "Welcome to Castmill™")
     end
   end
 
@@ -49,7 +49,7 @@ defmodule Castmill.Addons.OnboardingTest do
       assert_email_sent(
         to: user.email,
         from: {"Castmill", "no-reply@castmill.com"},
-        subject: "Welcome to Castmill™!"
+        subject: "Welcome to Castmill™"
       )
     end
 
@@ -64,10 +64,18 @@ defmodule Castmill.Addons.OnboardingTest do
       })
 
       assert_email_sent(fn email ->
-        assert email.subject == "Welcome to Tylöprint!"
+        assert email.subject == "Welcome to Tylöprint"
         assert email.from == {"Tylöprint", "no-reply@castmill.com"}
         assert email.reply_to == {"", "info@tyloprint.test"}
         refute email.text_body =~ "Castmill"
+        refute email.html_body =~ "Castmill"
+
+        # Getting started steps and a link to the network's dashboard.
+        for body <- [email.text_body, email.html_body] do
+          assert body =~ "Register a screen"
+          assert body =~ "https://#{network.domain}"
+        end
+
         true
       end)
     end

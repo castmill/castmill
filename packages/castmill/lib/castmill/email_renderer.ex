@@ -1,66 +1,15 @@
 defmodule Castmill.EmailRenderer do
   @moduledoc """
-  Renders email templates using EEx templates.
-  Provides both HTML and text versions for all emails.
+  Organization and team invitation emails, in `Castmill.EmailLayout`.
+  Each returns `{html_body, text_body}`.
   """
 
-  require EEx
-
   alias Castmill.EmailBrand
-
-  @template_dir "lib/castmill/templates/email"
-
-  # Compile templates at compile time for performance
-  EEx.function_from_file(
-    :defp,
-    :render_base_layout_html,
-    Path.join(@template_dir, "base_layout.html.eex"),
-    [:assigns]
-  )
-
-  EEx.function_from_file(
-    :defp,
-    :render_organization_invite_body_html,
-    Path.join(@template_dir, "organization_invite.html.eex"),
-    [:assigns]
-  )
-
-  EEx.function_from_file(
-    :defp,
-    :render_organization_invite_text,
-    Path.join(@template_dir, "organization_invite.text.eex"),
-    [:assigns]
-  )
-
-  EEx.function_from_file(
-    :defp,
-    :render_team_invite_body_html,
-    Path.join(@template_dir, "team_invite.html.eex"),
-    [:assigns]
-  )
-
-  EEx.function_from_file(
-    :defp,
-    :render_team_invite_text,
-    Path.join(@template_dir, "team_invite.text.eex"),
-    [:assigns]
-  )
+  alias Castmill.EmailLayout
 
   @doc """
-  Renders an organization invitation email.
-
-  Returns a tuple with {html_body, text_body}.
-
-  ## Parameters
-    - organization_name: Name of the organization
-    - network_name: Name of the network
-    - email: Recipient email address
-    - token: Invitation token
-    - base_url: Base URL for the invitation link
-
-  ## Examples
-      iex> render_organization_invite("Acme Corp", "Castmill", "user@example.com", "abc123", "https://app.castmill.com")
-      {html_body, text_body}
+  Renders an organization invitation email. `base_url` is the dashboard's
+  URL or domain (`https://` is added when it has no scheme).
   """
   def render_organization_invite(
         organization_name,
@@ -70,65 +19,54 @@ defmodule Castmill.EmailRenderer do
         base_url,
         brand \\ EmailBrand.castmill()
       ) do
-    invitation_url = "#{base_url}/invite-organization/?token=#{token}"
+    url = "#{EmailBrand.dashboard_url(base_url)}/invite-organization/?token=#{token}"
 
-    assigns = %{
-      organization_name: organization_name,
-      network_name: network_name,
-      email: email,
-      invitation_url: invitation_url
-    }
-
-    html_body_content = render_organization_invite_body_html(assigns)
-
-    html_body =
-      render_base_layout_html(%{
-        subject: "You have been invited to an Organization on #{network_name}",
-        body: html_body_content,
-        brand: EmailBrand.html_escape(brand)
-      })
-
-    text_body = render_organization_invite_text(Map.put(assigns, :brand, brand))
-
-    {html_body, text_body}
+    EmailLayout.render(brand,
+      subject: "You have been invited to an Organization on #{network_name}",
+      preheader: "Join #{organization_name} on #{network_name}.",
+      blocks: [
+        {:heading, "Join #{organization_name}"},
+        {:text,
+         [
+           "You've been invited to join the organization ",
+           {:strong, organization_name},
+           " on ",
+           {:strong, network_name},
+           "."
+         ]},
+        {:button, "Accept invitation", url},
+        {:link, url},
+        {:note,
+         "This invitation was sent to #{email}. If you weren't expecting it, you can ignore this email."}
+      ]
+    )
   end
 
   @doc """
-  Renders a team invitation email.
-
-  Returns a tuple with {html_body, text_body}.
-
-  ## Parameters
-    - team_name: Name of the team
-    - email: Recipient email address
-    - token: Invitation token
-    - base_url: Base URL for the invitation link
-
-  ## Examples
-      iex> render_team_invite("Engineering Team", "user@example.com", "abc123", "https://app.castmill.com")
-      {html_body, text_body}
+  Renders a team invitation email. `base_url` is the dashboard's URL or
+  domain (`https://` is added when it has no scheme).
   """
   def render_team_invite(team_name, email, token, base_url, brand \\ EmailBrand.castmill()) do
-    invitation_url = "#{base_url}/invite/?token=#{token}"
+    url = "#{EmailBrand.dashboard_url(base_url)}/invite/?token=#{token}"
 
-    assigns = %{
-      team_name: team_name,
-      email: email,
-      invitation_url: invitation_url
-    }
-
-    html_body_content =
-      render_team_invite_body_html(Map.put(assigns, :brand, EmailBrand.html_escape(brand)))
-
-    html_body =
-      render_base_layout_html(%{
-        subject: Plug.HTML.html_escape("You have been invited to a Team on #{brand.name}"),
-        body: html_body_content,
-        brand: EmailBrand.html_escape(brand)
-      })
-
-    text_body = render_team_invite_text(Map.put(assigns, :brand, brand))
-
-    {html_body, text_body}
+    EmailLayout.render(brand,
+      subject: "You have been invited to a Team on #{brand.name}",
+      preheader: "Join the #{team_name} team on #{brand.name}.",
+      blocks: [
+        {:heading, "Join the #{team_name} team"},
+        {:text,
+         [
+           "You've been invited to join the team ",
+           {:strong, team_name},
+           " on ",
+           {:strong, brand.name},
+           "."
+         ]},
+        {:button, "Accept invitation", url},
+        {:link, url},
+        {:note,
+         "This invitation was sent to #{email}. If you weren't expecting it, you can ignore this email."}
+      ]
+    )
   end
 end

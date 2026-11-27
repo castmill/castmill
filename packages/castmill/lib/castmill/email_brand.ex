@@ -9,12 +9,27 @@ defmodule Castmill.EmailBrand do
 
   All emails share the configured sender address (`:mailer_from`); only the
   sender name changes, so no extra DNS setup is needed.
+
+  The brand also carries what `Castmill.EmailLayout` shows: the logo for
+  light and dark backgrounds, the dashboard URL and the button colour.
   """
   import Swoosh.Email, only: [from: 2, reply_to: 2]
 
   alias Castmill.Networks.Network
 
-  defstruct [:name, :sender_name, :reply_to, :support_email, :support_url, :copyright]
+  defstruct [
+    :name,
+    :sender_name,
+    :reply_to,
+    :support_email,
+    :support_url,
+    :copyright,
+    :logo_url,
+    :logo_dark_url,
+    :dashboard_url,
+    :accent,
+    :logo_backdrop
+  ]
 
   @type t :: %__MODULE__{
           name: String.t(),
@@ -22,8 +37,16 @@ defmodule Castmill.EmailBrand do
           reply_to: String.t() | nil,
           support_email: String.t() | nil,
           support_url: String.t() | nil,
-          copyright: String.t()
+          copyright: String.t(),
+          logo_url: String.t() | nil,
+          logo_dark_url: String.t() | nil,
+          dashboard_url: String.t() | nil,
+          accent: String.t() | nil,
+          logo_backdrop: :dark | :light | nil
         }
+
+  # Castmill's button colour; networks get a neutral one that suits any logo.
+  @castmill_accent "#2563eb"
 
   @doc "The brand of `network` (a network, its id, or nil for Castmill)."
   @spec for_network(Network.t() | String.t() | nil) :: t()
@@ -31,13 +54,20 @@ defmodule Castmill.EmailBrand do
     name = present(network.name) || "Castmill"
     email = contact_email(network.email)
 
+    {logo_url, logo_dark_url, logo_backdrop} = logos(network)
+
     %__MODULE__{
       name: name,
       sender_name: name,
       reply_to: email,
       support_email: email,
       support_url: nil,
-      copyright: copyright(network, name)
+      copyright: copyright(network, name),
+      logo_url: logo_url,
+      logo_dark_url: logo_dark_url,
+      logo_backdrop: logo_backdrop,
+      dashboard_url: dashboard_url(network.domain),
+      accent: nil
     }
   end
 
@@ -70,8 +100,23 @@ defmodule Castmill.EmailBrand do
       reply_to: nil,
       support_email: "support@castmill.com",
       support_url: "https://castmill.com/support",
-      copyright: "© #{year()} Castmill AB. All rights reserved."
+      copyright: "© #{year()} Castmill AB. All rights reserved.",
+      logo_url: static_url("/images/email/castmill-logo-light.png"),
+      logo_dark_url: static_url("/images/email/castmill-logo-dark.png"),
+      dashboard_url: nil,
+      accent: @castmill_accent
     }
+  end
+
+  @doc "The dashboard URL of a network domain (`https://` unless it has a scheme)."
+  @spec dashboard_url(String.t() | nil) :: String.t() | nil
+  def dashboard_url(domain) do
+    case present(domain) do
+      nil -> nil
+      "http://" <> _ = url -> String.trim_trailing(url, "/")
+      "https://" <> _ = url -> String.trim_trailing(url, "/")
+      host -> "https://" <> String.trim_trailing(host, "/")
+    end
   end
 
   @doc "Sets the sender (brand name, shared address) and Reply-To of `email`."
@@ -88,7 +133,10 @@ defmodule Castmill.EmailBrand do
   def html_escape(%__MODULE__{} = brand) do
     brand
     |> Map.from_struct()
-    |> Map.new(fn {key, value} -> {key, value && Plug.HTML.html_escape(value)} end)
+    |> Map.new(fn
+      {key, value} when is_binary(value) -> {key, Plug.HTML.html_escape(value)}
+      pair -> pair
+    end)
     |> then(&struct(__MODULE__, &1))
   end
 
@@ -97,6 +145,47 @@ defmodule Castmill.EmailBrand do
       {name, address} -> {name, address}
       address when is_binary(address) -> {"Castmill", address}
     end
+  end
+
+  # The network's logos, as in the dashboard: `logo` is for dark backgrounds
+  # and `logo_light` for light ones. With only one of them, it is shown on a
+  # backdrop of its own background colour, so it stays legible in both light
+  # and dark mode.
+  defp logos(%Network{logo: logo, logo_light: logo_light}) do
+    case {web_url(logo_light), web_url(logo)} do
+      {nil, nil} -> {nil, nil, nil}
+      {light, nil} -> {light, light, :light}
+      {nil, dark} -> {dark, dark, :dark}
+      {light, dark} -> {light, dark, nil}
+    end
+  end
+
+  # Only absolute http(s) URLs end up in emails.
+  defp web_url(value) do
+    case present(value) do
+      "https://" <> _ = url -> url
+      "http://" <> _ = url -> url
+      _ -> nil
+    end
+  end
+
+  # A file served by the backend, as an absolute URL. Built from the
+  # endpoint's configuration, so it also works where the endpoint isn't
+  # running (background jobs, scripts).
+  defp static_url(path) do
+    url = Application.get_env(:castmill, CastmillWeb.Endpoint, [])[:url] || []
+    scheme = url[:scheme] || "http"
+    host = url[:host] || "localhost"
+
+    port =
+      case {scheme, url[:port]} do
+        {_, nil} -> ""
+        {"https", 443} -> ""
+        {"http", 80} -> ""
+        {_, port} -> ":#{port}"
+      end
+
+    "#{scheme}://#{host}#{port}#{path}"
   end
 
   # Networks that kept Castmill's default copyright show their own name.

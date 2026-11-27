@@ -25,16 +25,45 @@ hardcode "Castmill" in an email that is sent for a network**.
 - `EmailBrand.html_escape/1` escapes the brand for HTML templates, because
   network names and emails are user input.
 
+## Design: `Castmill.EmailLayout`
+
+Every email uses `Castmill.EmailLayout.render(brand, subject:, blocks:, preheader:, reason:)`,
+which returns `{html_body, text_body}` from the same content:
+
+- the brand's logo (or its name), a card with the content, and a footer with
+  the support contact, the optional `reason` and the copyright;
+- light and dark mode (`prefers-color-scheme`, with the light design where a
+  client doesn't support it);
+- blocks: `{:heading, text}`, `{:text, inline}`, `{:button, label, url}`,
+  `{:link, url}` (fallback for the button), `{:code, text}`,
+  `{:steps, [{title, inline}]}` and `{:note, inline}`. `inline` is a string or
+  a list of strings, `{:strong, text}` and `{:link, label, url}`.
+
+The layout escapes everything, so pass plain values. Don't write HTML
+templates for emails.
+
+The brand carries what the layout shows:
+
+| Field | Network brand | Castmill brand |
+| --- | --- | --- |
+| `logo_url`, `logo_dark_url` | `logo_light` and `logo` (light and dark backgrounds), as in the dashboard | `/images/email/castmill-logo-{light,dark}.png` on the backend |
+| `logo_backdrop` | `:dark` when only `logo` is set, `:light` when only `logo_light` is: the logo is shown on a backdrop of that colour in both modes | `nil` |
+| `dashboard_url` | `https://` + the network domain | `nil` |
+| `accent` | `nil`: a neutral dark button that suits any logo | Castmill blue |
+
+Only http(s) logo URLs are used. Castmill's logo URLs are built from the
+endpoint's configured host (`CASTMILL_HOST`), so they work in background jobs.
+`EmailBrand.dashboard_url/1` adds `https://` to a domain without a scheme; use
+it for links built from a network domain.
+
 ## Rules for new emails
 
 1. Find the network the email belongs to (the organization's, team's,
    invitation's or user's network) and build the brand with
    `EmailBrand.for_network/1`.
-2. Set the sender with `EmailBrand.put_sender/2` instead of reading
+2. Render the email with `Castmill.EmailLayout.render/2`.
+3. Set the sender with `EmailBrand.put_sender/2` instead of reading
    `:mailer_from` directly.
-3. Render `@brand` in templates (name, support contact, copyright). Use
-   `EmailBrand.html_escape/1` for HTML bodies. Show the "do not reply" line only
-   when the brand has no `reply_to`.
 4. Send through `Castmill.EmailDelivery.deliver/2`. The queue serializes only
    known fields (including `reply_to`); add new fields to both
    `serialize_email/1` and `deserialize_email/1`.
@@ -48,10 +77,10 @@ Castmill-branded.
 
 - `Castmill.Accounts.UserNotifier`: sign-up, already registered, network
   invitation, network admin setup and credential recovery.
-- `Castmill.EmailRenderer` with `templates/email/base_layout.html.eex`:
-  organization and team invitations.
+- `Castmill.EmailRenderer`: organization and team invitations.
 - `Castmill.Addons.Onboarding`: the welcome email (the `:user_signup` hook
-  payload carries `network_id`).
+  payload carries `network_id`), with getting-started steps and a link to the
+  network's dashboard.
 
 A per-network sender domain (`From: noreply@customer.com`) needs a verified
 sending identity per network and is not implemented yet.
