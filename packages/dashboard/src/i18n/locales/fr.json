@@ -384,6 +384,9 @@
       "privacyPolicyUrl": "URL de la Politique de Confidentialité",
       "privacyPolicyUrlPlaceholder": "https://exemple.fr/confidentialite",
       "privacyPolicyUrlHelp": "Lien vers votre politique de confidentialité, affiché sur les pages de connexion et d'inscription.",
+      "termsUrl": "URL des conditions d'utilisation",
+      "termsUrlPlaceholder": "https://exemple.fr/conditions",
+      "termsUrlHelp": "Lien vers vos conditions d'utilisation, affiché dans le pied de page.",
       "defaultLanguage": "Langue par Défaut",
       "defaultLanguageHelp": "La langue par défaut pour les nouveaux utilisateurs et la page de connexion/inscription."
     },

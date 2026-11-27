@@ -17,6 +17,7 @@ defmodule Castmill.Networks.Network do
     field(:name, :string)
     field(:default_locale, :string, default: "en")
     field(:privacy_policy_url, :string)
+    field(:terms_url, :string)
 
     field(:invitation_only, :boolean, default: true)
     field(:invitation_only_org_admins, :boolean, default: false)
@@ -83,11 +84,15 @@ defmodule Castmill.Networks.Network do
       :default_plan_id,
       :default_locale,
       :privacy_policy_url,
+      :terms_url,
       :invitation_only,
       :invitation_only_org_admins
     ])
     |> validate_required(required)
     |> validate_format(:email, ~r/@/, message: "must be a valid email address")
+    # Shown as links on the login page and in the footer: web addresses only.
+    |> validate_format(:privacy_policy_url, ~r{\Ahttps?://}i, message: "must be an http(s) URL")
+    |> validate_format(:terms_url, ~r{\Ahttps?://}i, message: "must be an http(s) URL")
     |> validate_format(
       :domain,
       ~r/^[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?)*(:\d+)?$/,

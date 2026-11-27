@@ -384,6 +384,9 @@
       "privacyPolicyUrl": "隐私政策链接",
       "privacyPolicyUrlPlaceholder": "https://example.com/privacy",
       "privacyPolicyUrlHelp": "指向您的隐私政策的链接，显示在登录和注册页面。",
+      "termsUrl": "服务条款网址",
+      "termsUrlPlaceholder": "https://example.com/terms",
+      "termsUrlHelp": "指向您服务条款的链接，显示在页脚中。",
       "defaultLanguage": "默认语言",
       "defaultLanguageHelp": "新用户和登录/注册页面的默认语言。"
     },

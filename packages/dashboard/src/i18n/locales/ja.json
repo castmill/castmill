@@ -384,6 +384,9 @@
       "privacyPolicyUrl": "プライバシーポリシー URL",
       "privacyPolicyUrlPlaceholder": "https://example.com/privacy",
       "privacyPolicyUrlHelp": "ログインおよびサインアップページに表示されるプライバシーポリシーへのリンクです。",
+      "termsUrl": "利用規約のURL",
+      "termsUrlPlaceholder": "https://example.com/terms",
+      "termsUrlHelp": "利用規約へのリンクで、フッターに表示されます。",
       "defaultLanguage": "デフォルト言語",
       "defaultLanguageHelp": "新規ユーザーおよびログイン/サインアップページのデフォルト言語です。"
     },

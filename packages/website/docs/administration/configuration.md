@@ -85,6 +85,18 @@ API keys and OAuth client credentials of widget integrations are not environment
 
 `CASTMILL_GIT_SHA` and `CASTMILL_BUILD_TIME` are reported by `/api/version`. Set them in your build pipeline.
 
+## Privacy policy and terms
+
+The backend can publish the operator's own documents at `/privacy` and `/terms`. Set them in the application configuration as HTML files, either a path or a file inside an application's directory:
+
+```elixir
+config :castmill, :legal_documents,
+  privacy: {:my_app, "priv/legal/privacy.html"},
+  terms: "/etc/castmill/terms.html"
+```
+
+A document that isn't set returns 404. Each network links to its own documents with the **Privacy Policy URL** and **Terms of Service URL** in its settings (see [Network administration](./network-administration.md)).
+
 ## Encryption keys
 
 `ENCRYPTION_MASTER_KEY` is key version 1. Each encrypted value records the version of the key that encrypted it, so you can rotate keys without downtime:

@@ -109,6 +109,7 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'https://example.com/logo.png',
   'https://example.com/logo-light.png',
   'https://example.com/privacy',
+  'https://example.com/terms',
   'https://github.com/yourcompany',
   'https://x.com/yourcompany',
   'https://linkedin.com/company/yourcompany',

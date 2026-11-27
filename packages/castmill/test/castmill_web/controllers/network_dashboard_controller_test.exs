@@ -169,6 +169,58 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       assert response["email"] == "updated@test.com"
     end
 
+    test "saves and clears the privacy policy and terms URLs and the default language", %{
+      conn: conn,
+      network: network
+    } do
+      admin = create_network_admin(network)
+      conn = authenticate_conn(conn, admin, network)
+
+      response =
+        conn
+        |> put("/dashboard/network/settings", %{
+          "network" => %{
+            "privacy_policy_url" => "https://example.com/privacy",
+            "terms_url" => "https://example.com/terms",
+            "default_locale" => "sv"
+          }
+        })
+        |> json_response(200)
+
+      assert %{
+               "privacy_policy_url" => "https://example.com/privacy",
+               "terms_url" => "https://example.com/terms",
+               "default_locale" => "sv"
+             } = response
+
+      response =
+        conn
+        |> put("/dashboard/network/settings", %{
+          "network" => %{"privacy_policy_url" => nil, "terms_url" => nil}
+        })
+        |> json_response(200)
+
+      assert %{"privacy_policy_url" => nil, "terms_url" => nil} = response
+    end
+
+    test "only accepts web addresses for the privacy policy and terms", %{
+      conn: conn,
+      network: network
+    } do
+      admin = create_network_admin(network)
+      conn = authenticate_conn(conn, admin, network)
+
+      for field <- ["privacy_policy_url", "terms_url"] do
+        conn
+        |> put("/dashboard/network/settings", %{
+          "network" => %{field => "javascript:alert(1)"}
+        })
+        |> json_response(422)
+      end
+
+      assert %{privacy_policy_url: nil, terms_url: nil} = Networks.get_network(network.id)
+    end
+
     test "updates and clears the light mode logo", %{conn: conn, network: network} do
       admin = create_network_admin(network)
       conn = authenticate_conn(conn, admin, network)

@@ -34,6 +34,7 @@ defmodule CastmillWeb.NetworkSettingsController do
             email: network.email,
             default_locale: network.default_locale,
             privacy_policy_url: network.privacy_policy_url,
+            terms_url: network.terms_url,
             social_links: get_in(network.meta, ["social_links"]) || %{},
             # Passkeys use this RP ID on all of the network's domains
             passkey_rp_id: Castmill.Networks.PasskeyDomains.rp_id(network)

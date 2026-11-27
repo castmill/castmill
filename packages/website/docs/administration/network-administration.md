@@ -24,7 +24,7 @@ If you don't belong to any organization yet, the dashboard says so and greys out
 
 | Group | Settings |
 | --- | --- |
-| **Network Identity** | **Network Name**, **Support Email**, **Logo URL**, **Copyright Text**, **Privacy Policy URL** (shown on the sign-in and sign-up pages) and **Default Language** for new users and the sign-in page |
+| **Network Identity** | **Network Name**, **Support Email**, **Logo URL**, **Copyright Text**, **Privacy Policy URL** (shown on the sign-in and sign-up pages and in the footer), **Terms of Service URL** (shown in the footer) and **Default Language** for new users and the sign-in page |
 | **Social Links** | GitHub, X, LinkedIn and Facebook addresses for the dashboard footer |
 | **Domain Configuration** | The network domain. It is read-only here; the installation operator changes it in the admin tool. |
 | **Access Control** | **Invitation Only**: when on, people can only join through an invitation and public sign-up is disabled. |

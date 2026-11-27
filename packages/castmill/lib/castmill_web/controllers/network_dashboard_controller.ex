@@ -1233,6 +1233,7 @@ defmodule CastmillWeb.NetworkDashboardController do
       copyright: network.copyright,
       default_locale: network.default_locale,
       privacy_policy_url: network.privacy_policy_url,
+      terms_url: network.terms_url,
       invitation_only: network.invitation_only,
       invitation_only_org_admins: network.invitation_only_org_admins,
       meta: network.meta,
@@ -1343,7 +1344,10 @@ defmodule CastmillWeb.NetworkDashboardController do
       "copyright",
       "invitation_only",
       "invitation_only_org_admins",
-      "meta"
+      "meta",
+      "default_locale",
+      "privacy_policy_url",
+      "terms_url"
     ]
 
     params

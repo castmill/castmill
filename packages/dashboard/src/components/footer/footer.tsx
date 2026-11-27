@@ -29,8 +29,24 @@ const Footer: Component = () => {
     <div class="castmill-footer">
       <div class="footer-links">
         <p>{copyright()}</p>
-        <a href="#">{t('common.privacy')}</a>
-        <a href="#">{t('common.terms')}</a>
+        <Show when={store.networkSettings.privacyPolicyUrl}>
+          <a
+            href={store.networkSettings.privacyPolicyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t('common.privacy')}
+          </a>
+        </Show>
+        <Show when={store.networkSettings.termsUrl}>
+          <a
+            href={store.networkSettings.termsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t('common.terms')}
+          </a>
+        </Show>
         <a href={`mailto:${supportEmail()}`}>{t('common.contact')}</a>
         <Show when={socialLinks().github}>
           <a
