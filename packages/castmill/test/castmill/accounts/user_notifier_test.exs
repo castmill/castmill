@@ -46,7 +46,7 @@ defmodule Castmill.Accounts.UserNotifierTest do
     {:ok, _email} = UserNotifier.deliver_already_registered_notice(email, dashboard_uri)
 
     assert_email_sent(fn sent_email ->
-      assert sent_email.subject == "Castmill™ — You Already Have an Account"
+      assert sent_email.subject == "You already have a Castmill™ account"
       assert Enum.any?(sent_email.to, fn {_name, addr} -> addr == email end)
 
       login_url = "#{dashboard_uri}/login?email=#{URI.encode_www_form(email)}"
@@ -72,7 +72,7 @@ defmodule Castmill.Accounts.UserNotifierTest do
       )
 
     assert_email_sent(fn sent ->
-      assert sent.subject == "Tylöprint <b> — You Already Have an Account"
+      assert sent.subject == "You already have a Tylöprint <b> account"
       assert sent.from == {"Tylöprint <b>", "no-reply@castmill.com"}
       assert sent.reply_to == {"", "info@tyloprint.test"}
 
@@ -99,7 +99,7 @@ defmodule Castmill.Accounts.UserNotifierTest do
       UserNotifier.deliver_signup_instructions(signup, "https://signage.tyloprint.test")
 
     assert_email_sent(fn sent ->
-      assert sent.subject == "Complete Your Tylöprint <b> Signup"
+      assert sent.subject == "Finish creating your Tylöprint <b> account"
       refute sent.text_body =~ "Castmill"
       refute sent.html_body =~ "Castmill"
       true

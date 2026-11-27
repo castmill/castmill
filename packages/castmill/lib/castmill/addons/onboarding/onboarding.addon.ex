@@ -5,6 +5,7 @@ defmodule Castmill.Addons.Onboarding do
   import Swoosh.Email
   alias Castmill.EmailBrand
   alias Castmill.EmailDelivery
+  alias Castmill.EmailLayout
 
   @impl Castmill.Addons.AddonBehaviour
   def register_hooks() do
@@ -30,27 +31,53 @@ defmodule Castmill.Addons.Onboarding do
     if user == nil do
       Logger.error("User not found for id #{user_id}")
     else
-      subject = "Welcome to #{brand.name}!"
+      {html, text} = EmailLayout.render(brand, welcome(user, brand))
 
-      body = """
-      Hello #{user.name || ""}
-
-      Welcome to #{brand.name}! We're excited to have you on board.
-      """
-
-      deliver(email, subject, body, brand)
+      new()
+      |> to(email)
+      |> EmailBrand.put_sender(brand)
+      |> subject("Welcome to #{brand.name}")
+      |> text_body(text)
+      |> html_body(html)
+      |> EmailDelivery.deliver(context: "onboarding.welcome")
     end
   end
 
-  # Delivers the email using the application mailer.
-  defp deliver(recipient, subject, body, brand) do
-    email =
-      new()
-      |> to(recipient)
-      |> EmailBrand.put_sender(brand)
-      |> subject(subject)
-      |> text_body(body)
+  @doc false
+  # The welcome email's content, in Castmill.EmailLayout blocks.
+  def welcome(user, brand) do
+    greeting =
+      case user.name && String.trim(user.name) do
+        name when is_binary(name) and name != "" and name != user.email -> "Welcome, #{name}"
+        _ -> "Welcome to #{brand.name}"
+      end
 
-    EmailDelivery.deliver(email, context: "onboarding.welcome")
+    button =
+      if brand.dashboard_url,
+        do: [{:button, "Open your dashboard", brand.dashboard_url}],
+        else: []
+
+    [
+      subject: "Welcome to #{brand.name}",
+      preheader: "Your account is ready. Here's how to get your first screen running.",
+      blocks:
+        [
+          {:heading, greeting},
+          {:text,
+           [
+             "Your ",
+             {:strong, brand.name},
+             " account is ready. Here's how to get your first screen showing your content:"
+           ]},
+          {:steps,
+           [
+             {"Register a screen",
+              "Open the player on your screen. In the dashboard, go to Devices, choose Register device and enter the pincode the screen shows."},
+             {"Add your content", "Upload images and videos in Content > Medias."},
+             {"Build a playlist",
+              "Arrange your media and widgets in Content > Playlists, then assign the playlist to your screen."}
+           ]}
+        ] ++ button
+    ]
   end
 end

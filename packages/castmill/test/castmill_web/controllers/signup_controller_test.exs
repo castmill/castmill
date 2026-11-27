@@ -120,7 +120,7 @@ defmodule CastmillWeb.SignUpControllerTest do
 
       # Ensure an email was sent, branded as the network signed up to
       assert_email_sent(fn sent ->
-        assert sent.subject == "Complete Your #{network.name} Signup"
+        assert sent.subject == "Finish creating your #{network.name} account"
         assert {network.name, elem(sent.from, 1)} == sent.from
         refute sent.html_body =~ "Castmill"
         refute sent.text_body =~ "Castmill"
@@ -142,7 +142,7 @@ defmodule CastmillWeb.SignUpControllerTest do
       assert json_response(conn, 201)["status"] == "ok"
 
       # Use Swoosh test helpers to assert an email was sent
-      assert_email_sent(subject: "Complete Your #{network.name} Signup")
+      assert_email_sent(subject: "Finish creating your #{network.name} account")
     end
 
     test "handles errors during signup creation", %{conn: conn} do
