@@ -74,8 +74,9 @@ defmodule Castmill.Addons.Onboarding do
              {"Register a screen",
               "Open the player on your screen. In the dashboard, go to Devices, choose Register device and enter the pincode the screen shows."},
              {"Add your content", "Upload images and videos in Content > Medias."},
-             {"Build a playlist",
-              "Arrange your media and widgets in Content > Playlists, then assign the playlist to your screen."}
+             {"Build a playlist", "Arrange your media and widgets in Content > Playlists."},
+             {"Show it on your screen",
+              "Each registered screen gets its own channel. In Channels, open your screen's channel and choose your playlist as its default playlist, or schedule it on the calendar."}
            ]}
         ] ++ button
     ]

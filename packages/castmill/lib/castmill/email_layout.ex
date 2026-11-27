@@ -128,6 +128,7 @@ defmodule Castmill.EmailLayout do
     <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #{@light.page}; opacity: 0;">#{esc(preheader)}#{String.duplicate("&#8199;&#65279;&#847; ", 40)}</div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="cm-page" bgcolor="#{@light.page}" style="background-color: #{@light.page};">
     <tr><td align="center" class="cm-shell" style="padding: 40px 16px;">
+    <!--[if mso]><table role="presentation" width="560" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 560px;">
     <tr><td style="padding: 0 4px 24px 4px;">#{logo(brand)}</td></tr>
     <tr><td class="cm-card cm-card-pad" bgcolor="#{@light.card}" style="background-color: #{@light.card}; border: 1px solid #{@light.border}; border-radius: 14px; padding: 40px 40px 36px 40px;">
@@ -135,6 +136,7 @@ defmodule Castmill.EmailLayout do
     </td></tr>
     <tr><td style="padding: 24px 8px 0 8px;">#{footer(brand, reason)}</td></tr>
     </table>
+    <!--[if mso]></td></tr></table><![endif]-->
     </td></tr>
     </table>
     </body>
@@ -165,9 +167,12 @@ defmodule Castmill.EmailLayout do
     ~s(<span class="cm-text" style="font-family: #{@font}; font-size: 20px; font-weight: 700; letter-spacing: -0.2px; color: #{@light.text};">#{esc(brand.name)}</span>)
   end
 
-  # A logo made for dark backgrounds, shown on a dark backdrop in both modes.
-  defp logo(%EmailBrand{logo_on_dark: true} = brand) do
-    ~s(<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="#151925" style="background-color: #151925; border-radius: 10px; padding: 10px 14px;">#{logo_img(brand.logo_url, brand.name, "")}</td></tr></table>)
+  # A network with a logo for only one background colour: shown on a backdrop
+  # of that colour in both modes.
+  defp logo(%EmailBrand{logo_backdrop: backdrop} = brand) when backdrop in [:dark, :light] do
+    color = if backdrop == :dark, do: "#151925", else: "#ffffff"
+
+    ~s(<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="#{color}" style="background-color: #{color}; border: 1px solid #{if backdrop == :dark, do: color, else: @light.border}; border-radius: 10px; padding: 10px 14px;">#{logo_img(brand.logo_url, brand.name, "")}</td></tr></table>)
   end
 
   defp logo(%EmailBrand{logo_url: url, logo_dark_url: url} = brand) do

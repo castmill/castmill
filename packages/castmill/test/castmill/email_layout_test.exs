@@ -36,6 +36,13 @@ defmodule Castmill.EmailLayoutTest do
     refute text =~ "<a "
   end
 
+  test "keeps a fixed width in Outlook" do
+    {html, _text} = render(EmailBrand.castmill(), [{:text, "Hi"}])
+
+    assert html =~ ~s(<!--[if mso]><table role="presentation" width="560")
+    assert html =~ "<!--[if mso]></td></tr></table><![endif]-->"
+  end
+
   test "supports dark mode and has a preheader" do
     {html, _text} = render(EmailBrand.castmill(), [{:text, "Hi"}], preheader: "Preview text")
 
@@ -83,9 +90,18 @@ defmodule Castmill.EmailLayoutTest do
 
     # A logo made for dark backgrounds only is shown on a dark backdrop.
     dark_only = EmailBrand.for_network(network_fixture(%{logo: "https://cdn.test/dark.png"}))
-    assert %{logo_on_dark: true} = dark_only
+    assert %{logo_backdrop: :dark} = dark_only
     {html, _} = render(dark_only, [{:text, "Hi"}])
     assert html =~ ~s(bgcolor="#151925")
+
+    # A logo made for light backgrounds only keeps a light backdrop in dark mode.
+    light_only =
+      EmailBrand.for_network(network_fixture(%{logo_light: "https://cdn.test/light.png"}))
+
+    assert %{logo_backdrop: :light, logo_url: "https://cdn.test/light.png"} = light_only
+    {html, _} = render(light_only, [{:text, "Hi"}])
+    assert html =~ ~s(bgcolor="#ffffff")
+    refute html =~ "cm-dark-only\" style"
 
     # Only web addresses end up in emails.
     unsafe = EmailBrand.for_network(network_fixture(%{logo: "javascript:alert(1)"}))

@@ -47,7 +47,7 @@ The brand carries what the layout shows:
 | Field | Network brand | Castmill brand |
 | --- | --- | --- |
 | `logo_url`, `logo_dark_url` | `logo_light` and `logo` (light and dark backgrounds), as in the dashboard | `/images/email/castmill-logo-{light,dark}.png` on the backend |
-| `logo_on_dark` | `true` when only `logo` is set: it is shown on a dark backdrop | `false` |
+| `logo_backdrop` | `:dark` when only `logo` is set, `:light` when only `logo_light` is: the logo is shown on a backdrop of that colour in both modes | `nil` |
 | `dashboard_url` | `https://` + the network domain | `nil` |
 | `accent` | `nil`: a neutral dark button that suits any logo | Castmill blue |
 

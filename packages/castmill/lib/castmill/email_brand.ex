@@ -28,7 +28,7 @@ defmodule Castmill.EmailBrand do
     :logo_dark_url,
     :dashboard_url,
     :accent,
-    logo_on_dark: false
+    :logo_backdrop
   ]
 
   @type t :: %__MODULE__{
@@ -42,7 +42,7 @@ defmodule Castmill.EmailBrand do
           logo_dark_url: String.t() | nil,
           dashboard_url: String.t() | nil,
           accent: String.t() | nil,
-          logo_on_dark: boolean()
+          logo_backdrop: :dark | :light | nil
         }
 
   # Castmill's button colour; networks get a neutral one that suits any logo.
@@ -54,7 +54,7 @@ defmodule Castmill.EmailBrand do
     name = present(network.name) || "Castmill"
     email = contact_email(network.email)
 
-    {logo_url, logo_dark_url, logo_on_dark} = logos(network)
+    {logo_url, logo_dark_url, logo_backdrop} = logos(network)
 
     %__MODULE__{
       name: name,
@@ -65,7 +65,7 @@ defmodule Castmill.EmailBrand do
       copyright: copyright(network, name),
       logo_url: logo_url,
       logo_dark_url: logo_dark_url,
-      logo_on_dark: logo_on_dark,
+      logo_backdrop: logo_backdrop,
       dashboard_url: dashboard_url(network.domain),
       accent: nil
     }
@@ -148,14 +148,15 @@ defmodule Castmill.EmailBrand do
   end
 
   # The network's logos, as in the dashboard: `logo` is for dark backgrounds
-  # and `logo_light` for light ones. With only `logo`, it is shown on a dark
-  # backdrop so it stays legible on a light email.
+  # and `logo_light` for light ones. With only one of them, it is shown on a
+  # backdrop of its own background colour, so it stays legible in both light
+  # and dark mode.
   defp logos(%Network{logo: logo, logo_light: logo_light}) do
     case {web_url(logo_light), web_url(logo)} do
-      {nil, nil} -> {nil, nil, false}
-      {light, nil} -> {light, light, false}
-      {nil, dark} -> {dark, dark, true}
-      {light, dark} -> {light, dark, false}
+      {nil, nil} -> {nil, nil, nil}
+      {light, nil} -> {light, light, :light}
+      {nil, dark} -> {dark, dark, :dark}
+      {light, dark} -> {light, dark, nil}
     end
   end
 
