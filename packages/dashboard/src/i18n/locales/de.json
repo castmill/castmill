@@ -1111,7 +1111,13 @@
       "removeItemTitle": "Element entfernen?",
       "removeItemMessage": "\"{{name}}\" aus dieser Playlist entfernen?"
     },
-    "widgetConfigFailed": "Die Einstellungen dieses Widgets konnten nicht angezeigt werden. Schließen Sie dieses Fenster und wählen Sie ein anderes Widget."
+    "widgetConfigFailed": "Die Einstellungen dieses Widgets konnten nicht angezeigt werden. Schließen Sie dieses Fenster und wählen Sie ein anderes Widget.",
+    "mediaUpload": {
+      "uploadImage": "Neues Bild hochladen",
+      "uploadVideo": "Neues Video hochladen",
+      "uploadMedia": "Neue Mediendatei hochladen",
+      "description": "Die hochgeladene Datei wird für dieses Widget ausgewählt und erscheint nach der Verarbeitung in Ihrer Medienbibliothek."
+    }
   },
   "layouts": {
     "title": "Layoutvorlagen",

@@ -6,6 +6,7 @@ import {
   JSX,
   onMount,
   createEffect,
+  createUniqueId,
 } from 'solid-js';
 import { dropTargetForExternal } from '@atlaskit/pragmatic-drag-and-drop/external/adapter';
 import { authFetch, getAuthToken } from '../../common/services/auth-fetch';
@@ -34,6 +35,10 @@ interface UploadComponentProps {
   onFileUpload?: (fileName: string, result: any) => void;
   onCancel?: () => void;
   onUploadComplete?: () => void;
+  /** Only accept files of this kind, e.g. 'image' or 'video'. */
+  mediaType?: string;
+  /** Whether several files can be uploaded at once (default true). */
+  multiple?: boolean;
 }
 
 interface Progresses {
@@ -70,6 +75,15 @@ export const UploadComponent = (props: UploadComponentProps) => {
   const t = (key: string, params?: Record<string, any>) =>
     props.store?.i18n?.t(key, params) || key;
   const toast = useToast();
+  const inputId = `upload-file-${createUniqueId()}`;
+  const multiple = () => props.multiple !== false;
+  const acceptedFileTypes = () =>
+    props.mediaType
+      ? supportedFileTypes.filter((type) =>
+          type.startsWith(`${props.mediaType}/`)
+        )
+      : supportedFileTypes;
+  const isAccepted = (type: string) => acceptedFileTypes().includes(type);
 
   const [files, setFiles] = createSignal<File[]>([]);
   const [messages, setMessages] = createSignal<Messages>({});
@@ -149,7 +163,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
     const target = e.target as HTMLInputElement;
     if (target.files) {
       const selectedFiles = Array.from(target.files).filter((file) =>
-        supportedFileTypes.includes(file.type)
+        isAccepted(file.type)
       );
       setFiles(selectedFiles);
       setProgresses({});
@@ -288,8 +302,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
         setIsDraggedOver(false);
 
         const droppedFiles = Array.from(source.items).filter(
-          (file) =>
-            file.kind === 'file' && supportedFileTypes.includes(file.type)
+          (file) => file.kind === 'file' && isAccepted(file.type)
         );
 
         if (droppedFiles.length === 0) {
@@ -297,10 +310,8 @@ export const UploadComponent = (props: UploadComponentProps) => {
           return;
         }
 
-        setFiles([
-          ...files(),
-          ...droppedFiles.map((file) => file.getAsFile()!),
-        ]);
+        const newFiles = droppedFiles.map((file) => file.getAsFile()!);
+        setFiles(multiple() ? [...files(), ...newFiles] : newFiles.slice(0, 1));
         setProgresses({});
         setMessages({});
       },
@@ -335,13 +346,13 @@ export const UploadComponent = (props: UploadComponentProps) => {
       <div>
         <input
           type="file"
-          id="file"
+          id={inputId}
           class="file-input"
-          multiple
+          multiple={multiple()}
           onChange={handleFileChange}
-          accept={supportedFileTypes.join(',')}
+          accept={acceptedFileTypes().join(',')}
         />
-        <label for="file" class="file-label">
+        <label for={inputId} class="file-label">
           Choose Files
         </label>
       </div>

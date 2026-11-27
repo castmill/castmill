@@ -71,6 +71,7 @@ import {
 } from './text-overrides';
 import { LayoutEditor } from '../../common/components/layout-editor';
 import { LayoutRefEditor } from '../../common/components/layout-ref-editor';
+import { MediaUpload } from './media-upload';
 
 /**
  * WidgetConfig
@@ -593,6 +594,16 @@ export const getMediaPlaceholderText = (
       ? t('common.selectVideo')
       : t('common.selectMedia');
 
+export const getMediaUploadLabel = (
+  filters: Record<string, string | boolean>,
+  t: (key: string) => string
+): string =>
+  filters['type'] === 'image'
+    ? t('playlists.mediaUpload.uploadImage')
+    : filters['type'] === 'video'
+      ? t('playlists.mediaUpload.uploadVideo')
+      : t('playlists.mediaUpload.uploadMedia');
+
 export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const toast = useToast();
   const [widgetConfig, setWidgetConfig] = createSignal(props.item.config);
@@ -980,6 +991,10 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     return undefined;
   };
 
+  /** Media pickers offer an in-place upload to users who can add medias. */
+  const canUploadMedias = () =>
+    !!props.store.permissions?.matrix?.medias?.includes('create');
+
   /**
    * Maps JSON Schema types to form field types.
    * Also handles special cases like enums (which render as select dropdowns).
@@ -1181,51 +1196,85 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
         switch (collectionName) {
           case 'medias':
+            // Bumped after an upload so the picker lists the new media.
+            const [mediaListVersion, setMediaListVersion] = createSignal(0);
+            const selectMedia = (media: JsonMedia) => {
+              setWidgetOptions({ ...widgetOptions(), [key]: media });
+              setIsFormModified(true);
+              setIsFormValid(checkFormValidity());
+            };
             return (
               <>
-                <ComboBox<JsonMedia>
-                  closeLabel={t('common.close')}
-                  id={key}
-                  label={translateWidgetOptionLabel(key, key)}
-                  placeholder={placeholderText}
-                  value={getReferenceValue<JsonMedia>(key)}
-                  renderItem={(item: JsonMedia) => {
-                    return (
-                      <div class="media-item">
-                        <div
-                          class="thumbnail"
-                          style={{
-                            'background-image': `url(${item.files['thumbnail']?.uri})`,
-                          }}
-                        ></div>
-                        <div>{item.name}</div>
-                      </div>
-                    );
-                  }}
-                  fetchItems={async (
-                    page: number,
-                    pageSize: number,
-                    search: string
-                  ) => {
-                    return ResourcesService.fetch<JsonMedia>(
-                      props.baseUrl,
-                      props.organizationId,
-                      collectionName,
-                      {
-                        page,
-                        page_size: pageSize,
-                        search,
-                        filters:
-                          Object.keys(filters).length > 0 ? filters : undefined,
+                <For each={[mediaListVersion()]}>
+                  {() => (
+                    <ComboBox<JsonMedia>
+                      closeLabel={t('common.close')}
+                      id={key}
+                      label={translateWidgetOptionLabel(key, key)}
+                      placeholder={placeholderText}
+                      value={getReferenceValue<JsonMedia>(key)}
+                      renderItem={(item: JsonMedia) => {
+                        return (
+                          <div class="media-item">
+                            <div
+                              class="thumbnail"
+                              style={{
+                                'background-image': `url(${item.files['thumbnail']?.uri})`,
+                              }}
+                            ></div>
+                            <div>{item.name}</div>
+                          </div>
+                        );
+                      }}
+                      fetchItems={async (
+                        page: number,
+                        pageSize: number,
+                        search: string
+                      ) => {
+                        return ResourcesService.fetch<JsonMedia>(
+                          props.baseUrl,
+                          props.organizationId,
+                          collectionName,
+                          {
+                            page,
+                            page_size: pageSize,
+                            search,
+                            filters:
+                              Object.keys(filters).length > 0
+                                ? filters
+                                : undefined,
+                          }
+                        );
+                      }}
+                      onSelect={selectMedia}
+                    />
+                  )}
+                </For>
+                <Show when={canUploadMedias()}>
+                  <MediaUpload
+                    store={props.store}
+                    baseUrl={props.baseUrl}
+                    organizationId={props.organizationId}
+                    mediaType={
+                      typeof filters['type'] === 'string'
+                        ? filters['type']
+                        : undefined
+                    }
+                    label={getMediaUploadLabel(filters, t)}
+                    onUpload={(media) => {
+                      selectMedia(media);
+                      setMediaListVersion((version) => version + 1);
+                    }}
+                    onProcessed={(media) => {
+                      // Only refresh it if the user kept the uploaded media.
+                      const current = getReferenceValue<JsonMedia>(key);
+                      if (current?.id === media.id) {
+                        setWidgetOptions({ ...widgetOptions(), [key]: media });
+                        setMediaListVersion((version) => version + 1);
                       }
-                    );
-                  }}
-                  onSelect={(media: JsonMedia) => {
-                    setWidgetOptions({ ...widgetOptions(), [key]: media });
-                    setIsFormModified(true);
-                    setIsFormValid(checkFormValidity());
-                  }}
-                />
+                    }}
+                  />
+                </Show>
                 <div class="error">{errors().get(key)}</div>
               </>
             );

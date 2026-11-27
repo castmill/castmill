@@ -1089,7 +1089,13 @@
       "removeItemTitle": "移除项目？",
       "removeItemMessage": "要从此播放列表中移除“{{name}}”吗？"
     },
-    "widgetConfigFailed": "无法显示此小组件的设置。请关闭此窗口并选择其他小组件。"
+    "widgetConfigFailed": "无法显示此小组件的设置。请关闭此窗口并选择其他小组件。",
+    "mediaUpload": {
+      "uploadImage": "上传新图片",
+      "uploadVideo": "上传新视频",
+      "uploadMedia": "上传新媒体文件",
+      "description": "上传的文件将被选用于此小部件，处理完成后会显示在您的媒体库中。"
+    }
   },
   "layouts": {
     "title": "布局",

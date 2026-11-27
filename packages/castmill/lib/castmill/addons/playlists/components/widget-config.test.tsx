@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
 import type { JsonPlaylistItem } from '@castmill/player';
 import { ToastProvider } from '@castmill/ui-common';
@@ -18,6 +18,16 @@ vi.mock('./widget-view', () => ({
       )}
     </div>
   ),
+}));
+
+const mediaUploadProps = vi.hoisted(() => ({ current: undefined as any }));
+
+// The in-place upload has its own tests (media-upload.test.tsx).
+vi.mock('./media-upload', () => ({
+  MediaUpload: (props: any) => {
+    mediaUploadProps.current = props;
+    return <button type="button">{props.label}</button>;
+  },
 }));
 
 const item = (id?: number) =>
@@ -324,5 +334,100 @@ describe('WidgetConfig text editing toolbar', () => {
         })
       ).toBeNull()
     );
+  });
+});
+
+describe('WidgetConfig media upload', () => {
+  const imageItem = () =>
+    ({
+      duration: 10000,
+      widget: {
+        id: 4,
+        name: 'Image',
+        options_schema: {
+          image: {
+            type: 'ref',
+            collection: 'medias|type:image',
+            required: true,
+          },
+        },
+      },
+      config: { options: {} },
+    }) as unknown as JsonPlaylistItem;
+
+  const canCreateMedias = {
+    i18n: { t: (key: string) => key, locale: () => 'en' },
+    permissions: { role: 'regular', matrix: { medias: ['list', 'create'] } },
+  };
+
+  const previewOptions = () =>
+    JSON.parse(
+      screen.getByTestId('widget-view').getAttribute('data-options') || '{}'
+    );
+
+  const uploaded = (overrides: Record<string, unknown> = {}) => ({
+    id: 42,
+    name: 'beach',
+    status: 'uploading',
+    files: {},
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    mediaUploadProps.current = undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        status: 200,
+        json: async () => ({ data: [], count: 0 }),
+      })
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('is not offered to users who cannot add medias', () => {
+    renderConfig({ item: imageItem() });
+
+    expect(
+      screen.queryByRole('button', {
+        name: 'playlists.mediaUpload.uploadImage',
+      })
+    ).toBeNull();
+  });
+
+  it('selects the uploaded image and refreshes it once processed', async () => {
+    renderConfig({ item: imageItem(), store: canCreateMedias });
+
+    expect(
+      screen.getByRole('button', { name: 'playlists.mediaUpload.uploadImage' })
+    ).toBeInTheDocument();
+    expect(mediaUploadProps.current.mediaType).toBe('image');
+    expect(mediaUploadProps.current.organizationId).toBe('org-1');
+    expect(button('playlists.editor.addToPlaylist')).toBeDisabled();
+
+    mediaUploadProps.current.onUpload(uploaded());
+
+    await waitFor(() => expect(previewOptions().image.id).toBe(42));
+    expect(button('playlists.editor.addToPlaylist')).toBeEnabled();
+
+    const ready = uploaded({
+      status: 'ready',
+      files: { thumbnail: { uri: 'thumb.png' } },
+    });
+    mediaUploadProps.current.onProcessed(ready);
+    await waitFor(() => expect(previewOptions().image.status).toBe('ready'));
+  });
+
+  it('keeps another media chosen after the upload', async () => {
+    renderConfig({ item: imageItem(), store: canCreateMedias });
+
+    mediaUploadProps.current.onUpload(uploaded({ id: 7 }));
+    await waitFor(() => expect(previewOptions().image.id).toBe(7));
+
+    mediaUploadProps.current.onProcessed(uploaded({ status: 'ready' }));
+    expect(previewOptions().image).toEqual(uploaded({ id: 7 }));
   });
 });
