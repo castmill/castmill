@@ -226,7 +226,9 @@
     "deleteAccountError": "Konto konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
     "soleAdministratorError": "Konto kann nicht gelöscht werden. Sie sind der einzige Administrator von '{{orgName}}', das andere Mitglieder hat. Bitte befördern Sie zuerst einen anderen Benutzer zum Administrator.",
     "soleAdministratorErrorGeneric": "Konto kann nicht gelöscht werden. Sie sind der einzige Administrator einer oder mehrerer Organisationen mit anderen Mitgliedern. Bitte befördern Sie zuerst einen anderen Benutzer zum Administrator.",
-    "childOrganizationsError": "Konto kann nicht gelöscht werden. Sie sind das einzige Mitglied von '{{orgName}}', das untergeordnete Organisationen hat. Löschen Sie zuerst die untergeordneten Organisationen."
+    "childOrganizationsError": "Konto kann nicht gelöscht werden. Sie sind das einzige Mitglied von '{{orgName}}', das untergeordnete Organisationen hat. Löschen Sie zuerst die untergeordneten Organisationen.",
+    "rootAdminDeletionError": "Konto kann nicht gelöscht werden. Sie sind Root-Administrator; Root-Administratoren werden in der Serverkonfiguration verwaltet.",
+    "lastNetworkAdminError": "Konto kann nicht gelöscht werden. Sie sind der letzte Administrator des Netzwerks '{{networkName}}'. Machen Sie zuerst einen anderen Benutzer zum Netzwerkadministrator."
   },
   "network": {
     "widgets": {

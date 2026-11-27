@@ -225,14 +225,49 @@ defmodule Castmill.Accounts do
       with child organizations refuses the deletion
       (`{:error, {:has_child_organizations, org_name}}`).
     - If user is the sole admin BUT there are other users, prevent deletion (must transfer admin first)
+    - Root admins (`{:error, :root_admin}`) and a network's last admin
+      (`{:error, {:last_network_admin, network_name}}`) cannot be deleted
     - Otherwise, allow deletion
 
     This ensures no dangling organizations are left in the system.
   """
   def delete_user(user_id), do: delete_user(user_id, 3)
 
+  # The name of a network the user is the only (human) admin of, or nil.
+  defp last_admin_network(user_id) do
+    alias Castmill.Networks.{Network, NetworksUsers}
+
+    from(nu in NetworksUsers,
+      as: :admin,
+      join: n in Network,
+      on: n.id == nu.network_id,
+      where: nu.user_id == ^user_id and nu.role == :admin,
+      where:
+        not exists(
+          from(other in NetworksUsers,
+            join: u in User,
+            on: u.id == other.user_id,
+            where:
+              other.network_id == parent_as(:admin).network_id and other.role == :admin and
+                other.user_id != ^user_id and u.is_agent == false
+          )
+        ),
+      select: n.name,
+      limit: 1
+    )
+    |> Repo.one()
+  end
+
   defp delete_user(user_id, attempts) do
     Repo.transaction(fn ->
+      # Root admins come from the server configuration; and a network must
+      # keep an admin. Either must be handed over before the account goes.
+      if Repo.exists?(from(t in AccessToken, where: t.user_id == ^user_id and t.is_root)),
+        do: Repo.rollback(:root_admin)
+
+      if network_name = last_admin_network(user_id),
+        do: Repo.rollback({:last_network_admin, network_name})
+
       # Get all organizations where user is a member
       user_orgs =
         from(ou in OrganizationsUsers,
@@ -336,6 +371,12 @@ defmodule Castmill.Accounts do
 
       {:error, {:has_child_organizations, _org_name} = error} ->
         {:error, error}
+
+      {:error, {:last_network_admin, _network_name} = error} ->
+        {:error, error}
+
+      {:error, :root_admin} ->
+        {:error, :root_admin}
 
       {:error, reason} when is_binary(reason) ->
         {:error, reason}

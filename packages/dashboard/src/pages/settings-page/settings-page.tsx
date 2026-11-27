@@ -12,6 +12,7 @@ import {
   UserService,
   SoleAdministratorError,
   ChildOrganizationsError,
+  AccountDeletionRefusedError,
 } from '../../services/user.service';
 import { OnboardingService } from '../../services/onboarding.service';
 import { User } from '../../interfaces/user.interface';
@@ -230,6 +231,13 @@ const SettingsPage: Component = () => {
         } else {
           errorMessage = t('settings.soleAdministratorErrorGeneric');
         }
+      } else if (err instanceof AccountDeletionRefusedError) {
+        errorMessage =
+          err.reason === 'root_admin'
+            ? t('settings.rootAdminDeletionError')
+            : t('settings.lastNetworkAdminError', {
+                networkName: err.networkName ?? '',
+              });
       } else if (err instanceof ChildOrganizationsError) {
         errorMessage = t('settings.childOrganizationsError', {
           orgName: err.organizationName ?? '',

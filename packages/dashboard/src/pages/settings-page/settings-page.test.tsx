@@ -528,6 +528,27 @@ describe('SettingsPage', () => {
       ).toBeInTheDocument();
     });
 
+    it('explains that the last network admin cannot delete their account', async () => {
+      const { AccountDeletionRefusedError } =
+        await import('../../services/user.service');
+      (UserService.deleteAccount as any).mockRejectedValue(
+        new AccountDeletionRefusedError('last_network_admin', 'Castmill')
+      );
+
+      renderWithProviders(() => <SettingsPage />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Delete Account' }));
+      fireEvent.click(
+        await screen.findByRole('button', { name: 'Yes, Delete Account' })
+      );
+
+      expect(
+        await screen.findByText(
+          "Cannot delete account. You are the last administrator of the network 'Castmill'. Make another user a network administrator first."
+        )
+      ).toBeInTheDocument();
+    });
+
     it('uses Signal API to delete passkeys when supported', async () => {
       // Mock Signal API support
       const mockSignalUnknownCredential = vi.fn().mockResolvedValue(undefined);

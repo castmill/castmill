@@ -421,9 +421,21 @@ defmodule CastmillWeb.Live.Admin.Resources do
 
   @impl true
   def handle_event("delete", %{"id" => id, "resource" => "users"}, socket) do
-    {:ok, _} = Accounts.delete_user(id)
-    rows = Enum.reject(socket.assigns.rows, fn r -> r.id == id end)
-    {:noreply, assign(socket, :rows, rows)}
+    case Accounts.delete_user(id) do
+      {:ok, _} ->
+        rows = Enum.reject(socket.assigns.rows, fn r -> r.id == id end)
+        {:noreply, assign(socket, :rows, rows)}
+
+      {:error, :root_admin} ->
+        {:noreply, put_flash(socket, :error, "Root admins are managed in CASTMILL_ROOT_ADMINS")}
+
+      {:error, {:last_network_admin, network_name}} ->
+        {:noreply,
+         put_flash(socket, :error, "This user is the last admin of the network #{network_name}")}
+
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, "Failed to delete user: #{inspect(reason)}")}
+    end
   end
 
   @impl true

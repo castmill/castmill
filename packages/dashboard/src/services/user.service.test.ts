@@ -3,6 +3,7 @@ import {
   UserService,
   ChildOrganizationsError,
   SoleAdministratorError,
+  AccountDeletionRefusedError,
 } from './user.service';
 
 vi.mock('../components/auth', () => ({
@@ -46,5 +47,26 @@ describe('UserService.deleteAccount', () => {
     await expect(UserService.deleteAccount('u1')).rejects.toBeInstanceOf(
       SoleAdministratorError
     );
+  });
+
+  it('reports the last admin of a network', async () => {
+    (global.fetch as any).mockResolvedValue(
+      refused({ error: 'last_network_admin', network_name: 'Castmill' })
+    );
+
+    const error = await UserService.deleteAccount('u1').catch((e) => e);
+
+    expect(error).toBeInstanceOf(AccountDeletionRefusedError);
+    expect(error.reason).toBe('last_network_admin');
+    expect(error.networkName).toBe('Castmill');
+  });
+
+  it('reports a root admin', async () => {
+    (global.fetch as any).mockResolvedValue(refused({ error: 'root_admin' }));
+
+    const error = await UserService.deleteAccount('u1').catch((e) => e);
+
+    expect(error).toBeInstanceOf(AccountDeletionRefusedError);
+    expect(error.reason).toBe('root_admin');
   });
 });

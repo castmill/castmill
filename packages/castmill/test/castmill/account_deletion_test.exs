@@ -92,4 +92,31 @@ defmodule Castmill.AccountDeletionTest do
     assert Organizations.get_organization(other_organization.id)
     refute_received {:organization_deleted, _}
   end
+
+  test "a root admin cannot delete their account", %{user: user} do
+    {:ok, _} =
+      Accounts.create_access_token(%{secret: "root-secret", user_id: user.id, is_root: true})
+
+    assert {:error, :root_admin} = Accounts.delete_user(user.id)
+    assert Accounts.get_user(user.id)
+  end
+
+  test "the last admin of a network cannot delete their account; with another admin they can", %{
+    network: network,
+    organization: organization,
+    user: user
+  } do
+    {:ok, _} = Castmill.Networks.promote_to_network_admin(user.id, network.id)
+    name = network.name
+
+    assert {:error, {:last_network_admin, ^name}} = Accounts.delete_user(user.id)
+    assert Accounts.get_user(user.id)
+    assert Organizations.get_organization(organization.id)
+
+    other = user_fixture(%{network_id: network.id})
+    {:ok, _} = Castmill.Networks.promote_to_network_admin(other.id, network.id)
+
+    assert {:ok, _} = Accounts.delete_user(user.id)
+    refute Accounts.get_user(user.id)
+  end
 end
