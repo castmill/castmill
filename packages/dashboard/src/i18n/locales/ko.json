@@ -387,6 +387,9 @@
       "privacyPolicyUrl": "개인정보 처리방침 URL",
       "privacyPolicyUrlPlaceholder": "https://example.com/privacy",
       "privacyPolicyUrlHelp": "로그인 및 회원가입 페이지에 표시되는 개인정보 처리방침 링크입니다.",
+      "termsUrl": "서비스 약관 URL",
+      "termsUrlPlaceholder": "https://example.com/terms",
+      "termsUrlHelp": "서비스 약관 링크로, 바닥글에 표시됩니다.",
       "defaultLanguage": "기본 언어",
       "defaultLanguageHelp": "신규 사용자 및 로그인/회원가입 페이지의 기본 언어입니다."
     },

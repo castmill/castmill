@@ -407,6 +407,9 @@
       "privacyPolicyUrl": "Datenschutzrichtlinien-URL",
       "privacyPolicyUrlPlaceholder": "https://beispiel.de/datenschutz",
       "privacyPolicyUrlHelp": "Link zu Ihrer Datenschutzrichtlinie, wird auf den Anmelde- und Registrierungsseiten angezeigt.",
+      "termsUrl": "URL der Nutzungsbedingungen",
+      "termsUrlPlaceholder": "https://beispiel.de/agb",
+      "termsUrlHelp": "Link zu Ihren Nutzungsbedingungen, wird in der Fußzeile angezeigt.",
       "defaultLanguage": "Standardsprache",
       "defaultLanguageHelp": "Die Standardsprache für neue Benutzer und die Anmelde-/Registrierungsseite."
     },

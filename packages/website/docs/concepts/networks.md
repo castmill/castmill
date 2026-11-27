@@ -26,7 +26,7 @@ The same domain list also controls which websites may call the API from a browse
 | --- | --- |
 | Name, email | How the network identifies itself. Emails for the network use the name as the sender name and the email as the Reply-To address. |
 | Domain | The dashboard address that selects this network |
-| Logo, copyright, privacy policy URL | Branding shown in the dashboard and emails |
+| Logo, copyright, privacy policy and terms URLs | Branding shown in the dashboard and emails |
 | Default language | Language for users who have not chosen one |
 | Default plan | [Plan](../administration/plans-and-quotas.md) given to new organizations |
 | Invitation only | When enabled, people can only create an account from an invitation. Enabled by default for new networks. |

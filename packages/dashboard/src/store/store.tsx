@@ -71,6 +71,9 @@ interface CastmillStore {
     email: string;
     defaultLocale: string;
     socialLinks: SocialLinks;
+    /** The network's privacy policy and terms of service pages ('' if none). */
+    privacyPolicyUrl: string;
+    termsUrl: string;
     data?: NetworkSettings;
   };
 
@@ -180,6 +183,8 @@ const [store, setStore] = createStore<CastmillStore>({
     email: 'support@castmill.com',
     defaultLocale: 'en',
     socialLinks: {},
+    privacyPolicyUrl: '',
+    termsUrl: '',
   },
 
   theme: 'dark',

@@ -422,6 +422,9 @@
       "privacyPolicyUrl": "Privacy Policy URL",
       "privacyPolicyUrlPlaceholder": "https://example.com/privacy",
       "privacyPolicyUrlHelp": "Link to your privacy policy, shown on login and signup pages.",
+      "termsUrl": "Terms of Service URL",
+      "termsUrlPlaceholder": "https://example.com/terms",
+      "termsUrlHelp": "Link to your terms of service, shown in the footer.",
       "defaultLanguage": "Default Language",
       "defaultLanguageHelp": "The default language for new users and the login/signup page."
     },

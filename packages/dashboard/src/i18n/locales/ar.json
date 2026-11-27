@@ -387,6 +387,9 @@
       "privacyPolicyUrl": "رابط سياسة الخصوصية",
       "privacyPolicyUrlPlaceholder": "https://example.com/privacy",
       "privacyPolicyUrlHelp": "رابط سياسة الخصوصية الخاصة بك، يظهر في صفحات تسجيل الدخول والتسجيل.",
+      "termsUrl": "رابط شروط الخدمة",
+      "termsUrlPlaceholder": "https://example.com/terms",
+      "termsUrlHelp": "رابط إلى شروط الخدمة الخاصة بك، يظهر في تذييل الصفحة.",
       "defaultLanguage": "اللغة الافتراضية",
       "defaultLanguageHelp": "اللغة الافتراضية للمستخدمين الجدد وصفحة تسجيل الدخول/التسجيل."
     },

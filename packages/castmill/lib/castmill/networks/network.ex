@@ -17,6 +17,7 @@ defmodule Castmill.Networks.Network do
     field(:name, :string)
     field(:default_locale, :string, default: "en")
     field(:privacy_policy_url, :string)
+    field(:terms_url, :string)
 
     field(:invitation_only, :boolean, default: true)
     field(:invitation_only_org_admins, :boolean, default: false)
@@ -83,11 +84,15 @@ defmodule Castmill.Networks.Network do
       :default_plan_id,
       :default_locale,
       :privacy_policy_url,
+      :terms_url,
       :invitation_only,
       :invitation_only_org_admins
     ])
     |> validate_required(required)
     |> validate_format(:email, ~r/@/, message: "must be a valid email address")
+    # Shown as links on the login page and in the footer: web addresses only.
+    |> validate_web_url(:privacy_policy_url)
+    |> validate_web_url(:terms_url)
     |> validate_format(
       :domain,
       ~r/^[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?)*(:\d+)?$/,
@@ -95,6 +100,20 @@ defmodule Castmill.Networks.Network do
     )
     |> unique_constraint(:name)
     |> unique_constraint(:domain)
+  end
+
+  # An http(s) URL with a host (nil clears the link).
+  defp validate_web_url(changeset, field) do
+    validate_change(changeset, field, fn ^field, value ->
+      case URI.parse(value) do
+        %URI{scheme: scheme, host: host}
+        when scheme in ["http", "https"] and is_binary(host) and host != "" ->
+          []
+
+        _ ->
+          [{field, "must be an http(s) URL"}]
+      end
+    end)
   end
 
   def base_query() do

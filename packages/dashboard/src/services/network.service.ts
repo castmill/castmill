@@ -20,6 +20,7 @@ export interface NetworkSettings {
   copyright: string;
   default_locale: string;
   privacy_policy_url: string | null;
+  terms_url: string | null;
   invitation_only: boolean;
   invitation_only_org_admins: boolean;
   meta?: Record<string, any>;
@@ -236,6 +237,7 @@ export interface PublicNetworkSettings {
   email: string;
   default_locale: string;
   privacy_policy_url: string | null;
+  terms_url?: string | null;
   social_links: SocialLinks;
   /** Domain (relying party ID) of the network's passkeys, see getPasskeyRpId. */
   passkey_rp_id?: string;
@@ -336,6 +338,7 @@ export const NetworkService = {
         | 'meta'
         | 'default_locale'
         | 'privacy_policy_url'
+        | 'terms_url'
       >
     >
   ): Promise<NetworkSettings> {

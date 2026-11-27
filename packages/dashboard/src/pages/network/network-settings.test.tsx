@@ -44,6 +44,7 @@ const mockSettings = {
   invitation_only_org_admins: true,
   default_locale: 'en',
   privacy_policy_url: null,
+  terms_url: null,
   meta: {},
   inserted_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
@@ -160,6 +161,38 @@ describe('NetworkSettings', () => {
           logo: 'https://example.com/logo.png',
           logoLight: 'https://example.com/logo-light.png',
         })
+      );
+    });
+  });
+
+  it('saves the terms URL and clears an empty privacy policy URL', async () => {
+    const { setStore } = await import('../../store');
+    const updated = { ...mockSettings, terms_url: 'https://example.com/terms' };
+    vi.mocked(NetworkService.updateSettings).mockResolvedValue(updated);
+
+    const { container } = renderSettings();
+
+    const termsInput = await waitFor(() => {
+      const input = container.querySelector('#network-terms-url');
+      expect(input).toBeInTheDocument();
+      return input as HTMLInputElement;
+    });
+    fireEvent.input(termsInput, {
+      target: { value: 'https://example.com/terms' },
+    });
+
+    fireEvent.click(screen.getByText(/save/i).closest('button')!);
+
+    await waitFor(() => {
+      expect(NetworkService.updateSettings).toHaveBeenCalledWith(
+        expect.objectContaining({
+          terms_url: 'https://example.com/terms',
+          privacy_policy_url: null,
+        })
+      );
+      expect(setStore).toHaveBeenCalledWith(
+        'networkSettings',
+        expect.objectContaining({ termsUrl: 'https://example.com/terms' })
       );
     });
   });

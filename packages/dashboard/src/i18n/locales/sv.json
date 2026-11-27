@@ -382,6 +382,9 @@
       "privacyPolicyUrl": "URL för Integritetspolicy",
       "privacyPolicyUrlPlaceholder": "https://exempel.se/integritet",
       "privacyPolicyUrlHelp": "Länk till din integritetspolicy, visas på inloggnings- och registreringssidorna.",
+      "termsUrl": "URL till användarvillkor",
+      "termsUrlPlaceholder": "https://exempel.se/villkor",
+      "termsUrlHelp": "Länk till era användarvillkor, visas i sidfoten.",
       "defaultLanguage": "Standardspråk",
       "defaultLanguageHelp": "Standardspråket för nya användare och inloggnings-/registreringssidan."
     },

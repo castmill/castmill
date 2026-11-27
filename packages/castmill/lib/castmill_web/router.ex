@@ -914,6 +914,12 @@ defmodule CastmillWeb.Router do
     get("/playlists/:playlist_id/items/:id", PlaylistController, :show_item)
   end
 
+  # The operator's privacy policy and terms (see LegalController).
+  scope "/", CastmillWeb do
+    get("/privacy", LegalController, :privacy)
+    get("/terms", LegalController, :terms)
+  end
+
   # Proxy routes for development medias
   scope "/", CastmillWeb do
     pipe_through(:browser)

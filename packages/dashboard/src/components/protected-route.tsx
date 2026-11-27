@@ -244,6 +244,8 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
         email: settings.email || 'support@castmill.com',
         defaultLocale: settings.default_locale || 'en',
         socialLinks: settings.social_links || {},
+        privacyPolicyUrl: settings.privacy_policy_url || '',
+        termsUrl: settings.terms_url || '',
       });
     } catch (error) {
       console.warn('Failed to load public network settings:', error);
@@ -256,6 +258,8 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
         email: 'support@castmill.com',
         defaultLocale: 'en',
         socialLinks: {},
+        privacyPolicyUrl: '',
+        termsUrl: '',
       });
     }
   };

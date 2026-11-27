@@ -29,6 +29,7 @@ const NetworkSettings: Component = () => {
   const [logoLight, setLogoLight] = createSignal('');
   const [copyright, setCopyright] = createSignal('');
   const [privacyPolicyUrl, setPrivacyPolicyUrl] = createSignal('');
+  const [termsUrl, setTermsUrl] = createSignal('');
   const [defaultLocale, setDefaultLocale] = createSignal('en');
   const [invitationOnly, setInvitationOnly] = createSignal(false);
   const [invitationOnlyOrgAdmins, setInvitationOnlyOrgAdmins] =
@@ -69,6 +70,7 @@ const NetworkSettings: Component = () => {
     setLogoLight(current.logo_light || '');
     setCopyright(current.copyright || '');
     setPrivacyPolicyUrl(current.privacy_policy_url || '');
+    setTermsUrl(current.terms_url || '');
     setDefaultLocale(current.default_locale || 'en');
     setInvitationOnly(current.invitation_only);
     setInvitationOnlyOrgAdmins(current.invitation_only_org_admins);
@@ -102,6 +104,7 @@ const NetworkSettings: Component = () => {
       logoLight() !== (current.logo_light || '') ||
       copyright() !== (current.copyright || '') ||
       privacyPolicyUrl() !== (current.privacy_policy_url || '') ||
+      termsUrl() !== (current.terms_url || '') ||
       defaultLocale() !== (current.default_locale || 'en') ||
       invitationOnly() !== current.invitation_only ||
       invitationOnlyOrgAdmins() !== current.invitation_only_org_admins ||
@@ -142,7 +145,9 @@ const NetworkSettings: Component = () => {
         logo: logo() || undefined,
         logo_light: logoLight().trim() || null,
         copyright: copyright() || undefined,
-        privacy_policy_url: privacyPolicyUrl() || undefined,
+        // null clears a link
+        privacy_policy_url: privacyPolicyUrl().trim() || null,
+        terms_url: termsUrl().trim() || null,
         default_locale: defaultLocale(),
         invitation_only: invitationOnly(),
         invitation_only_org_admins: invitationOnlyOrgAdmins(),
@@ -161,6 +166,8 @@ const NetworkSettings: Component = () => {
         email: updated.email || 'support@castmill.com',
         defaultLocale: updated.default_locale || 'en',
         socialLinks: updated.meta?.social_links || {},
+        privacyPolicyUrl: updated.privacy_policy_url || '',
+        termsUrl: updated.terms_url || '',
       });
 
       toast.success(t('network.saveSuccess'));
@@ -273,6 +280,18 @@ const NetworkSettings: Component = () => {
           >
             <span class={styles['help-text']}>
               {t('network.identity.privacyPolicyUrlHelp')}
+            </span>
+          </FormItem>
+
+          <FormItem
+            label={t('network.identity.termsUrl')}
+            id="network-terms-url"
+            value={termsUrl()}
+            placeholder={t('network.identity.termsUrlPlaceholder')}
+            onInput={(value) => setTermsUrl(value as string)}
+          >
+            <span class={styles['help-text']}>
+              {t('network.identity.termsUrlHelp')}
             </span>
           </FormItem>
 

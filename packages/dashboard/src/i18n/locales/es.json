@@ -388,6 +388,9 @@
       "privacyPolicyUrl": "URL de Política de Privacidad",
       "privacyPolicyUrlPlaceholder": "https://ejemplo.com/privacidad",
       "privacyPolicyUrlHelp": "Enlace a tu política de privacidad, mostrado en las páginas de inicio de sesión y registro.",
+      "termsUrl": "URL de los términos del servicio",
+      "termsUrlPlaceholder": "https://ejemplo.com/terminos",
+      "termsUrlHelp": "Enlace a tus términos del servicio, que se muestra en el pie de página.",
       "defaultLanguage": "Idioma Predeterminado",
       "defaultLanguageHelp": "El idioma predeterminado para nuevos usuarios y la página de inicio de sesión/registro."
     },
