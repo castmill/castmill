@@ -219,6 +219,10 @@ export const PlaylistView: Component<{
   };
 
   const handleMediaUpload = (media: JsonMedia) => {
+    if (media.status === 'ready' || media.status === 'failed') {
+      refreshSavedMedia(media);
+      return;
+    }
     pollUploadedMedia(media.id);
   };
 

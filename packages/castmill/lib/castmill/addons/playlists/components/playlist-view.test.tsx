@@ -917,6 +917,16 @@ describe('PlaylistView Component', () => {
       resolveSecond({ ...video(1000), id: 42, status: 'ready' });
       await vi.advanceTimersByTimeAsync(0);
     });
+
+    it('does not poll media that is already processed', async () => {
+      const props = await renderView();
+      props.onMediaUpload({
+        ...video(1000),
+        status: 'ready',
+      } as any);
+
+      expect(ResourcesService.get).not.toHaveBeenCalled();
+    });
   });
   describe('Drawer layout', () => {
     const renderView = (onChange = vi.fn()) => {
