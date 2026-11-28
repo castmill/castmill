@@ -1,4 +1,5 @@
 import {
+  JsonMedia,
   JsonPlaylist,
   JsonPlaylistItem,
   JsonWidget,
@@ -38,6 +39,7 @@ import {
 
 import './playlist-view.scss';
 import { PlaylistsService } from '../services/playlists.service';
+import { ResourcesService } from '../services/resources.service';
 import { WidgetChooser } from './widget-chooser';
 import { PlaylistItems, CredentialsError } from './playlist-items';
 import {
@@ -72,6 +74,10 @@ interface PlaylistSection {
 // (e.g. tablets, zoomed pages) fall back to tabs even if the viewport is wide.
 export const WIDE_LAYOUT_MIN_EM = 57;
 const RELATIVE_TIME_REFRESH_MS = 30_000;
+/** How often an uploaded media is checked until it has been processed. */
+export const MEDIA_POLL_INTERVAL_MS = 3000;
+/** Stop checking after this many attempts (about 15 minutes). */
+export const MEDIA_POLL_MAX_ATTEMPTS = 300;
 
 export const PlaylistView: Component<{
   store: AddonStore;
@@ -121,11 +127,108 @@ export const PlaylistView: Component<{
   // Store reference to playlist preview for seeking
   let previewRef: PlaylistPreviewRef | null = null;
   let seekDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  const processedMedias = new Map<JsonMedia['id'], JsonMedia>();
+  const mediaPollTimers = new Map<
+    JsonMedia['id'],
+    ReturnType<typeof setTimeout>
+  >();
+  const mediaPollGenerations = new Map<JsonMedia['id'], number>();
 
   const updatePlaylistItems = (nextItems: JsonPlaylistItem[]) => {
     setItems(nextItems);
     setPlaylist((prev) => (prev ? { ...prev, items: nextItems } : prev));
   };
+
+  const withProcessedMedias = (options: OptionsDict): OptionsDict => {
+    let updated = options;
+    for (const [key, value] of Object.entries(options)) {
+      if (
+        !value ||
+        typeof value !== 'object' ||
+        !('id' in value) ||
+        !('mimetype' in value) ||
+        !('files' in value)
+      ) {
+        continue;
+      }
+
+      const media = processedMedias.get((value as JsonMedia).id);
+      if (media && media !== value) {
+        if (updated === options) updated = { ...options };
+        updated[key] = media;
+      }
+    }
+    return updated;
+  };
+
+  const refreshSavedMedia = (media: JsonMedia) => {
+    processedMedias.set(media.id, media);
+    const currentItems = items();
+    const nextItems = currentItems.map((item) => {
+      if (!item.config?.options) return item;
+      const options = withProcessedMedias(item.config.options as OptionsDict);
+      return options === item.config.options
+        ? item
+        : { ...item, config: { ...item.config, options } };
+    });
+
+    if (nextItems.some((item, index) => item !== currentItems[index])) {
+      updatePlaylistItems(nextItems);
+    }
+  };
+
+  const pollUploadedMedia = (id: JsonMedia['id']) => {
+    const timer = mediaPollTimers.get(id);
+    if (timer) clearTimeout(timer);
+    const generation = (mediaPollGenerations.get(id) || 0) + 1;
+    mediaPollGenerations.set(id, generation);
+
+    const isCurrentRun = () => mediaPollGenerations.get(id) === generation;
+    const poll = (attempt: number) => {
+      if (!isCurrentRun() || attempt > MEDIA_POLL_MAX_ATTEMPTS) return;
+      const nextTimer = setTimeout(async () => {
+        if (mediaPollTimers.get(id) === nextTimer) {
+          mediaPollTimers.delete(id);
+        }
+        if (!isCurrentRun()) return;
+
+        try {
+          const media = await ResourcesService.get<JsonMedia>(
+            props.baseUrl,
+            props.organizationId,
+            'medias',
+            id
+          );
+          if (!isCurrentRun()) return;
+          if (media.status === 'ready' || media.status === 'failed') {
+            refreshSavedMedia(media);
+            return;
+          }
+        } catch (error) {
+          if (isCurrentRun()) {
+            console.warn('Failed to check the uploaded media:', error);
+          }
+        }
+
+        poll(attempt + 1);
+      }, MEDIA_POLL_INTERVAL_MS);
+      mediaPollTimers.set(id, nextTimer);
+    };
+
+    poll(1);
+  };
+
+  const handleMediaUpload = (media: JsonMedia) => {
+    pollUploadedMedia(media.id);
+  };
+
+  onCleanup(() => {
+    for (const timer of mediaPollTimers.values()) clearTimeout(timer);
+    mediaPollTimers.clear();
+    for (const [id, generation] of mediaPollGenerations) {
+      mediaPollGenerations.set(id, generation + 1);
+    }
+  });
 
   // Handle credentials error from widget insertion
   const handleCredentialsError = (error: CredentialsError) => {
@@ -260,7 +363,7 @@ export const PlaylistView: Component<{
       // Recalculate duration based on updated options
       const newDuration = await resolveWidgetDuration(
         item.widget,
-        expandedOptions
+        withProcessedMedias(expandedOptions)
       );
 
       await PlaylistsService.updateWidgetConfig(
@@ -295,6 +398,7 @@ export const PlaylistView: Component<{
           )
         : null;
 
+      const savedOptions = withProcessedMedias(expandedOptions);
       const newItems = items().map((i) =>
         i.id === item.id
           ? {
@@ -302,7 +406,7 @@ export const PlaylistView: Component<{
               duration: newDuration,
               config: {
                 ...config,
-                options: expandedOptions,
+                options: savedOptions,
                 data: integrationData || config.data || {},
               },
             }
@@ -365,7 +469,10 @@ export const PlaylistView: Component<{
   ) => {
     const prevItem = items()[index - 1];
     // Use expandedOptions which includes default values from the schema
-    const duration = await resolveWidgetDuration(widget, expandedOptions);
+    const duration = await resolveWidgetDuration(
+      widget,
+      withProcessedMedias(expandedOptions)
+    );
 
     try {
       const newItem = await PlaylistsService.insertWidgetIntoPlaylist(
@@ -393,6 +500,7 @@ export const PlaylistView: Component<{
       const defaultData = getDefaultDataFromSchema(widget.data_schema);
       const widgetData = integrationData || config.data || defaultData;
 
+      const savedOptions = withProcessedMedias(expandedOptions);
       const newItems = [...items()];
       newItems.splice(index ?? 0, 0, {
         id: newItem.id,
@@ -404,7 +512,7 @@ export const PlaylistView: Component<{
         config: {
           id: newItem.widget_config_id, // Use the widget_config_id from the server
           widget_id: widget.id!,
-          options: expandedOptions,
+          options: savedOptions,
           data: widgetData,
         },
       });
@@ -1039,6 +1147,7 @@ export const PlaylistView: Component<{
               onRemoveItem={onRemoveItem}
               onChangeDuration={onChangeDuration}
               onCredentialsError={handleCredentialsError}
+              onMediaUpload={handleMediaUpload}
               onSeekToItem={seekToItem}
               onAddWidgetReady={(add) => (addWidget = add)}
               reorderButtons={!wide() || coarsePointer()}

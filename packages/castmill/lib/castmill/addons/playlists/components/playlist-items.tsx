@@ -11,6 +11,7 @@ import {
   Show,
 } from 'solid-js';
 import {
+  JsonMedia,
   JsonPlaylistItem,
   JsonWidget,
   JsonWidgetConfig,
@@ -68,6 +69,7 @@ export const PlaylistItems: Component<{
   onRemoveItem: (item: JsonPlaylistItem) => Promise<void>;
   onChangeDuration: (item: JsonPlaylistItem, duration: number) => Promise<void>;
   onCredentialsError?: (error: CredentialsError) => void;
+  onMediaUpload?: (media: JsonMedia) => void;
   onSeekToItem?: (index: number) => void;
   /** Receives the add function used by click/tap widget adding. */
   onAddWidgetReady?: (
@@ -457,6 +459,7 @@ export const PlaylistItems: Component<{
                 if (requestCloseConfig()) configModal?.close();
               }}
               onDirtyChange={setConfigDirty}
+              onMediaUpload={props.onMediaUpload}
               organizationId={props.organizationId}
               playlistId={props.playlistId}
             />

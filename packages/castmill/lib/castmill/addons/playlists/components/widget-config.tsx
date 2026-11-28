@@ -91,6 +91,7 @@ interface WidgetConfigProps {
     config: Partial<JsonWidgetConfig>;
     expandedOptions: OptionsDict;
   }) => Promise<void>;
+  onMediaUpload?: (media: JsonMedia) => void;
   /** Shows a Cancel button; the parent decides whether to confirm discarding. */
   onCancel?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
@@ -1264,14 +1265,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
                     onUpload={(media) => {
                       selectMedia(media);
                       setMediaListVersion((version) => version + 1);
-                    }}
-                    onProcessed={(media) => {
-                      // Only refresh it if the user kept the uploaded media.
-                      const current = getReferenceValue<JsonMedia>(key);
-                      if (current?.id === media.id) {
-                        setWidgetOptions({ ...widgetOptions(), [key]: media });
-                        setMediaListVersion((version) => version + 1);
-                      }
+                      props.onMediaUpload?.(media);
                     }}
                   />
                 </Show>

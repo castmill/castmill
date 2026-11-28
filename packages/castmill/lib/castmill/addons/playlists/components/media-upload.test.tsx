@@ -2,12 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@solidjs/testing-library';
 import type { JsonMedia } from '@castmill/player';
 
-import {
-  MediaUpload,
-  MEDIA_POLL_INTERVAL_MS,
-  MEDIA_POLL_MAX_ATTEMPTS,
-} from './media-upload';
-import { ResourcesService } from '../services/resources.service';
+import { MediaUpload } from './media-upload';
 
 // The dialog animates its size with a ResizeObserver.
 globalThis.ResizeObserver ??= class {
@@ -23,10 +18,6 @@ vi.mock('../../medias/components/upload', () => ({
     uploadProps.current = props;
     return <div data-testid="upload-component" />;
   },
-}));
-
-vi.mock('../services/resources.service', () => ({
-  ResourcesService: { get: vi.fn() },
 }));
 
 const media = (overrides: Partial<JsonMedia> = {}) =>
@@ -55,7 +46,6 @@ const renderUpload = (overrides: Record<string, unknown> = {}) => {
     mediaType: 'image',
     label: 'Upload a new image',
     onUpload: vi.fn(),
-    onProcessed: vi.fn(),
     ...overrides,
   };
   render(() => <MediaUpload {...(props as any)} />);
@@ -65,13 +55,10 @@ const renderUpload = (overrides: Record<string, unknown> = {}) => {
 const openDialog = () =>
   fireEvent.click(screen.getByRole('button', { name: 'Upload a new image' }));
 
-const getMock = vi.mocked(ResourcesService.get);
-
 describe('MediaUpload', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     uploadProps.current = undefined;
-    getMock.mockReset();
   });
 
   afterEach(() => {
@@ -94,7 +81,7 @@ describe('MediaUpload', () => {
     expect(uploadProps.current.organizationId).toBe('org-1');
   });
 
-  it('reports the uploaded media, closes and refreshes it once processed', async () => {
+  it('reports the uploaded media and closes the dialog', async () => {
     const props = renderUpload();
     openDialog();
 
@@ -104,45 +91,6 @@ describe('MediaUpload', () => {
     expect(props.onUpload).toHaveBeenCalledWith(media());
     await vi.advanceTimersByTimeAsync(400);
     expect(screen.queryByTestId('upload-component')).toBeNull();
-
-    getMock.mockResolvedValueOnce(media({ status: 'transcoding' }));
-    await vi.advanceTimersByTimeAsync(MEDIA_POLL_INTERVAL_MS);
-    expect(getMock).toHaveBeenCalledWith(
-      'http://localhost:4000',
-      'org-1',
-      'medias',
-      42
-    );
-    expect(props.onProcessed).not.toHaveBeenCalled();
-
-    getMock.mockRejectedValueOnce(new Error('offline'));
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    await vi.advanceTimersByTimeAsync(MEDIA_POLL_INTERVAL_MS);
-    expect(warn).toHaveBeenCalled();
-    warn.mockRestore();
-
-    const ready = media({
-      status: 'ready',
-      files: { thumbnail: { uri: 'thumb.png' } as any },
-    });
-    getMock.mockResolvedValueOnce(ready);
-    await vi.advanceTimersByTimeAsync(MEDIA_POLL_INTERVAL_MS);
-    expect(props.onProcessed).toHaveBeenCalledWith(ready);
-
-    await vi.advanceTimersByTimeAsync(MEDIA_POLL_INTERVAL_MS * 3);
-    expect(getMock).toHaveBeenCalledTimes(3);
-  });
-
-  it('does not poll a media that is already processed', async () => {
-    const props = renderUpload();
-    openDialog();
-
-    uploadProps.current.onFileUpload('beach.png', media({ status: 'ready' }));
-    uploadProps.current.onUploadComplete();
-
-    expect(props.onUpload).toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(MEDIA_POLL_INTERVAL_MS * 2);
-    expect(getMock).not.toHaveBeenCalled();
   });
 
   it('keeps the dialog open when nothing was uploaded', async () => {
@@ -167,30 +115,34 @@ describe('MediaUpload', () => {
     expect(props.onUpload).not.toHaveBeenCalled();
   });
 
-  it('gives up after the maximum number of checks', async () => {
+  it('ignores late callbacks from a dismissed dialog after reopening', async () => {
     const props = renderUpload();
     openDialog();
-    getMock.mockResolvedValue(media({ status: 'transcoding' }));
+    const firstUpload = uploadProps.current;
+    firstUpload.onCancel();
+    await vi.advanceTimersByTimeAsync(400);
 
-    uploadProps.current.onFileUpload('beach.png', media());
-    uploadProps.current.onUploadComplete();
-    await vi.advanceTimersByTimeAsync(
-      MEDIA_POLL_INTERVAL_MS * (MEDIA_POLL_MAX_ATTEMPTS + 5)
-    );
+    openDialog();
+    const secondUpload = uploadProps.current;
+    firstUpload.onFileUpload('stale.png', media({ id: 41 }));
+    firstUpload.onUploadComplete();
+    expect(props.onUpload).not.toHaveBeenCalled();
 
-    expect(getMock).toHaveBeenCalledTimes(MEDIA_POLL_MAX_ATTEMPTS);
-    expect(props.onProcessed).not.toHaveBeenCalled();
+    const selected = media({ id: 43 });
+    secondUpload.onFileUpload('new.png', selected);
+    secondUpload.onUploadComplete();
+    expect(props.onUpload).toHaveBeenCalledWith(selected);
+    expect(props.onUpload).toHaveBeenCalledTimes(1);
   });
 
-  it('stops checking the media when unmounted', async () => {
-    renderUpload();
+  it('ignores late upload callbacks after unmount', () => {
+    const props = renderUpload();
     openDialog();
-
-    uploadProps.current.onFileUpload('beach.png', media());
-    uploadProps.current.onUploadComplete();
+    const upload = uploadProps.current;
     cleanup();
 
-    await vi.advanceTimersByTimeAsync(MEDIA_POLL_INTERVAL_MS * 2);
-    expect(getMock).not.toHaveBeenCalled();
+    upload.onFileUpload('late.png', media());
+    upload.onUploadComplete();
+    expect(props.onUpload).not.toHaveBeenCalled();
   });
 });

@@ -398,8 +398,13 @@ describe('WidgetConfig media upload', () => {
     ).toBeNull();
   });
 
-  it('selects the uploaded image and refreshes it once processed', async () => {
-    renderConfig({ item: imageItem(), store: canCreateMedias });
+  it('selects the uploaded image and reports it to the playlist view', async () => {
+    const onMediaUpload = vi.fn();
+    renderConfig({
+      item: imageItem(),
+      store: canCreateMedias,
+      onMediaUpload,
+    });
 
     expect(
       screen.getByRole('button', { name: 'playlists.mediaUpload.uploadImage' })
@@ -408,17 +413,12 @@ describe('WidgetConfig media upload', () => {
     expect(mediaUploadProps.current.organizationId).toBe('org-1');
     expect(button('playlists.editor.addToPlaylist')).toBeDisabled();
 
-    mediaUploadProps.current.onUpload(uploaded());
+    const uploadedMedia = uploaded();
+    mediaUploadProps.current.onUpload(uploadedMedia);
 
     await waitFor(() => expect(previewOptions().image.id).toBe(42));
     expect(button('playlists.editor.addToPlaylist')).toBeEnabled();
-
-    const ready = uploaded({
-      status: 'ready',
-      files: { thumbnail: { uri: 'thumb.png' } },
-    });
-    mediaUploadProps.current.onProcessed(ready);
-    await waitFor(() => expect(previewOptions().image.status).toBe('ready'));
+    expect(onMediaUpload).toHaveBeenCalledWith(uploadedMedia);
   });
 
   it('keeps another media chosen after the upload', async () => {
@@ -427,7 +427,6 @@ describe('WidgetConfig media upload', () => {
     mediaUploadProps.current.onUpload(uploaded({ id: 7 }));
     await waitFor(() => expect(previewOptions().image.id).toBe(7));
 
-    mediaUploadProps.current.onProcessed(uploaded({ status: 'ready' }));
     expect(previewOptions().image).toEqual(uploaded({ id: 7 }));
   });
 });
