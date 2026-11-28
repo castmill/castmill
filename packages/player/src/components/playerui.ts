@@ -34,7 +34,7 @@ const controlsTemplate = (id: string) => `
     justify-content: space-around;
     align-items: center;">
     <div style="flex-grow: 1; display: flex; align-items: center;">
-      <span id="time-${id}" style="margin:0 0.5em"></span>
+      <span id="time-${id}" style="margin:0 0.5em; text-align: right; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums;"></span>
       <input
           id="seek-${id}"
           style="
@@ -48,7 +48,7 @@ const controlsTemplate = (id: string) => `
           step="0.1"
           min="0"
       />
-      <span id="duration-${id}" style="margin:0 0.5em"></span>
+      <span id="duration-${id}" style="margin:0 0.5em; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums;"></span>
     </div>
     <div style="padding-right: 0.5em;">
       <input id="loop-${id}" type="checkbox"/>
@@ -254,6 +254,11 @@ export class PlayerUIControls {
     this.updateTime(time);
     this.elements.seek.max = `${duration}`;
     this.elements.duration.textContent = timeFormat(duration / 1000);
+    // The time label changes every tick. Reserve room for its longest value
+    // so the seek bar next to it keeps its width and its thumb moves smoothly.
+    this.elements.time.style.minWidth = `${
+      timeFormat(duration / 1000, true).length
+    }ch`;
     this.elements.loop.checked = loop;
   }
 
