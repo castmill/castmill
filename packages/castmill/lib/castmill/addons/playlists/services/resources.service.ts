@@ -87,4 +87,26 @@ export const ResourcesService = {
       parse: true,
     });
   },
+
+  get: async <T extends { id: string | number }>(
+    baseUrl: string,
+    organizationId: string,
+    collection: string,
+    id: string | number
+  ): Promise<T> => {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/${collection}/${encodeURIComponent(id)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    const { data } = await handleResponse<{ data: T }>(response, {
+      parse: true,
+    });
+    return data;
+  },
 };

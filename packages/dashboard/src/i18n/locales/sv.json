@@ -1084,7 +1084,13 @@
       "removeItemTitle": "Ta bort objekt?",
       "removeItemMessage": "Ta bort \"{{name}}\" från den här spellistan?"
     },
-    "widgetConfigFailed": "Widgetens inställningar kunde inte visas. Stäng fönstret och välj en annan widget."
+    "widgetConfigFailed": "Widgetens inställningar kunde inte visas. Stäng fönstret och välj en annan widget.",
+    "mediaUpload": {
+      "uploadImage": "Ladda upp en ny bild",
+      "uploadVideo": "Ladda upp en ny video",
+      "uploadMedia": "Ladda upp en ny mediefil",
+      "description": "Den uppladdade filen väljs för den här widgeten och visas i ditt mediebibliotek när den har bearbetats."
+    }
   },
   "layouts": {
     "title": "Layouter",

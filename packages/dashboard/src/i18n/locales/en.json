@@ -1126,7 +1126,13 @@
       "removeItemTitle": "Remove item?",
       "removeItemMessage": "Remove \"{{name}}\" from this playlist?"
     },
-    "widgetConfigFailed": "This widget's settings couldn't be shown. Close this window and choose another widget."
+    "widgetConfigFailed": "This widget's settings couldn't be shown. Close this window and choose another widget.",
+    "mediaUpload": {
+      "uploadImage": "Upload a new image",
+      "uploadVideo": "Upload a new video",
+      "uploadMedia": "Upload a new media file",
+      "description": "The uploaded file is selected for this widget and appears in your media library once it has been processed."
+    }
   },
   "layouts": {
     "title": "Layouts",

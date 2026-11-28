@@ -1101,7 +1101,13 @@
       "removeItemTitle": "Retirer l'élément ?",
       "removeItemMessage": "Retirer « {{name}} » de cette playlist ?"
     },
-    "widgetConfigFailed": "Les paramètres de ce widget n'ont pas pu être affichés. Fermez cette fenêtre et choisissez un autre widget."
+    "widgetConfigFailed": "Les paramètres de ce widget n'ont pas pu être affichés. Fermez cette fenêtre et choisissez un autre widget.",
+    "mediaUpload": {
+      "uploadImage": "Téléverser une nouvelle image",
+      "uploadVideo": "Téléverser une nouvelle vidéo",
+      "uploadMedia": "Téléverser un nouveau fichier multimédia",
+      "description": "Le fichier téléversé est sélectionné pour ce widget et apparaît dans votre médiathèque une fois traité."
+    }
   },
   "layouts": {
     "title": "Mises en page",

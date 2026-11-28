@@ -177,6 +177,16 @@ classes with `[class*='modalHeader']`/`[class*='modalBody']` so the shared
 ui-common Modal stays untouched. Form fields keep the default `FormItem`
 palette, and the header, tabs and save bars match Device Details.
 
+Media pickers (`ref` options on `medias`, e.g. an image or video widget) show
+an "Upload a new image/video/media file" link (`MediaUpload`,
+`addons/playlists/components/media-upload.tsx`) to users whose permission
+matrix allows `medias: create`. It opens a nested `Modal` with the Medias
+`UploadComponent`, limited to one file of the picker's `type` filter
+(`mediaType`, `multiple={false}`). The uploaded media is selected right away,
+the picker list is remounted to include it, and the media is polled with
+`ResourcesService.get` until it is `ready` or `failed`; it then replaces the
+selection (thumbnail and files) only if the user kept it selected.
+
 Shared mobile behaviour (ui-common):
 
 - `Modal` accepts `closeLabel` (localized close/back tooltip and accessible

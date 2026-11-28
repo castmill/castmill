@@ -186,4 +186,44 @@ describe('UploadComponent', () => {
       'Bearer test-token-123'
     );
   });
+  it('accepts every supported type and several files by default', () => {
+    render(() => (
+      <UploadComponent baseUrl="http://test.local" organizationId="org-1" />
+    ));
+
+    const input = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
+    expect(input.multiple).toBe(true);
+    expect(input.accept).toContain('image/png');
+    expect(input.accept).toContain('video/mp4');
+    expect(document.querySelector(`label[for="${input.id}"]`)).not.toBeNull();
+  });
+
+  it('restricts the accepted files to a media type and a single file', async () => {
+    render(() => (
+      <UploadComponent
+        baseUrl="http://test.local"
+        organizationId="org-1"
+        mediaType="video"
+        multiple={false}
+      />
+    ));
+
+    const input = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
+    expect(input.multiple).toBe(false);
+    expect(input.accept.split(',').every((t) => t.startsWith('video/'))).toBe(
+      true
+    );
+
+    setFilesOnInput([
+      new File(['a'], 'image.png', { type: 'image/png' }),
+      new File(['b'], 'clip.mp4', { type: 'video/mp4' }),
+    ]);
+
+    expect(screen.queryByText('image.png')).toBeNull();
+    expect(screen.getByText('clip.mp4')).toBeInTheDocument();
+  });
 });

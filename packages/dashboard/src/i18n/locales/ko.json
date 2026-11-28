@@ -1089,7 +1089,13 @@
       "removeItemTitle": "항목을 제거할까요?",
       "removeItemMessage": "이 재생 목록에서 \"{{name}}\"을(를) 제거할까요?"
     },
-    "widgetConfigFailed": "이 위젯의 설정을 표시할 수 없습니다. 이 창을 닫고 다른 위젯을 선택하세요."
+    "widgetConfigFailed": "이 위젯의 설정을 표시할 수 없습니다. 이 창을 닫고 다른 위젯을 선택하세요.",
+    "mediaUpload": {
+      "uploadImage": "새 이미지 업로드",
+      "uploadVideo": "새 동영상 업로드",
+      "uploadMedia": "새 미디어 파일 업로드",
+      "description": "업로드한 파일이 이 위젯에 선택되며, 처리가 끝나면 미디어 라이브러리에 표시됩니다."
+    }
   },
   "layouts": {
     "title": "레이아웃",

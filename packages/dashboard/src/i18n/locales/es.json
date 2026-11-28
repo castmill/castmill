@@ -1117,7 +1117,13 @@
       "removeItemTitle": "¿Quitar elemento?",
       "removeItemMessage": "¿Quitar \"{{name}}\" de esta lista de reproducción?"
     },
-    "widgetConfigFailed": "No se pudo mostrar la configuración de este widget. Cierra esta ventana y elige otro widget."
+    "widgetConfigFailed": "No se pudo mostrar la configuración de este widget. Cierra esta ventana y elige otro widget.",
+    "mediaUpload": {
+      "uploadImage": "Subir una imagen nueva",
+      "uploadVideo": "Subir un vídeo nuevo",
+      "uploadMedia": "Subir un archivo multimedia nuevo",
+      "description": "El archivo subido se selecciona para este widget y aparece en tu biblioteca de medios una vez procesado."
+    }
   },
   "layouts": {
     "title": "Diseños",

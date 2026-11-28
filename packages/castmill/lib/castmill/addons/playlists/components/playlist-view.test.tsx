@@ -13,8 +13,9 @@ import {
 import { createSignal } from 'solid-js';
 import { WIDE_LAYOUT_QUERY } from '@castmill/ui-common';
 import { mockMatchMedia } from '@castmill/ui-common/testing';
-import { PlaylistView } from './playlist-view';
+import { MEDIA_POLL_INTERVAL_MS, PlaylistView } from './playlist-view';
 import { PlaylistsService } from '../services/playlists.service';
+import { ResourcesService } from '../services/resources.service';
 import type { AddonStore } from '../../common/interfaces/addon-store';
 import type { JsonPlaylist, JsonWidgetTemplate } from '@castmill/player';
 
@@ -48,6 +49,10 @@ vi.mock('../services/playlists.service', () => ({
     removeItemFromPlaylist: vi.fn(),
     fetchWidgetConfigData: vi.fn(),
   },
+}));
+
+vi.mock('../services/resources.service', () => ({
+  ResourcesService: { get: vi.fn() },
 }));
 
 // Mock the child components
@@ -152,10 +157,15 @@ describe('PlaylistView Component', () => {
     vi.clearAllMocks();
     playlistPreviewProps.current = null;
     playlistItemsProps.current = null;
+    vi.mocked(ResourcesService.get).mockReset();
 
     // Setup default mocks
     vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(mockPlaylist);
     vi.mocked(PlaylistsService.getWidgets).mockResolvedValue(mockWidgets);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('renders all child components after loading', async () => {
@@ -819,6 +829,106 @@ describe('PlaylistView Component', () => {
         10,
         { duration: 13967 }
       );
+    });
+
+    it('refreshes saved expanded media when processing finishes after saving', async () => {
+      vi.mocked(PlaylistsService.insertWidgetIntoPlaylist).mockResolvedValue({
+        id: 10,
+        widget_config_id: 'config-1',
+      } as any);
+      vi.mocked(PlaylistsService.fetchWidgetConfigData).mockResolvedValue(
+        null as any
+      );
+      const props = await renderView();
+      const uploadedMedia = {
+        ...video(12000),
+        status: 'uploading',
+        files: {},
+      } as any;
+      const readyMedia = {
+        ...uploadedMedia,
+        status: 'ready',
+        files: { thumbnail: { uri: 'thumb.png' } },
+      };
+
+      vi.useFakeTimers();
+      props.onMediaUpload(uploadedMedia);
+      await props.onInsertItem(videoWidget, 0, {
+        config: { options: { video: uploadedMedia.id } },
+        expandedOptions: { video: uploadedMedia },
+      });
+
+      expect(
+        playlistPreviewProps.current.playlist.items[0].config.options.video
+          .status
+      ).toBe('uploading');
+      vi.mocked(ResourcesService.get).mockResolvedValueOnce(readyMedia as any);
+      await vi.advanceTimersByTimeAsync(MEDIA_POLL_INTERVAL_MS);
+
+      expect(
+        playlistPreviewProps.current.playlist.items[0].config.options.video
+      ).toEqual(readyMedia);
+      expect(
+        playlistItemsProps.current.processedMedias().get(readyMedia.id)
+      ).toEqual(readyMedia);
+    });
+
+    it('keeps a newer upload poll scheduled when an older request resolves', async () => {
+      const props = await renderView();
+      let resolveFirst!: (media: any) => void;
+      let resolveSecond!: (media: any) => void;
+      const firstRequest = new Promise<any>((resolve) => {
+        resolveFirst = resolve;
+      });
+      const secondRequest = new Promise<any>((resolve) => {
+        resolveSecond = resolve;
+      });
+      vi.mocked(ResourcesService.get).mockImplementation(
+        (_baseUrl, _organizationId, _collection, id) =>
+          id === 41 ? firstRequest : secondRequest
+      );
+
+      vi.useFakeTimers();
+      props.onMediaUpload({
+        ...video(1000),
+        id: 41,
+        status: 'uploading',
+      } as any);
+      await vi.advanceTimersByTimeAsync(MEDIA_POLL_INTERVAL_MS);
+      expect(ResourcesService.get).toHaveBeenCalledWith(
+        baseUrl,
+        organizationId,
+        'medias',
+        41
+      );
+
+      props.onMediaUpload({
+        ...video(1000),
+        id: 42,
+        status: 'uploading',
+      } as any);
+      resolveFirst({ ...video(1000), id: 41, status: 'transcoding' });
+      await vi.advanceTimersByTimeAsync(0);
+      await vi.advanceTimersByTimeAsync(MEDIA_POLL_INTERVAL_MS);
+
+      expect(ResourcesService.get).toHaveBeenCalledWith(
+        baseUrl,
+        organizationId,
+        'medias',
+        42
+      );
+      resolveSecond({ ...video(1000), id: 42, status: 'ready' });
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    it('does not poll media that is already processed', async () => {
+      const props = await renderView();
+      props.onMediaUpload({
+        ...video(1000),
+        status: 'ready',
+      } as any);
+
+      expect(ResourcesService.get).not.toHaveBeenCalled();
     });
   });
   describe('Drawer layout', () => {

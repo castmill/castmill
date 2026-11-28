@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
+import { createSignal } from 'solid-js';
 import type { JsonPlaylistItem } from '@castmill/player';
 import { ToastProvider } from '@castmill/ui-common';
 import { WidgetConfig } from './widget-config';
@@ -18,6 +19,16 @@ vi.mock('./widget-view', () => ({
       )}
     </div>
   ),
+}));
+
+const mediaUploadProps = vi.hoisted(() => ({ current: undefined as any }));
+
+// The in-place upload has its own tests (media-upload.test.tsx).
+vi.mock('./media-upload', () => ({
+  MediaUpload: (props: any) => {
+    mediaUploadProps.current = props;
+    return <button type="button">{props.label}</button>;
+  },
 }));
 
 const item = (id?: number) =>
@@ -324,5 +335,127 @@ describe('WidgetConfig text editing toolbar', () => {
         })
       ).toBeNull()
     );
+  });
+});
+
+describe('WidgetConfig media upload', () => {
+  const imageItem = () =>
+    ({
+      duration: 10000,
+      widget: {
+        id: 4,
+        name: 'Image',
+        options_schema: {
+          image: {
+            type: 'ref',
+            collection: 'medias|type:image',
+            required: true,
+          },
+        },
+      },
+      config: { options: {} },
+    }) as unknown as JsonPlaylistItem;
+
+  const canCreateMedias = {
+    i18n: { t: (key: string) => key, locale: () => 'en' },
+    permissions: { role: 'regular', matrix: { medias: ['list', 'create'] } },
+  };
+
+  const previewOptions = () =>
+    JSON.parse(
+      screen.getByTestId('widget-view').getAttribute('data-options') || '{}'
+    );
+
+  const uploaded = (overrides: Record<string, unknown> = {}) => ({
+    id: 42,
+    name: 'beach',
+    mimetype: 'image/png',
+    status: 'uploading',
+    files: {},
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    mediaUploadProps.current = undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        status: 200,
+        json: async () => ({ data: [], count: 0 }),
+      })
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('is not offered to users who cannot add medias', () => {
+    renderConfig({ item: imageItem() });
+
+    expect(
+      screen.queryByRole('button', {
+        name: 'playlists.mediaUpload.uploadImage',
+      })
+    ).toBeNull();
+  });
+
+  it('selects the uploaded image and reports it to the playlist view', async () => {
+    const onMediaUpload = vi.fn();
+    renderConfig({
+      item: imageItem(),
+      store: canCreateMedias,
+      onMediaUpload,
+    });
+
+    expect(
+      screen.getByRole('button', { name: 'playlists.mediaUpload.uploadImage' })
+    ).toBeInTheDocument();
+    expect(mediaUploadProps.current.mediaType).toBe('image');
+    expect(mediaUploadProps.current.organizationId).toBe('org-1');
+    expect(button('playlists.editor.addToPlaylist')).toBeDisabled();
+
+    const uploadedMedia = uploaded();
+    mediaUploadProps.current.onUpload(uploadedMedia);
+
+    await waitFor(() => expect(previewOptions().image.id).toBe(42));
+    expect(button('playlists.editor.addToPlaylist')).toBeEnabled();
+    expect(onMediaUpload).toHaveBeenCalledWith(uploadedMedia);
+  });
+
+  it('keeps another media chosen after the upload', async () => {
+    renderConfig({ item: imageItem(), store: canCreateMedias });
+
+    mediaUploadProps.current.onUpload(uploaded({ id: 7 }));
+    await waitFor(() => expect(previewOptions().image.id).toBe(7));
+
+    expect(previewOptions().image).toEqual(uploaded({ id: 7 }));
+  });
+
+  it('refreshes only the selected uploaded media when processing finishes', async () => {
+    const [processedMedias, setProcessedMedias] = createSignal<
+      Map<number, ReturnType<typeof uploaded>>
+    >(new Map());
+    renderConfig({
+      item: imageItem(),
+      store: canCreateMedias,
+      processedMedias,
+    });
+
+    mediaUploadProps.current.onUpload(uploaded());
+    await waitFor(() => expect(previewOptions().image.id).toBe(42));
+
+    const readyMedia = uploaded({
+      status: 'ready',
+      files: { thumbnail: { uri: 'thumbnail.png' } },
+    });
+    setProcessedMedias(new Map([[42, readyMedia]]));
+    await waitFor(() => expect(previewOptions().image).toEqual(readyMedia));
+
+    mediaUploadProps.current.onUpload(uploaded({ id: 7 }));
+    await waitFor(() => expect(previewOptions().image.id).toBe(7));
+    setProcessedMedias(new Map([[42, uploaded({ id: 42, status: 'ready' })]]));
+
+    expect(previewOptions().image).toEqual(uploaded({ id: 7 }));
   });
 });
