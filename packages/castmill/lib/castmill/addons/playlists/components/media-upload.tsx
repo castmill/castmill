@@ -82,6 +82,7 @@ export const MediaUpload: Component<MediaUploadProps> = (props) => {
                 title={props.label}
                 description={t('playlists.mediaUpload.description')}
                 closeLabel={t('common.close')}
+                onCloseRequest={() => closeDialog(generation)}
                 onClose={() => {
                   if (!isCurrentDialog(generation)) return;
                   dialogGeneration++;

@@ -868,6 +868,9 @@ describe('PlaylistView Component', () => {
       expect(
         playlistPreviewProps.current.playlist.items[0].config.options.video
       ).toEqual(readyMedia);
+      expect(
+        playlistItemsProps.current.processedMedias().get(readyMedia.id)
+      ).toEqual(readyMedia);
     });
 
     it('keeps a newer upload poll scheduled when an older request resolves', async () => {

@@ -115,6 +115,18 @@ describe('MediaUpload', () => {
     expect(props.onUpload).not.toHaveBeenCalled();
   });
 
+  it('invalidates upload callbacks as soon as a close is requested', () => {
+    const props = renderUpload();
+    openDialog();
+    const upload = uploadProps.current;
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    upload.onFileUpload('late.png', media());
+    upload.onUploadComplete();
+
+    expect(props.onUpload).not.toHaveBeenCalled();
+  });
+
   it('ignores late callbacks from a dismissed dialog after reopening', async () => {
     const props = renderUpload();
     openDialog();

@@ -128,6 +128,11 @@ export const PlaylistView: Component<{
   let previewRef: PlaylistPreviewRef | null = null;
   let seekDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   const processedMedias = new Map<JsonMedia['id'], JsonMedia>();
+  const [processedMediasRevision, setProcessedMediasRevision] = createSignal(0);
+  const getProcessedMedias = () => {
+    processedMediasRevision();
+    return processedMedias;
+  };
   const mediaPollTimers = new Map<
     JsonMedia['id'],
     ReturnType<typeof setTimeout>
@@ -163,6 +168,7 @@ export const PlaylistView: Component<{
 
   const refreshSavedMedia = (media: JsonMedia) => {
     processedMedias.set(media.id, media);
+    setProcessedMediasRevision((revision) => revision + 1);
     const currentItems = items();
     const nextItems = currentItems.map((item) => {
       if (!item.config?.options) return item;
@@ -1152,6 +1158,7 @@ export const PlaylistView: Component<{
               onChangeDuration={onChangeDuration}
               onCredentialsError={handleCredentialsError}
               onMediaUpload={handleMediaUpload}
+              processedMedias={getProcessedMedias}
               onSeekToItem={seekToItem}
               onAddWidgetReady={(add) => (addWidget = add)}
               reorderButtons={!wide() || coarsePointer()}

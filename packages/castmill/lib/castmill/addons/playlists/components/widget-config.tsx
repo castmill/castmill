@@ -7,6 +7,7 @@ import {
   onCleanup,
   on,
   Show,
+  untrack,
 } from 'solid-js';
 import { authFetch } from '../../common/services/auth-fetch';
 import {
@@ -92,6 +93,7 @@ interface WidgetConfigProps {
     expandedOptions: OptionsDict;
   }) => Promise<void>;
   onMediaUpload?: (media: JsonMedia) => void;
+  processedMedias?: () => ReadonlyMap<JsonMedia['id'], JsonMedia>;
   /** Shows a Cancel button; the parent decides whether to confirm discarding. */
   onCancel?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
@@ -744,6 +746,33 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
   const [widgetOptions, setWidgetOptions] =
     createSignal<OptionsDict>(originalOptions);
+
+  createEffect(() => {
+    const processedMedias = props.processedMedias?.();
+    if (!processedMedias?.size) return;
+
+    const currentOptions = untrack(widgetOptions);
+    let updatedOptions: OptionsDict | undefined;
+    for (const [key, value] of Object.entries(currentOptions)) {
+      if (
+        !value ||
+        typeof value !== 'object' ||
+        !('id' in value) ||
+        !('mimetype' in value) ||
+        !('files' in value)
+      ) {
+        continue;
+      }
+
+      const media = processedMedias.get((value as JsonMedia).id);
+      if (!media || media === value) continue;
+
+      if (!updatedOptions) updatedOptions = { ...currentOptions };
+      updatedOptions[key] = media;
+    }
+
+    if (updatedOptions) setWidgetOptions(updatedOptions);
+  });
 
   // Integration data shown in the live preview. Unlike the playlist item view,
   // the preview must reflect the options currently being edited (e.g. toggling

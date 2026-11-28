@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
+import { createSignal } from 'solid-js';
 import type { JsonPlaylistItem } from '@castmill/player';
 import { ToastProvider } from '@castmill/ui-common';
 import { WidgetConfig } from './widget-config';
@@ -368,6 +369,7 @@ describe('WidgetConfig media upload', () => {
   const uploaded = (overrides: Record<string, unknown> = {}) => ({
     id: 42,
     name: 'beach',
+    mimetype: 'image/png',
     status: 'uploading',
     files: {},
     ...overrides,
@@ -426,6 +428,33 @@ describe('WidgetConfig media upload', () => {
 
     mediaUploadProps.current.onUpload(uploaded({ id: 7 }));
     await waitFor(() => expect(previewOptions().image.id).toBe(7));
+
+    expect(previewOptions().image).toEqual(uploaded({ id: 7 }));
+  });
+
+  it('refreshes only the selected uploaded media when processing finishes', async () => {
+    const [processedMedias, setProcessedMedias] = createSignal<
+      Map<number, ReturnType<typeof uploaded>>
+    >(new Map());
+    renderConfig({
+      item: imageItem(),
+      store: canCreateMedias,
+      processedMedias,
+    });
+
+    mediaUploadProps.current.onUpload(uploaded());
+    await waitFor(() => expect(previewOptions().image.id).toBe(42));
+
+    const readyMedia = uploaded({
+      status: 'ready',
+      files: { thumbnail: { uri: 'thumbnail.png' } },
+    });
+    setProcessedMedias(new Map([[42, readyMedia]]));
+    await waitFor(() => expect(previewOptions().image).toEqual(readyMedia));
+
+    mediaUploadProps.current.onUpload(uploaded({ id: 7 }));
+    await waitFor(() => expect(previewOptions().image.id).toBe(7));
+    setProcessedMedias(new Map([[42, uploaded({ id: 42, status: 'ready' })]]));
 
     expect(previewOptions().image).toEqual(uploaded({ id: 7 }));
   });

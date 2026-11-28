@@ -70,6 +70,7 @@ export const PlaylistItems: Component<{
   onChangeDuration: (item: JsonPlaylistItem, duration: number) => Promise<void>;
   onCredentialsError?: (error: CredentialsError) => void;
   onMediaUpload?: (media: JsonMedia) => void;
+  processedMedias?: () => ReadonlyMap<JsonMedia['id'], JsonMedia>;
   onSeekToItem?: (index: number) => void;
   /** Receives the add function used by click/tap widget adding. */
   onAddWidgetReady?: (
@@ -460,6 +461,7 @@ export const PlaylistItems: Component<{
               }}
               onDirtyChange={setConfigDirty}
               onMediaUpload={props.onMediaUpload}
+              processedMedias={props.processedMedias}
               organizationId={props.organizationId}
               playlistId={props.playlistId}
             />
